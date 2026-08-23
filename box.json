@@ -1,0 +1,48 @@
+{
+    "name":"myCFCMS",
+    "version":"1.0.0",
+    "author":"You",
+    "shortDescription":"A tiered and structured starter template for ColdBox",
+    "location":"forgeboxStorage",
+    "slug":"mycfcms",
+    "createPackageDirectory":false,
+    "type":"mvc",
+    "keywords":[],
+    "repository":{
+        "type":"",
+        "url":""
+    },
+    "ignore":[],
+    "dependencies":{
+        "coldbox":"^8.0.0",
+        "qb":"^13.2.1",
+        "BCrypt":"^3.2.0+1"
+    },
+    "devDependencies":{
+        "testbox":"*",
+        "route-visualizer":"*",
+        "commandbox-boxlang":"*"
+    },
+    "installPaths":{
+        "coldbox":"lib/coldbox/",
+        "testbox":"lib/testbox/",
+        "route-visualizer":"lib/modules/route-visualizer/",
+        "qb":"lib/modules/qb/",
+        "BCrypt":"lib/modules/BCrypt/"
+    },
+    "installPathConventions":{
+        "modules":"lib/modules"
+    },
+    "scripts":{
+        "postInstall":"pathExists .env || cp .env.example .env",
+        "format":"!boxlang format --source app/,tests/specs/,*.cfc",
+        "format:check":"!boxlang format --check --source app/,tests/specs/,*.cfc",
+        "build:docker":"!docker build --no-cache -t my-coldbox-app -f ./docker/Dockerfile ./",
+        "run:docker":"!docker run -it -p 8080:8080 my-coldbox-app"
+    },
+    "testbox":{
+        "runner":"/tests/runner.cfm"
+    },
+    "language":"CFML",
+    "description":"A ColdBox Application created with the ColdBox CLI"
+}

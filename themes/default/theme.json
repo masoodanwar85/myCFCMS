@@ -1,0 +1,5 @@
+{
+    "name": "Default",
+    "version": "1.0.0",
+    "description": "The fallback theme. Every site renders with this unless it selects another."
+}
