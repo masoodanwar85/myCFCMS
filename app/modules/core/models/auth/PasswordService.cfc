@@ -29,9 +29,14 @@ component singleton accessors="true" {
 	}
 
 	/**
+	 * Named `hashPassword`, not `hash`: ColdFusion has a built-in `hash()`, and
+	 * a component method of that name is only safe while every call happens to
+	 * be qualified. It works today and would break the first time something
+	 * inside this component called it unqualified.
+	 *
 	 * @throws Auth.WeakPassword when the password is too short.
 	 */
-	string function hash( required string plainPassword ){
+	string function hashPassword( required string plainPassword ){
 		validate( arguments.plainPassword );
 
 		return bcrypt.hashPassword( arguments.plainPassword, getWorkFactor() );

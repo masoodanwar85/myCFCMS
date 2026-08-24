@@ -5,12 +5,14 @@
  * with a page, or null. That is the entire coupling: Core never imports
  * PageService, and this module never registers a route.
  *
- * It also supplies the navigation and breadcrumb the theme's layout needs,
- * because Core cannot build those without knowing what a page tree is.
+ * It supplies the breadcrumb a post's own view needs. The site's navigation is
+ * not its business: that comes from PageNavigationProvider, which Core asks
+ * regardless of which module served the URL.
  */
 component singleton accessors="true" {
 
 	property name="pageService" inject="PageService@pages";
+	property name="shortcodes"  inject="ShortcodeService@core";
 
 	/**
 	 * @siteId The resolved tenant.
@@ -20,13 +22,43 @@ component singleton accessors="true" {
 	 * @return A content resolution struct, or null when no page serves this path.
 	 */
 	function resolveContent( required numeric siteId, required string path ){
-		var page = len( arguments.path )
-			? pageService.getPublishedPageByPath( arguments.siteId, arguments.path )
-			: resolveHomePage( arguments.siteId );
+		var isRoot = !len( arguments.path );
+
+		var page = isRoot
+			? resolveHomePage( arguments.siteId )
+			: pageService.getPublishedPageByPath( arguments.siteId, arguments.path );
 
 		if ( isNull( page ) ) {
 			return;
 		}
+
+		// The home page answers at `/` *and* at its own path — `/home` serves
+		// exactly what `/` serves. Both keep working, because links to either
+		// exist in the wild, but only one is offered for indexing. Comparing
+		// the resolved page against the site's designated home page catches the
+		// `/home` case too, which asking about the requested path alone does not.
+		var home     = pageService.getHomePage( arguments.siteId );
+		var isHome   = !isNull( home ) && home.getId() == page.getId();
+
+		// An explicit canonical wins over anything derived. It is the field an
+		// editor reaches for when this page duplicates something elsewhere —
+		// including somewhere off this site — so it has to be able to say so.
+		var explicitCanonical = trim( page.getCanonicalUrl() ?: "" );
+
+		// Shortcodes expand on the way out, never on the way in. The stored
+		// content keeps `[image id="12"]` as written, so an author can still
+		// edit it and the sanitiser has nothing to object to; the theme gets
+		// the expansion. Done here rather than in the theme so a third-party
+		// theme does not have to know shortcodes exist.
+		//
+		// The entity is built fresh from a row on every request, so setting the
+		// expanded content on it changes nothing in the database.
+		page.setContent(
+			shortcodes.expand(
+				content = page.getContent() ?: "",
+				context = { "siteId" : arguments.siteId, "path" : arguments.path }
+			)
+		);
 
 		return {
 			"view"            : "page",
@@ -36,8 +68,24 @@ component singleton accessors="true" {
 			},
 			"title"           : page.getEffectiveMetaTitle(),
 			"metaDescription" : page.getMetaDescription() ?: "",
-			"navigation"      : navigationFor( arguments.siteId ),
-			"statusCode"      : 200
+			"statusCode"      : 200,
+			"canonicalPath"   : len( explicitCanonical ) ? explicitCanonical : ( isHome ? "" : page.getPath() ),
+			"modifiedAt"      : page.getUpdatedAt(),
+			"publishedAt"     : page.getPublishedAt() ?: "",
+			// The page's own answers, where it has given any. An empty string
+			// means "no opinion", and SeoService fills it from the site's
+			// defaults — so a page nobody has opened the SEO tab on behaves
+			// exactly as it did before these fields existed.
+			"robots"          : page.getRobotsDirective(),
+			"image"           : page.getOgImage() ?: "",
+			"contentType"     : page.getOgType() ?: "website",
+			"twitterCard"     : page.getTwitterCard() ?: "",
+			"keywords"        : page.getMetaKeywords() ?: "",
+			"ogTitle"         : page.getOgTitle() ?: "",
+			"ogDescription"   : page.getOgDescription() ?: "",
+			"headMarkup"      : page.getHeadMarkup() ?: "",
+			"bodyMarkup"      : page.getBodyMarkup() ?: "",
+			"jsonLd"          : page.getJsonLd() ?: ""
 		};
 	}
 
@@ -55,15 +103,6 @@ component singleton accessors="true" {
 		}
 
 		return home;
-	}
-
-	/**
-	 * Top-level published pages, in menu order.
-	 */
-	private array function navigationFor( required numeric siteId ){
-		return pageService
-			.getRootPages( arguments.siteId )
-			.filter( ( page ) => page.isPublished() );
 	}
 
 }

@@ -35,6 +35,8 @@ component{
 	this.mappings[ "/public" ]     = _root & "public";
 	this.mappings[ "/modules" ] = _root & "lib/modules";
 	this.mappings[ "/themes" ]      = _root & "themes";
+	this.mappings[ "/resources" ]   = _root & "resources";
+	this.mappings[ "/storage" ]     = _root & "storage";
 	this.mappings[ "/coldbox" ] = _root & "/lib/coldbox";
 	this.mappings[ "/testbox" ] = _root & "/lib/testbox";
 

@@ -36,6 +36,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					.setSiteDomainRepository( domainRepo )
 					.setSiteSettingsRepository( settingsRepo )
 					.setDomainNormalizer( getInstance( "DomainNormalizer@core" ) )
+					.setSlugifier( getInstance( "Slugifier@core" ) )
 					.setWirebox( getWireBox() );
 			} );
 

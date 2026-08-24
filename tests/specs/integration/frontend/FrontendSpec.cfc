@@ -60,6 +60,13 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					expect( html ).toInclude( 'href="/about"' );
 				} );
 
+				it( "renders the same menu on a 404 as on a page", function(){
+					// The menu comes from SiteNavigationRegistry, not from
+					// whichever module answered the URL, so a request nothing
+					// serves still gives a reader somewhere to go.
+					expect( render( "/nowhere-at-all", "#PREFIX#one.test" ) ).toInclude( 'href="/about"' );
+				} );
+
 				it( "renders a breadcrumb for a nested page", function(){
 					var html = render( "/about/team", "#PREFIX#one.test" );
 

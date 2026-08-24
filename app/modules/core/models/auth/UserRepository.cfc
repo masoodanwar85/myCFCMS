@@ -158,14 +158,25 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		return q.exists();
 	}
 
-	array function findBySiteId( required numeric siteId ){
+	array function findBySiteId(
+		required numeric siteId,
+		numeric limit  = 25,
+		numeric offset = 0
+	){
 		return variables.query
 			.from( variables.TABLE )
 			.select( variables.COLUMNS )
 			.where( "site_id", arguments.siteId )
 			.orderBy( "name" )
+			.orderBy( "id" )
+			.limit( arguments.limit )
+			.offset( arguments.offset )
 			.get()
 			.map( ( row ) => toUser( row ) );
+	}
+
+	numeric function countBySiteId( required numeric siteId ){
+		return variables.query.from( variables.TABLE ).where( "site_id", arguments.siteId ).count();
 	}
 
 	array function findSuperAdmins(){

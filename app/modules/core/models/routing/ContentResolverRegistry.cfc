@@ -14,6 +14,10 @@
  *           .getInstance( "ContentResolverRegistry@core" )
  *           .register( "PageContentResolver@pages", 100 );
  *
+ * A resolver describes *content*, not chrome. The site's navigation comes from
+ * SiteNavigationRegistry instead, so the menu does not change depending on which
+ * module served the URL.
+ *
  * A resolver is any object with:
  *
  *     struct|null resolveContent( numeric siteId, string path )
@@ -25,8 +29,15 @@
  *         args            : { ... },  // passed to that view
  *         title           : "About",  // document title
  *         metaDescription : "...",
- *         navigation      : [ ... ],  // optional, for the layout
- *         statusCode      : 200
+ *         statusCode      : 200,
+ *
+ *         // optional, for SEO; see normalize() for the defaults
+ *         canonicalPath   : "about",      // the one URL this should be indexed at
+ *         robots          : "noindex",    // per-page directive
+ *         image           : "/media/...", // social preview
+ *         contentType     : "article",    // Open Graph type
+ *         publishedAt     : <date>,
+ *         modifiedAt      : <date>
  *     }
  */
 component singleton accessors="true" {
@@ -84,7 +95,48 @@ component singleton accessors="true" {
 			var result   = resolver.resolveContent( arguments.siteId, arguments.path );
 
 			if ( !isNull( result ) ) {
-				return normalize( result );
+				return normalize( result, arguments.path );
+			}
+		}
+
+		return;
+	}
+
+	/**
+	 * Route a form submission to whichever resolver claims the path.
+	 *
+	 * Public content that accepts input — a contact form — needs somewhere for
+	 * the POST to go. Adding a public route per module would mean each one
+	 * reaching into the application router, and ordering between them would
+	 * decide who won.
+	 *
+	 * So a resolver may optionally implement:
+	 *
+	 *     struct|null handleSubmission( numeric siteId, string path, struct formData )
+	 *
+	 * It receives the submitted values as a plain struct — not the event, not
+	 * the request — so a module still knows nothing about HTTP. It returns a
+	 * resolution to render, optionally carrying `redirectTo` for the
+	 * redirect-after-post that stops a refresh resubmitting.
+	 *
+	 * @return The resolution, or null when nothing handles submissions here.
+	 */
+	function resolveSubmission(
+		required numeric siteId,
+		required string path,
+		required struct formData
+	){
+		for ( var entry in variables.resolvers ) {
+			var resolver = wirebox.getInstance( entry.id );
+
+			if ( !structKeyExists( resolver, "handleSubmission" ) ) {
+				continue;
+			}
+
+			var result = resolver.handleSubmission( arguments.siteId, arguments.path, arguments.formData );
+
+			if ( !isNull( result ) ) {
+				return normalize( result, arguments.path );
 			}
 		}
 
@@ -94,16 +146,50 @@ component singleton accessors="true" {
 	/**
 	 * Fill in the parts a resolver may reasonably leave out, so the front
 	 * controller and the themes can rely on every key being present.
+	 *
+	 * @requestedPath The path this resolution answers, used as the default
+	 *                canonical. It is defaulted **here** rather than downstream
+	 *                because an empty `canonicalPath` is a meaningful answer —
+	 *                it names the site root — and anything checking `len()`
+	 *                further along would read that as "unspecified" and quietly
+	 *                canonicalise the home page to `/home`.
 	 */
-	private struct function normalize( required struct resolution ){
+	private struct function normalize( required struct resolution, string requestedPath = "" ){
 		var result = arguments.resolution;
 
 		result.view            = result.view ?: "page";
 		result.args            = result.args ?: {};
 		result.title           = result.title ?: "";
 		result.metaDescription = result.metaDescription ?: "";
-		result.navigation      = result.navigation ?: [];
 		result.statusCode      = result.statusCode ?: 200;
+		result.redirectTo      = result.redirectTo ?: "";
+
+		// SEO. All optional: a resolver that says nothing gets sensible
+		// defaults from SeoService and the site's own settings, so adding these
+		// did not oblige every existing resolver to change.
+		//
+		// `canonicalPath` matters most. A module that can serve one piece of
+		// content at more than one URL — a blog post reachable through a
+		// category, say — names the one address it wants indexed here.
+		result.canonicalPath   = structKeyExists( result, "canonicalPath" )
+			? result.canonicalPath
+			: arguments.requestedPath;
+		result.robots          = result.robots ?: "";
+		result.image           = result.image ?: "";
+		result.contentType     = result.contentType ?: "";
+		result.publishedAt     = result.publishedAt ?: "";
+		result.modifiedAt      = result.modifiedAt ?: "";
+		result.keywords        = result.keywords ?: "";
+		result.ogTitle         = result.ogTitle ?: "";
+		result.ogDescription   = result.ogDescription ?: "";
+		result.twitterCard     = result.twitterCard ?: "";
+
+		// Raw markup a module has already decided its author was allowed to
+		// write. Core carries it and never inspects it — the permission check
+		// belongs with whoever owns the content.
+		result.headMarkup      = result.headMarkup ?: "";
+		result.bodyMarkup      = result.bodyMarkup ?: "";
+		result.jsonLd          = result.jsonLd ?: "";
 
 		return result;
 	}

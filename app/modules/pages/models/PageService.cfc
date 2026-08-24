@@ -11,11 +11,14 @@
 component singleton accessors="true" {
 
 	property name="pageRepository"   inject="PageRepository@pages";
+	property name="slugifier"        inject="Slugifier@core";
 	property name="siteRepository"   inject="SiteRepository@core";
 	property name="userRepository"   inject="UserRepository@core";
 	property name="siteSettingsRepo" inject="SiteSettingsRepository@core";
 	property name="settings"         inject="coldbox:moduleSettings:pages";
 	property name="interceptorService" inject="coldbox:interceptorService";
+	property name="sanitizer"        inject="ContentSanitizer@core";
+	property name="redirects"        inject="RedirectService@core";
 	property name="wirebox"          inject="wirebox";
 
 	/* ---------------------------------------------------------------------
@@ -30,6 +33,8 @@ component singleton accessors="true" {
 	 * @slug     URL segment. Derived from the title when omitted.
 	 * @parentId Omit for a top-level page.
 	 * @authorId Recorded as creator; must belong to the site, or be a super admin.
+	 * @allowUnfilteredHtml Skip HTML sanitising. The caller is responsible for
+	 *                      checking the author holds `content.unfiltered`.
 	 *
 	 * @throws Pages.SiteNotFound
 	 * @throws Pages.InvalidPage
@@ -48,7 +53,9 @@ component singleton accessors="true" {
 		string metaTitle       = "",
 		string metaDescription = "",
 		numeric sortOrder      = 0,
-		numeric authorId
+		numeric authorId,
+		boolean allowUnfilteredHtml = false,
+		struct seo = {}
 	){
 		if ( isNull( siteRepository.findById( arguments.siteId ) ) ) {
 			throw( type = "Pages.SiteNotFound", message = "No site with id [#arguments.siteId#]." );
@@ -102,7 +109,7 @@ component singleton accessors="true" {
 			.setSlug( pageSlug )
 			.setPath( path )
 			.setStatus( arguments.status )
-			.setContent( arguments.content )
+			.setContent( sanitizer.sanitize( arguments.content, arguments.allowUnfilteredHtml ) )
 			.setMetaTitle( trim( arguments.metaTitle ) )
 			.setMetaDescription( trim( arguments.metaDescription ) )
 			.setSortOrder( arguments.sortOrder );
@@ -115,6 +122,8 @@ component singleton accessors="true" {
 			page.setCreatedBy( arguments.authorId );
 			page.setUpdatedBy( arguments.authorId );
 		}
+
+		applySeo( page, arguments.seo, arguments.allowUnfilteredHtml );
 
 		// A page created straight into `published` still needs its date.
 		if ( page.isPublished() ) {
@@ -146,7 +155,17 @@ component singleton accessors="true" {
 		string metaTitle,
 		string metaDescription,
 		numeric sortOrder,
-		numeric editorId
+		numeric editorId,
+		boolean allowUnfilteredHtml = false,
+		/**
+		 * The optional SEO, social, sitemap and scheduling fields, as a struct.
+		 *
+		 * A struct rather than seventeen more named arguments: the signature
+		 * would otherwise be unreadable, and every caller that only wanted to
+		 * change a title would have to scroll past them. Only the keys present
+		 * are applied, so a partial update stays partial.
+		 */
+		struct seo = {}
 	){
 		var page    = requirePage( arguments.pageId );
 		var oldPath = page.getPath();
@@ -170,7 +189,7 @@ component singleton accessors="true" {
 		}
 
 		if ( !isNull( arguments.content ) ) {
-			page.setContent( arguments.content );
+			page.setContent( sanitizer.sanitize( arguments.content, arguments.allowUnfilteredHtml ) );
 		}
 		if ( !isNull( arguments.metaTitle ) ) {
 			page.setMetaTitle( trim( arguments.metaTitle ) );
@@ -186,6 +205,8 @@ component singleton accessors="true" {
 			page.setUpdatedBy( arguments.editorId );
 		}
 
+		applySeo( page, arguments.seo, arguments.allowUnfilteredHtml );
+
 		var moved = page.getPath() != oldPath;
 
 		if ( moved && pageRepository.existsByPath( page.getSiteId(), page.getPath() ) ) {
@@ -195,10 +216,14 @@ component singleton accessors="true" {
 			);
 		}
 
+		// Captured before the rewrite, while the old paths still exist.
+		var subtree = moved ? pageRepository.findDescendants( page.getSiteId(), oldPath ) : [];
+
 		var updated = pageRepository.update( page );
 
 		if ( moved ) {
 			pageRepository.rewriteDescendantPaths( page.getSiteId(), oldPath, page.getPath() );
+			rememberMove( page.getSiteId(), oldPath, page.getPath(), subtree );
 		}
 
 		interceptorService.announce( "onPageUpdated", { page : updated, pathChanged : moved } );
@@ -252,13 +277,17 @@ component singleton accessors="true" {
 			);
 		}
 
+		var pathChanged = page.getPath() != oldPath;
+		var subtree     = pathChanged ? pageRepository.findDescendants( page.getSiteId(), oldPath ) : [];
+
 		var updated = pageRepository.update( page );
 
-		if ( page.getPath() != oldPath ) {
+		if ( pathChanged ) {
 			pageRepository.rewriteDescendantPaths( page.getSiteId(), oldPath, page.getPath() );
+			rememberMove( page.getSiteId(), oldPath, page.getPath(), subtree );
 		}
 
-		interceptorService.announce( "onPageUpdated", { page : updated, pathChanged : page.getPath() != oldPath } );
+		interceptorService.announce( "onPageUpdated", { page : updated, pathChanged : pathChanged } );
 
 		return updated;
 	}
@@ -533,6 +562,219 @@ component singleton accessors="true" {
 	}
 
 	/* ---------------------------------------------------------------------
+	 * SEO, social, sitemap and scheduling
+	 * ------------------------------------------------------------------ */
+
+	// Closed lists. A value outside them is dropped rather than stored, so
+	// nothing an author types can become an arbitrary attribute in the markup.
+	variables.OG_TYPES      = "website,article,profile,book,video.other,music.song";
+	variables.TWITTER_CARDS = "summary,summary_large_image,app,player";
+	variables.CHANGEFREQS   = "always,hourly,daily,weekly,monthly,yearly,never";
+
+	/**
+	 * Apply the optional SEO fields to a page.
+	 *
+	 * Every field is skipped when absent, so this serves both `createPage` and
+	 * a partial `updatePage` without either having to enumerate them.
+	 *
+	 * @allowRawMarkup Whether the caller's user holds `content.unfiltered`.
+	 *                 See `applyRawMarkup` for why that gate exists.
+	 */
+	private function applySeo(
+		required any page,
+		required struct values,
+		boolean allowRawMarkup = false
+	){
+		var given = arguments.values;
+
+		if ( structKeyExists( given, "metaKeywords" ) ) {
+			arguments.page.setMetaKeywords( trim( given.metaKeywords ) );
+		}
+
+		if ( structKeyExists( given, "canonicalUrl" ) ) {
+			arguments.page.setCanonicalUrl( safeUrl( given.canonicalUrl, "canonical URL" ) );
+		}
+
+		// `structKeyExists`, not truthiness: `false` is the whole point of
+		// these two, and the elvis-style shortcut would make them unsettable.
+		if ( structKeyExists( given, "robotsIndex" ) ) {
+			arguments.page.setRobotsIndex( asBoolean( given.robotsIndex ) );
+		}
+		if ( structKeyExists( given, "robotsFollow" ) ) {
+			arguments.page.setRobotsFollow( asBoolean( given.robotsFollow ) );
+		}
+
+		if ( structKeyExists( given, "ogTitle" ) ) {
+			arguments.page.setOgTitle( trim( given.ogTitle ) );
+		}
+		if ( structKeyExists( given, "ogDescription" ) ) {
+			arguments.page.setOgDescription( trim( given.ogDescription ) );
+		}
+		if ( structKeyExists( given, "ogImage" ) ) {
+			arguments.page.setOgImage( safeUrl( given.ogImage, "OG image URL" ) );
+		}
+		if ( structKeyExists( given, "ogType" ) ) {
+			arguments.page.setOgType( fromList( given.ogType, variables.OG_TYPES, "website" ) );
+		}
+		if ( structKeyExists( given, "twitterCard" ) ) {
+			arguments.page.setTwitterCard( fromList( given.twitterCard, variables.TWITTER_CARDS, "summary_large_image" ) );
+		}
+
+		if ( structKeyExists( given, "sitemapInclude" ) ) {
+			arguments.page.setSitemapInclude( asBoolean( given.sitemapInclude ) );
+		}
+		if ( structKeyExists( given, "sitemapPriority" ) ) {
+			// Clamped rather than rejected: a priority is a hint, and refusing
+			// to save a whole page over one out-of-range number is worse than
+			// storing the nearest legal value.
+			arguments.page.setSitemapPriority( max( 0, min( 1, val( given.sitemapPriority ) ) ) );
+		}
+		if ( structKeyExists( given, "sitemapChangefreq" ) ) {
+			arguments.page.setSitemapChangefreq( fromList( given.sitemapChangefreq, variables.CHANGEFREQS, "weekly" ) );
+		}
+
+		applySchedule( arguments.page, given );
+		applyRawMarkup( arguments.page, given, arguments.allowRawMarkup );
+
+		return arguments.page;
+	}
+
+	private function applySchedule( required any page, required struct given ){
+		if ( structKeyExists( arguments.given, "publishFrom" ) ) {
+			setOrClear( arguments.page, "publishFrom", arguments.given.publishFrom );
+		}
+		if ( structKeyExists( arguments.given, "publishUntil" ) ) {
+			setOrClear( arguments.page, "publishUntil", arguments.given.publishUntil );
+		}
+
+		var from  = arguments.page.getPublishFrom();
+		var until = arguments.page.getPublishUntil();
+
+		// A window that closes before it opens can never serve the page, and is
+		// far more likely a slip than an intention.
+		if ( !isNull( from ) && !isNull( until ) && dateCompare( from, until ) > 0 ) {
+			throw(
+				type    = "Pages.InvalidSchedule",
+				message = "A page cannot stop being published before it starts."
+			);
+		}
+
+		return arguments.page;
+	}
+
+	/**
+	 * `head_markup`, `body_markup` and `json_ld`.
+	 *
+	 * These are emitted into every visitor's page **without sanitising** —
+	 * that is what they are for, and it makes them the most dangerous fields in
+	 * the CMS. Anyone who could write them could put a script on a client's
+	 * site, so they are gated by the same `content.unfiltered` permission that
+	 * guards raw HTML in page content.
+	 *
+	 * A caller without it does not get an error, because that would leak which
+	 * fields exist to someone who cannot use them. The values are simply
+	 * ignored, and the admin does not render the inputs at all.
+	 */
+	private function applyRawMarkup( required any page, required struct given, required boolean allowed ){
+		if ( !arguments.allowed ) {
+			return arguments.page;
+		}
+
+		if ( structKeyExists( arguments.given, "headMarkup" ) ) {
+			arguments.page.setHeadMarkup( trim( arguments.given.headMarkup ) );
+		}
+		if ( structKeyExists( arguments.given, "bodyMarkup" ) ) {
+			arguments.page.setBodyMarkup( trim( arguments.given.bodyMarkup ) );
+		}
+
+		if ( structKeyExists( arguments.given, "jsonLd" ) ) {
+			var block = trim( arguments.given.jsonLd );
+
+			// Validated on the way in. Invalid JSON-LD is silently discarded by
+			// every consumer, so an author would get no feedback at all — and a
+			// broken block would sit in the page indefinitely.
+			if ( len( block ) && !isJSON( block ) ) {
+				throw(
+					type    = "Pages.InvalidPage",
+					message = "The JSON-LD block is not valid JSON."
+				);
+			}
+
+			arguments.page.setJsonLd( block );
+		}
+
+		return arguments.page;
+	}
+
+	/**
+	 * A URL safe to put in an `href` or a `content` attribute.
+	 *
+	 * Absolute http(s) or site-relative only. `javascript:` in a canonical tag
+	 * is not executable, but `data:` and friends in an `og:image` reach places
+	 * this code cannot see, and an allow-list is the only durable answer.
+	 *
+	 * @throws Pages.InvalidPage
+	 */
+	private string function safeUrl( required string value, required string label ){
+		var address = trim( arguments.value );
+
+		if ( !len( address ) ) {
+			return "";
+		}
+
+		if ( !reFindNoCase( "^(https?://|/)", address ) ) {
+			throw(
+				type    = "Pages.InvalidPage",
+				message = "The #arguments.label# must start with http://, https:// or /."
+			);
+		}
+
+		return address;
+	}
+
+	private string function fromList( required string value, required string allowed, required string fallback ){
+		var candidate = lCase( trim( arguments.value ) );
+
+		return listFindNoCase( arguments.allowed, candidate ) ? candidate : arguments.fallback;
+	}
+
+	private boolean function asBoolean( required any value ){
+		if ( isBoolean( arguments.value ) ) {
+			return arguments.value;
+		}
+
+		// What an unchecked HTML checkbox posts, versus what a checked one does.
+		return listFindNoCase( "on,yes,1,true", trim( arguments.value ) ) > 0;
+	}
+
+	/**
+	 * Set a date property, or clear it when the value is blank.
+	 *
+	 * Clearing matters: an editor removing a schedule must actually remove it,
+	 * and a generated setter given an empty string would store one rather than
+	 * a null.
+	 */
+	private function setOrClear( required any page, required string property, required any value ){
+		var raw = isSimpleValue( arguments.value ) ? trim( arguments.value ) : arguments.value;
+
+		if ( isSimpleValue( raw ) && !len( raw ) ) {
+			// Through the entity, because a generated accessor reads from the
+			// component's own `variables` scope — which nothing outside it can
+			// reach.
+			arguments.page.clearDate( arguments.property );
+			return arguments.page;
+		}
+
+		if ( !isDate( raw ) ) {
+			throw( type = "Pages.InvalidPage", message = "[#arguments.property#] is not a date." );
+		}
+
+		invoke( arguments.page, "set" & arguments.property, [ parseDateTime( raw ) ] );
+
+		return arguments.page;
+	}
+
+	/* ---------------------------------------------------------------------
 	 * Helpers
 	 * ------------------------------------------------------------------ */
 
@@ -541,11 +783,9 @@ component singleton accessors="true" {
 	}
 
 	string function slugify( required string value ){
-		var slug = lCase( trim( arguments.value ) );
-		slug     = reReplace( slug, "[^a-z0-9]+", "-", "all" );
-		slug     = reReplace( slug, "^-+|-+$", "", "all" );
-
-		return slug;
+		// Delegated: five copies of this each dropped accented
+		// characters instead of transliterating them.
+		return slugifier.slugify( arguments.value );
 	}
 
 	/**
@@ -568,6 +808,36 @@ component singleton accessors="true" {
 		var parent = pageRepository.findById( arguments.page.getParentId() );
 
 		return isNull( parent ) ? "" : parent.getPath();
+	}
+
+	/**
+	 * Remember the old URLs of a page and everything that moved with it.
+	 *
+	 * A descendant's new path is its old one with the parent's prefix swapped,
+	 * which is exactly what the database rewrite did, so the two cannot drift.
+	 *
+	 * @subtree Descendants as they were *before* the rewrite.
+	 */
+	private function rememberMove(
+		required numeric siteId,
+		required string oldPath,
+		required string newPath,
+		required array subtree
+	){
+		var moves = [ { "from" : arguments.oldPath, "to" : arguments.newPath } ];
+
+		for ( var descendant in arguments.subtree ) {
+			var was = descendant.getPath();
+
+			moves.append( {
+				"from" : was,
+				"to"   : arguments.newPath & mid( was, len( arguments.oldPath ) + 1, len( was ) )
+			} );
+		}
+
+		redirects.recordAll( arguments.siteId, moves );
+
+		return this;
 	}
 
 	/**

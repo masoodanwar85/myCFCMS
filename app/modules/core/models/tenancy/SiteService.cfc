@@ -9,6 +9,7 @@
 component singleton accessors="true" {
 
 	property name="siteRepository"         inject="SiteRepository@core";
+	property name="slugifier"        inject="Slugifier@core";
 	property name="siteDomainRepository"   inject="SiteDomainRepository@core";
 	property name="siteSettingsRepository" inject="SiteSettingsRepository@core";
 	property name="domainNormalizer"       inject="DomainNormalizer@core";
@@ -221,11 +222,9 @@ component singleton accessors="true" {
 	 * Lower-case, hyphen-separated, alphanumeric.
 	 */
 	string function slugify( required string value ){
-		var slug = lCase( trim( arguments.value ) );
-		slug     = reReplace( slug, "[^a-z0-9]+", "-", "all" );
-		slug     = reReplace( slug, "^-+|-+$", "", "all" );
-
-		return slug;
+		// Delegated: five copies of this each dropped accented
+		// characters instead of transliterating them.
+		return slugifier.slugify( arguments.value );
 	}
 
 }

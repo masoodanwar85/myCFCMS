@@ -149,7 +149,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 			describe( "passwords", function(){
 
 				it( "verifies a correct password for an active user", function(){
-					var hash = getInstance( "PasswordService@core" ).hash( "correct-horse-battery" );
+					var hash = getInstance( "PasswordService@core" ).hashPassword( "correct-horse-battery" );
 					var user = makeUser( 1, 1 ).setPasswordHash( hash );
 
 					expect( service.verifyPassword( user, "correct-horse-battery" ) ).toBeTrue();
@@ -157,7 +157,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				} );
 
 				it( "never verifies for an inactive user, even with the right password", function(){
-					var hash = getInstance( "PasswordService@core" ).hash( "correct-horse-battery" );
+					var hash = getInstance( "PasswordService@core" ).hashPassword( "correct-horse-battery" );
 					var user = makeUser( 1, 1 ).setPasswordHash( hash ).setStatus( "inactive" );
 
 					expect( service.verifyPassword( user, "correct-horse-battery" ) ).toBeFalse();

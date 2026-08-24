@@ -18,6 +18,9 @@ component extends="coldbox.system.EventHandler" {
 	property name="tenantContext" inject="TenantContext@core";
 	property name="resolvers"     inject="ContentResolverRegistry@core";
 	property name="themeService"  inject="ThemeService@core";
+	property name="navigation"    inject="NavigationService@core";
+	property name="redirects"     inject="RedirectService@core";
+	property name="seo"           inject="SeoService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
 
 	/**
@@ -43,9 +46,36 @@ component extends="coldbox.system.EventHandler" {
 		prc.currentSite  = site;
 		prc.currentTheme = theme;
 
-		var resolution = resolvers.resolve( site.getId(), path );
+		var resolution = javacast( "null", "" );
+
+		// A public form posting back to its own URL. Handled before the GET
+		// lookup, so a module can answer with a result page or the form again
+		// carrying errors.
+		if ( event.getHTTPMethod() == "POST" ) {
+			resolution = resolvers.resolveSubmission( site.getId(), path, arguments.rc );
+
+			if ( !isNull( resolution ) && len( resolution.redirectTo ) ) {
+				// Redirect after post, so a refresh does not send it twice.
+				relocate( uri = resolution.redirectTo );
+				return;
+			}
+		}
 
 		if ( isNull( resolution ) ) {
+			resolution = resolvers.resolve( site.getId(), path );
+		}
+
+		if ( isNull( resolution ) ) {
+			// Nothing serves this path now — but something may have, before an
+			// editor renamed it. A link someone already published should keep
+			// working rather than becoming a 404.
+			var moved = redirects.find( site.getId(), path );
+
+			if ( !isNull( moved ) ) {
+				relocate( uri = "/" & moved.toPath, statusCode = moved.statusCode );
+				return;
+			}
+
 			return renderNotFound( event, site, theme, path );
 		}
 
@@ -66,8 +96,15 @@ component extends="coldbox.system.EventHandler" {
 				site            : site,
 				title           : len( resolution.title ) ? resolution.title : site.getName(),
 				metaDescription : resolution.metaDescription,
-				navigation      : resolution.navigation,
-				path            : path
+				// Asked of the registry, not taken from the resolution: the menu
+				// is the site's, not the property of whichever module answered
+				// this URL.
+				navigation      : navigation.getNavigationFor( site.getId() ),
+				path            : path,
+				// Canonical, robots and the social tags, with whatever the
+				// resolver left out filled in from the site's own defaults. A
+				// theme emits these; it does not work them out.
+				seo             : seo.metadataFor( site, path, resolution )
 			}
 		);
 	}
@@ -101,8 +138,17 @@ component extends="coldbox.system.EventHandler" {
 				site            : arguments.site,
 				title           : "Page not found",
 				metaDescription : "",
-				navigation      : [],
-				path            : arguments.path
+				// A 404 keeps the site's menu, so a reader can get somewhere.
+				navigation      : navigation.getNavigationFor( arguments.site.getId() ),
+				path            : arguments.path,
+				// `statusCode` is what makes SeoService mark this `noindex`: a
+				// 404 rendered in the site's theme still looks like a page, and
+				// without this a crawler would happily index it as one.
+				seo             : seo.metadataFor(
+					site       = arguments.site,
+					path       = arguments.path,
+					resolution = { "statusCode" : 404 }
+				)
 			}
 		);
 	}

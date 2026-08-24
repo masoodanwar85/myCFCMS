@@ -3,7 +3,7 @@
 	<p class="crumbs">
 		<cfloop array="#args.breadcrumb#" index="crumb">
 			<cfif crumb.getId() neq args.page.getId()>
-				<a href="/#encodeForHTML( crumb.getPath() )#">#encodeForHTML( crumb.getTitle() )#</a> /
+				<a href="/#xmlFormat( crumb.getPath() )#">#encodeForHTML( crumb.getTitle() )#</a> /
 			<cfelse>
 				#encodeForHTML( crumb.getTitle() )#
 			</cfif>

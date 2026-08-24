@@ -15,7 +15,9 @@ component {
 	this.sessionManagement = true;
 	this.sessionTimeout    = createTimespan( 0, 0, 30, 0 );
 	this.setClientCookies  = true;
-	this.setDomainCookies     = true;
+	// Host-scoped, not domain-scoped: tenants are separated by domain, and a
+	// domain-level cookie set on one subdomain tenant would be sent to another.
+	this.setDomainCookies     = false;
 	this.timezone             = "UTC";
 	this.whiteSpaceManagement = "smart";
 
@@ -35,6 +37,8 @@ component {
 	this.mappings[ "/coldbox" ]     = _root & "lib/coldbox";
 	this.mappings[ "/modules" ]     = _root & "lib/modules";
 	this.mappings[ "/themes" ]      = _root & "themes";
+	this.mappings[ "/resources" ]   = _root & "resources";
+	this.mappings[ "/storage" ]     = _root & "storage";
 
 	/**
 	 * --------------------------------------------------------------------------

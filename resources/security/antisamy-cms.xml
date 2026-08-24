@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	AntiSamy policy for CMS content.
+
+	ColdFusion's bundled `antisamy-basic.xml` allows only a handful of tags —
+	no headings, no tables, no horizontal rules, no underline or strikethrough.
+	Sanitising with it silently deleted exactly the markup the rich text editor
+	produces, which would have destroyed authors' work without telling them.
+
+	This policy allows what an editor legitimately writes and nothing that can
+	execute. Deliberately absent: script, style, iframe, object, embed, form,
+	input, and every `on*` event attribute. `href` and `src` are constrained by
+	regexp, so `javascript:` cannot survive.
+
+	Images are permitted so that content stays intact if a Media library is
+	added later; nothing in the CMS produces them yet.
+-->
+<anti-samy-rules xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:noNamespaceSchemaLocation="antisamy.xsd">
+
+	<directives>
+		<directive name="omitXmlDeclaration"    value="true"/>
+		<directive name="omitDoctypeDeclaration" value="true"/>
+		<directive name="maxInputSize"          value="500000"/>
+		<directive name="useXHTML"              value="false"/>
+		<directive name="formatOutput"          value="false"/>
+		<directive name="embedStyleSheets"      value="false"/>
+	</directives>
+
+	<common-regexps>
+		<regexp name="htmlTitle"  value="[\p{L}\p{N}\s\-_',:\[\]!\./\\\(\)&amp;]*"/>
+		<regexp name="onsiteURL"  value="([\p{L}\p{N}\\/\.\?=\#&amp;;\-_~]+|\#(\w)+)"/>
+		<regexp name="offsiteURL" value="(\s)*((ht|f)tp(s?)://|mailto:)[\p{L}\p{N}]+[~\p{L}\p{N}\p{Zs}\-_\.@\#\$%&amp;;:,\?=/\+!\(\)]*(\s)*"/>
+		<regexp name="cssClass"   value="[a-zA-Z0-9\-_\s]+"/>
+		<regexp name="anything"   value=".*"/>
+		<regexp name="number"     value="\d+"/>
+		<regexp name="alignment"  value="(left|right|center|justify)"/>
+	</common-regexps>
+
+	<common-attributes>
+		<attribute name="lang" description="Language of the element's content">
+			<regexp-list><regexp value="[a-zA-Z]{2,20}"/></regexp-list>
+		</attribute>
+		<attribute name="title" description="Advisory title">
+			<regexp-list><regexp name="htmlTitle"/></regexp-list>
+		</attribute>
+		<attribute name="class" description="CSS class names">
+			<regexp-list><regexp name="cssClass"/></regexp-list>
+		</attribute>
+		<attribute name="dir" description="Text direction">
+			<literal-list><literal value="ltr"/><literal value="rtl"/></literal-list>
+		</attribute>
+		<!-- Declared here because AntiSamy requires any attribute a tag
+		     references to exist in this list. Deliberately carries no regexp:
+		     the value is validated by the CSS scanner against <css-rules>
+		     below, which allows nothing but width and height. It is NOT in
+		     <global-tag-attributes>, so only the tags that name it get it. -->
+		<attribute name="style" description="Inline CSS, checked against css-rules"/>
+	</common-attributes>
+
+	<global-tag-attributes>
+		<attribute name="lang"/>
+		<attribute name="title"/>
+		<attribute name="class"/>
+		<attribute name="dir"/>
+	</global-tag-attributes>
+
+	<tags-to-encode>
+		<tag>g</tag>
+		<tag>grin</tag>
+	</tags-to-encode>
+
+	<tag-rules>
+		<!-- Removed outright, contents and all. -->
+		<tag name="script"   action="remove"/>
+		<tag name="noscript" action="remove"/>
+		<tag name="style"    action="remove"/>
+		<tag name="iframe"   action="remove"/>
+		<tag name="frame"    action="remove"/>
+		<tag name="frameset" action="remove"/>
+		<tag name="noframes" action="remove"/>
+		<tag name="object"   action="remove"/>
+		<tag name="embed"    action="remove"/>
+		<tag name="applet"   action="remove"/>
+		<tag name="form"     action="remove"/>
+		<tag name="input"    action="remove"/>
+		<tag name="button"   action="remove"/>
+		<tag name="textarea" action="remove"/>
+		<tag name="select"   action="remove"/>
+		<tag name="option"   action="remove"/>
+		<tag name="meta"     action="remove"/>
+		<tag name="link"     action="remove"/>
+		<tag name="base"     action="remove"/>
+		<tag name="svg"      action="remove"/>
+		<tag name="math"     action="remove"/>
+
+		<!-- Structure -->
+		<tag name="p"          action="validate"/>
+		<tag name="div"        action="validate"/>
+		<tag name="span"       action="validate"/>
+		<tag name="br"         action="truncate"/>
+		<tag name="hr"         action="truncate"/>
+		<tag name="section"    action="validate"/>
+		<tag name="article"    action="validate"/>
+		<tag name="figure" action="validate">
+			<attribute name="style"/>
+		</tag>
+		<tag name="figcaption" action="validate"/>
+
+		<!-- Headings. The editor offers h2 and h3; the rest are allowed so
+		     pasted or imported content is not mangled. -->
+		<tag name="h1" action="validate"/>
+		<tag name="h2" action="validate"/>
+		<tag name="h3" action="validate"/>
+		<tag name="h4" action="validate"/>
+		<tag name="h5" action="validate"/>
+		<tag name="h6" action="validate"/>
+
+		<!-- Inline formatting -->
+		<tag name="b"      action="validate"/>
+		<tag name="strong"  action="validate"/>
+		<tag name="i"       action="validate"/>
+		<tag name="em"      action="validate"/>
+		<tag name="u"       action="validate"/>
+		<tag name="s"       action="validate"/>
+		<tag name="strike"  action="validate"/>
+		<tag name="del"     action="validate"/>
+		<tag name="ins"     action="validate"/>
+		<tag name="sub"     action="validate"/>
+		<tag name="sup"     action="validate"/>
+		<tag name="small"   action="validate"/>
+		<tag name="mark"    action="validate"/>
+		<tag name="code"    action="validate"/>
+		<tag name="pre"     action="validate"/>
+		<tag name="tt"      action="validate"/>
+		<tag name="kbd"     action="validate"/>
+		<tag name="samp"    action="validate"/>
+		<tag name="var"     action="validate"/>
+		<tag name="abbr"    action="validate"/>
+		<tag name="cite"    action="validate"/>
+		<tag name="q"       action="validate"/>
+		<tag name="blockquote" action="validate"/>
+
+		<!-- Lists -->
+		<tag name="ul" action="validate"/>
+		<tag name="ol" action="validate">
+			<attribute name="start"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="type"><regexp-list><regexp name="anything"/></regexp-list></attribute>
+		</tag>
+		<tag name="li" action="validate"/>
+		<tag name="dl" action="validate"/>
+		<tag name="dt" action="validate"/>
+		<tag name="dd" action="validate"/>
+
+		<!-- Tables -->
+		<tag name="table" action="validate">
+			<attribute name="summary"><regexp-list><regexp name="htmlTitle"/></regexp-list></attribute>
+		</tag>
+		<tag name="caption"  action="validate"/>
+		<tag name="thead"    action="validate"/>
+		<tag name="tbody"    action="validate"/>
+		<tag name="tfoot"    action="validate"/>
+		<tag name="colgroup" action="validate"/>
+		<tag name="col"      action="truncate"/>
+		<tag name="tr" action="validate"/>
+		<tag name="th" action="validate">
+			<attribute name="colspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="rowspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="scope"><regexp-list><regexp name="anything"/></regexp-list></attribute>
+		</tag>
+		<tag name="td" action="validate">
+			<attribute name="colspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="rowspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
+		</tag>
+
+		<!-- Links. The URL regexps are what stop `javascript:` surviving. -->
+		<tag name="a" action="validate">
+			<attribute name="href" onInvalid="removeAttribute">
+				<regexp-list>
+					<regexp name="onsiteURL"/>
+					<regexp name="offsiteURL"/>
+				</regexp-list>
+			</attribute>
+			<attribute name="rel"><regexp-list><regexp value="[a-zA-Z\s\-]+"/></regexp-list></attribute>
+			<attribute name="target">
+				<literal-list><literal value="_blank"/><literal value="_self"/></literal-list>
+			</attribute>
+		</tag>
+
+		<!-- Images: nothing produces them yet, but content survives a later
+		     Media library rather than being stripped on the next save. -->
+		<tag name="img" action="validate">
+			<attribute name="src" onInvalid="removeTag">
+				<regexp-list>
+					<regexp name="onsiteURL"/>
+					<regexp name="offsiteURL"/>
+				</regexp-list>
+			</attribute>
+			<attribute name="alt"><regexp-list><regexp name="htmlTitle"/></regexp-list></attribute>
+			<attribute name="width"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="height"><regexp-list><regexp name="number"/></regexp-list></attribute>
+			<attribute name="style"/>
+		</tag>
+	</tag-rules>
+
+	<css-rules>
+		<property name="text-align" default="left" description="Text alignment">
+			<literal-list>
+				<literal value="left"/><literal value="right"/>
+				<literal value="center"/><literal value="justify"/>
+			</literal-list>
+		</property>
+
+		<!-- What the editor's image resizer writes. Sizes only, and only as a
+		     percentage or a pixel count: enough to keep a resized image the
+		     size the author left it, with no room for positioning tricks that
+		     could put content over the rest of the page. -->
+		<property name="width" description="Image width">
+			<regexp-list>
+				<regexp value="[0-9]{1,3}(\.[0-9]{1,4})?%"/>
+				<regexp value="[0-9]{1,5}(\.[0-9]{1,4})?px"/>
+			</regexp-list>
+		</property>
+		<property name="height" description="Image height">
+			<regexp-list>
+				<regexp value="auto"/>
+				<regexp value="[0-9]{1,3}(\.[0-9]{1,4})?%"/>
+				<regexp value="[0-9]{1,5}(\.[0-9]{1,4})?px"/>
+			</regexp-list>
+		</property>
+	</css-rules>
+
+</anti-samy-rules>

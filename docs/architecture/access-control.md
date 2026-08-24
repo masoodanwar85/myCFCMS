@@ -287,13 +287,13 @@ All typed, so callers can branch instead of matching on message text.
 - BCrypt password hashing and verification.
 - `AuthorizationService`, integrated with `TenantContext`.
 - Default per-site roles, seeded idempotently.
-- 188 passing specs for Groups 1 and 2; 258 across Groups 1-3.
+- 188 passing specs for Groups 1 and 2; 346 across Groups 1-5.
 
 ## 8. What is intentionally postponed
 
 | Area | Why it waits |
 | --- | --- |
-| Login, sessions, JWT, "remember me" | Needs routing and the API layer to exist before session and token policy can be decided. `verifyPassword()` is the seam they will build on. |
+| Login and sessions | **Delivered in Group 5** — see [admin.md](admin.md). JWT still waits for the API layer. |
 | Password reset / email verification | Requires a mail layer, which does not exist. |
 | Rate limiting and lockout on failed attempts | Belongs with the login flow, not the data model. |
 | Audit log of permission changes | Real requirement eventually; needs its own table and a decision on retention. |

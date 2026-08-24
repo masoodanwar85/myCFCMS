@@ -23,6 +23,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					.$( "findById" )
 					.$( "hasChildren", false )
 					.$( "rewriteDescendantPaths", 0 )
+					.$( "findDescendants", [] )
 					.$( "delete" );
 
 				variables.siteRepo     = createStub().$( "findById", makeSite( 1 ) );
@@ -34,8 +35,11 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					.setSiteRepository( siteRepo )
 					.setUserRepository( userRepo )
 					.setSiteSettingsRepo( settingsRepo )
+					.setSanitizer( getInstance( "ContentSanitizer@core" ) )
 					.setSettings( { "homePageSettingKey" : "pages.homePageId" } )
 					.setInterceptorService( createStub().$( "announce" ) )
+					.setSlugifier( getInstance( "Slugifier@core" ) )
+					.setRedirects( createStub().$( "record" ).$( "recordAll" ) )
 					.setWirebox( getWireBox() );
 			} );
 
@@ -44,7 +48,9 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				it( "slugifies a title", function(){
 					expect( service.slugify( "About Us!" ) ).toBe( "about-us" );
 					expect( service.slugify( "  Our   Team  " ) ).toBe( "our-team" );
-					expect( service.slugify( "Bar & Grill" ) ).toBe( "bar-grill" );
+					// An ampersand is spelled out rather than dropped: "Bar & Grill"
+					// and "Bar Grill" are different names.
+					expect( service.slugify( "Bar & Grill" ) ).toBe( "bar-and-grill" );
 					// Non-ASCII titles are dropped rather than transliterated:
 					// "Cafe\u0301 Bar" would slug to "caf-bar". See the docs'
 					// postponed list — transliteration needs a per-locale answer.

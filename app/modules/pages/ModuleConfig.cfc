@@ -21,8 +21,10 @@ component {
 	this.modelNamespace = "pages";
 	this.autoMapModels  = true;
 
-	// No entry point yet: this module serves no URLs of its own in Group 3.
-	this.entryPoint        = "";
+	// The module serves no public URLs of its own — Core's front controller asks
+	// its content resolver instead. It does own its admin screens, so its entry
+	// point is the admin area rather than the site root.
+	this.entryPoint        = "admin/pages";
 	this.inheritEntryPoint = false;
 
 	this.dependencies = [ "core" ];
@@ -39,6 +41,8 @@ component {
 		 * Announced so later modules — menus, search indexing, cache
 		 * invalidation — can react without this module knowing they exist.
 		 */
+		routes = [ { pattern : "/:action?/:id?", handler : "Admin" } ];
+
 		interceptorSettings = {
 			customInterceptionPoints : [
 				"onPageCreated",
@@ -63,12 +67,69 @@ component {
 		wirebox
 			.getInstance( "ContentResolverRegistry@core" )
 			.register( "PageContentResolver@pages", 100 );
+
+		// Contribute the site's top-level pages to its public menu. Core asks
+		// every provider regardless of which module served the request, so the
+		// menu is the same on a page, a blog post and a 404.
+		wirebox
+			.getInstance( "SiteNavigationRegistry@core" )
+			.register( "PageNavigationProvider@pages", 10 );
+
+		// And to its sitemap. Same seam again: Core serves /sitemap.xml without
+		// knowing that pages exist.
+		wirebox
+			.getInstance( "SitemapRegistry@core" )
+			.register( "PageSitemapProvider@pages", 10 );
+
+		// The module's REST resource. Core builds the conventional routes from
+		// this, so `/api/v1/pages` appears without a line changing in the
+		// application router.
+		wirebox
+			.getInstance( "ApiRouteRegistry@core" )
+			.resource( name = "pages", module = "pages", handler = "Api", memberActions = "publish,unpublish" );
+
+		// And what a menu item may point at, so an editor can link to this
+		// module's content without Core knowing the content exists.
+		wirebox
+			.getInstance( "LinkTargetRegistry@core" )
+			.register( "PageLinkTargetProvider@pages", 10 );
+
+		// Contribute an admin section. The admin shell renders whatever is
+		// registered, so it needs no knowledge of this module.
+		wirebox
+			.getInstance( "AdminNavigationRegistry@core" )
+			.register(
+				label      = "Pages",
+				href       = "/admin/pages",
+				permission = "pages.view",
+				// First in CMS, and therefore the group's own position.
+				order      = 20,
+				group      = "CMS"
+			);
 	}
 
 	function onUnload(){
 		wirebox
 			.getInstance( "ContentResolverRegistry@core" )
 			.unregister( "PageContentResolver@pages" );
+
+		wirebox
+			.getInstance( "SiteNavigationRegistry@core" )
+			.unregister( "PageNavigationProvider@pages" );
+
+		wirebox
+			.getInstance( "SitemapRegistry@core" )
+			.unregister( "PageSitemapProvider@pages" );
+
+		wirebox.getInstance( "ApiRouteRegistry@core" ).unregister( "pages" );
+
+		wirebox
+			.getInstance( "LinkTargetRegistry@core" )
+			.unregister( "PageLinkTargetProvider@pages" );
+
+		wirebox
+			.getInstance( "AdminNavigationRegistry@core" )
+			.unregister( "/admin/pages" );
 	}
 
 }

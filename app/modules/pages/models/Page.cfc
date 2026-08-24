@@ -18,6 +18,32 @@ component accessors="true" {
 	property name="metaTitle"       type="string";
 	property name="metaDescription" type="string";
 	property name="sortOrder"       type="numeric";
+
+	// SEO and social. All optional: an empty value means "use the site
+	// default", which is what SeoService supplies.
+	property name="metaKeywords"     type="string";
+	property name="canonicalUrl"     type="string";
+	property name="robotsIndex"      type="boolean";
+	property name="robotsFollow"     type="boolean";
+	property name="ogTitle"          type="string";
+	property name="ogDescription"    type="string";
+	property name="ogImage"          type="string";
+	property name="ogType"           type="string";
+	property name="twitterCard"      type="string";
+
+	// Sitemap.
+	property name="sitemapInclude"    type="boolean";
+	property name="sitemapPriority"   type="numeric";
+	property name="sitemapChangefreq" type="string";
+
+	// Scheduling.
+	property name="publishFrom";
+	property name="publishUntil";
+
+	// Raw markup, guarded by `content.unfiltered`.
+	property name="headMarkup" type="string";
+	property name="bodyMarkup" type="string";
+	property name="jsonLd"     type="string";
 	property name="publishedAt";
 	property name="createdBy"       type="numeric";
 	property name="updatedBy"       type="numeric";
@@ -32,11 +58,90 @@ component accessors="true" {
 		variables.status    = this.STATUS_DRAFT;
 		variables.sortOrder = 0;
 		variables.content   = "";
+
+		// The behaviour that existed before these fields did, so a page created
+		// without touching the SEO tab presents exactly as it always has.
+		variables.robotsIndex       = true;
+		variables.robotsFollow      = true;
+		variables.ogType            = "website";
+		variables.twitterCard       = "summary_large_image";
+		variables.sitemapInclude    = true;
+		variables.sitemapPriority   = 0.5;
+		variables.sitemapChangefreq = "weekly";
+
 		return this;
 	}
 
 	boolean function isPublished(){
 		return variables.status == this.STATUS_PUBLISHED;
+	}
+
+	/**
+	 * Is this page inside its publication window right now?
+	 *
+	 * Separate from `isPublished()` on purpose. "Published" is an editor's
+	 * decision and is what the admin shows; "live" is that decision *plus* the
+	 * clock. A page scheduled for next Tuesday is published and not live, and
+	 * conflating the two would either hide it from its own author or serve it
+	 * early.
+	 */
+	boolean function isLive(){
+		if ( !isPublished() ) {
+			return false;
+		}
+
+		if ( !isNull( variables.publishFrom ) && dateCompare( now(), variables.publishFrom ) < 0 ) {
+			return false;
+		}
+
+		if ( !isNull( variables.publishUntil ) && dateCompare( now(), variables.publishUntil ) > 0 ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Why this page is not live, for the admin list. Empty when it is.
+	 */
+	string function getScheduleState(){
+		if ( !isPublished() ) {
+			return "";
+		}
+
+		if ( !isNull( variables.publishFrom ) && dateCompare( now(), variables.publishFrom ) < 0 ) {
+			return "scheduled";
+		}
+
+		if ( !isNull( variables.publishUntil ) && dateCompare( now(), variables.publishUntil ) > 0 ) {
+			return "expired";
+		}
+
+		return "";
+	}
+
+	/**
+	 * The `robots` directive this page asks for, or an empty string when it
+	 * wants the default.
+	 *
+	 * Only says something when it has something to say: emitting
+	 * `index, follow` on every page is noise, because it is what a crawler does
+	 * anyway in the absence of a tag.
+	 */
+	string function getRobotsDirective(){
+		// `isNull`, not `?:`. ColdFusion's elvis operator falls through on any
+		// falsy value, so `variables.robotsIndex ?: true` reads a stored
+		// `false` as `true` — and a page an editor had marked `noindex`
+		// rendered `index` while being correctly dropped from the sitemap. The
+		// two disagreed, and only the sitemap was right.
+		var index  = ( isNull( variables.robotsIndex ) || variables.robotsIndex ) ? "index" : "noindex";
+		var follow = ( isNull( variables.robotsFollow ) || variables.robotsFollow ) ? "follow" : "nofollow";
+
+		if ( index == "index" && follow == "follow" ) {
+			return "";
+		}
+
+		return index & ", " & follow;
 	}
 
 	boolean function isDraft(){
@@ -45,6 +150,22 @@ component accessors="true" {
 
 	boolean function isArchived(){
 		return variables.status == this.STATUS_ARCHIVED;
+	}
+
+	/**
+	 * Unset a date property.
+	 *
+	 * `setPublishFrom( "" )` would store an empty string, and passing a null
+	 * through a generated setter is not dependable across CFML engines — the
+	 * same reason `clearParent()` exists. An editor removing a schedule has to
+	 * actually remove it, or the page stays stuck outside its own window.
+	 */
+	function clearDate( required string property ){
+		if ( listFindNoCase( "publishFrom,publishUntil,publishedAt", arguments.property ) ) {
+			structDelete( variables, arguments.property );
+		}
+
+		return this;
 	}
 
 	/**

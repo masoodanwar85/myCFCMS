@@ -93,7 +93,17 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		string defaultValue = ""
 	){
 		var setting = findByKey( arguments.siteId, arguments.key );
-		return isNull( setting ) ? arguments.defaultValue : ( setting.getSettingValue() ?: "" );
+		if ( isNull( setting ) ) {
+			return arguments.defaultValue;
+		}
+
+		// Not `?: ""`. ColdFusion's elvis operator falls through on any *falsy*
+		// value, not just null — so a stored "false" or "0" came back as an
+		// empty string, and every caller then read it as "not set". A setting
+		// whose whole job is to hold a boolean could not be turned off.
+		var stored = setting.getSettingValue();
+
+		return isNull( stored ) ? "" : stored;
 	}
 
 	/**
@@ -111,7 +121,9 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.where( "site_id", arguments.siteId )
 			.get()
 			.each( ( row ) => {
-				settings[ row.setting_key ] = row.setting_value ?: "";
+				// Same reason as getValue(): "false" and "0" are values, not
+				// absences.
+				settings[ row.setting_key ] = isNull( row.setting_value ) ? "" : row.setting_value;
 			} );
 
 		return settings;
@@ -133,7 +145,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setId( arguments.row.id )
 			.setSiteId( arguments.row.site_id )
 			.setSettingKey( arguments.row.setting_key )
-			.setSettingValue( arguments.row.setting_value ?: "" )
+			.setSettingValue( isNull( arguments.row.setting_value ) ? "" : arguments.row.setting_value )
 			.setCreatedAt( arguments.row.created_at )
 			.setUpdatedAt( arguments.row.updated_at );
 	}

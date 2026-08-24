@@ -297,7 +297,9 @@ of this:
 | --- | --- |
 | Users, roles, permissions | **Delivered in Group 2** — see [access-control.md](access-control.md). |
 | Pages | **Delivered in Group 3** — see [pages.md](pages.md). |
-| Blog, News, Contact | Feature modules. Core must not know they exist. |
+| Blog | **Delivered in Group 6** — see [blog.md](blog.md). |
+| Contact | **Delivered in Group 7** — see [contact-and-editing.md](contact-and-editing.md). |
+| News | A feature module. Core must not know it exists. |
 | Themes | **Delivered in Group 4** — see [routing-and-themes.md](routing-and-themes.md). |
 | Media, SEO, menus, shortcodes | Later Core areas. |
 | REST API / GraphQL | The service layer is already shaped for them; no endpoints yet. |

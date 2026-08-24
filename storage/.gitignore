@@ -1,0 +1,3 @@
+# Uploaded media is site data, not source. Keep the directory, ignore contents.
+media/*
+!media/.gitkeep

@@ -57,7 +57,7 @@ component singleton accessors="true" {
 			.setSiteId( arguments.siteId )
 			.setName( trim( arguments.name ) )
 			.setEmail( emailAddress )
-			.setPasswordHash( passwordService.hash( arguments.password ) )
+			.setPasswordHash( passwordService.hashPassword( arguments.password ) )
 			.setStatus( arguments.status );
 
 		return userRepository.create( user );
@@ -94,7 +94,7 @@ component singleton accessors="true" {
 			.getInstance( "User@core" )
 			.setName( trim( arguments.name ) )
 			.setEmail( emailAddress )
-			.setPasswordHash( passwordService.hash( arguments.password ) )
+			.setPasswordHash( passwordService.hashPassword( arguments.password ) )
 			.setStatus( arguments.status );
 
 		return userRepository.create( user );
@@ -161,7 +161,7 @@ component singleton accessors="true" {
 
 		userRepository.updatePasswordHash(
 			arguments.userId,
-			passwordService.hash( arguments.newPassword )
+			passwordService.hashPassword( arguments.newPassword )
 		);
 
 		return this;
@@ -273,8 +273,16 @@ component singleton accessors="true" {
 		return userRepository.findSuperAdminByEmail( normalizeEmail( arguments.email ) );
 	}
 
-	array function getUsersForSite( required numeric siteId ){
-		return userRepository.findBySiteId( arguments.siteId );
+	array function getUsersForSite(
+		required numeric siteId,
+		numeric limit  = 25,
+		numeric offset = 0
+	){
+		return userRepository.findBySiteId( arguments.siteId, arguments.limit, arguments.offset );
+	}
+
+	numeric function countUsersForSite( required numeric siteId ){
+		return userRepository.countBySiteId( arguments.siteId );
 	}
 
 	array function getSuperAdmins(){

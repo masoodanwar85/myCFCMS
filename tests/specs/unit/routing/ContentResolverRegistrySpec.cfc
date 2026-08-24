@@ -114,6 +114,8 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			describe( "normalising a resolution", function(){
 
+				// Navigation is deliberately absent: it is site chrome and comes
+				// from SiteNavigationRegistry, not from a content resolver.
 				it( "fills in every key a theme may rely on", function(){
 					injector.$( "getInstance", createStub().$( "resolveContent", { title : "Bare" } ) );
 					registry.register( "sparse" );
@@ -123,7 +125,6 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					expect( result.view ).toBe( "page" );
 					expect( result.args ).toBeEmpty();
 					expect( result.metaDescription ).toBe( "" );
-					expect( result.navigation ).toBeEmpty();
 					expect( result.statusCode ).toBe( 200 );
 				} );
 

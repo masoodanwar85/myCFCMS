@@ -29,6 +29,10 @@ Groups 1–3 built the pieces. This one connects them:
    theme view + layout                 HTML
 ```
 
+The live request — bootstrap, reserved prefixes, POST, redirects, navigation
+and the 404 policies — is walked end to end in
+[frontend-request.md](frontend-request.md).
+
 Two decisions Group 1 deliberately postponed are settled here, because they are
 routing decisions and routing did not exist yet:
 
@@ -94,6 +98,51 @@ what a page tree is, and it does not.
 
 Resolutions are normalised on the way out, so every key is present and a theme
 never has to defend against a missing one.
+
+### Navigation is not a resolver's business
+
+A content resolver describes **content**. The site's menu is **chrome**, and it
+comes from a second registry.
+
+That distinction was learned the hard way: navigation was originally part of the
+resolution, supplied by whichever module answered the URL. The Pages resolver
+built it from the page tree, and the Blog resolver — which cannot see the page
+tree, and should not be able to — supplied nothing. The result was a menu that
+appeared on pages and silently vanished on the blog.
+
+`SiteNavigationRegistry` fixes the shape rather than the symptom. Core asks
+every registered provider, independently of what served the request:
+
+```cfc
+// app/modules/pages/ModuleConfig.cfc
+wirebox.getInstance( "SiteNavigationRegistry@core" )
+       .register( "PageNavigationProvider@pages", 10 );
+```
+
+A provider answers one method:
+
+```cfc
+array getNavigationItems( numeric siteId )
+// -> [ { label : "About", href : "/about", order : 1 } ]
+```
+
+Items are **structs, not entities**. A theme should not have to know that one
+item is a Page and another is a module's landing link, and a module contributing
+an entry should not have to invent an entity to do it.
+
+Items are merged and sorted by each item's own `order`, then by label — so a
+module's entry can sit between two pages rather than being stuck after whichever
+provider ran last. The menu is now identical on a page, a blog post, a category
+archive and a 404.
+
+Blog contributes a single `Blog` entry, and only when the site has a published
+post: an empty archive in the menu is a dead end. There is no menu management
+yet — Menus remains a postponed Core area — so a module contributing its own
+landing link is how its section becomes findable at all. When menu editing
+arrives, these become defaults an editor can remove.
+
+A provider that throws is skipped with a warning rather than taking the page
+down: a broken menu is a poor experience, a blank site is worse.
 
 ---
 
@@ -184,18 +233,64 @@ Admin and API areas will take reserved prefixes here in the same way.
 | Area | Why it waits |
 | --- | --- |
 | Page caching / static output | Explicitly out of scope. Every request currently resolves and renders from scratch. This is the obvious first place to measure once there is real traffic. |
-| Admin UI | Still services only. Nothing edits content through a browser yet. |
-| Permission checks on the front end | Public pages need none. They arrive with the admin area, which is where `AuthorizationService` gets wired to a request boundary. |
+| Admin UI | **Delivered in Group 5** — see [admin.md](admin.md). |
+| Permission checks on the front end | Public pages need none. The admin area wired `AuthorizationService` to a request boundary in Group 5. |
 | Sitemap, robots.txt, canonical URLs | SEO is its own Core area. `site_domains.is_primary` already records the canonical host for it. |
-| Redirects and URL history | Renaming a page silently breaks its old URL. A `page_redirects` table is the natural fix and belongs with the admin UI that makes renaming easy. |
+| Redirect management UI | Redirects are recorded automatically on rename (see below); an editor cannot yet add or remove one by hand. |
 | Per-site timezone in output | `sites.timezone` is stored and unused. Nothing currently renders a date; when something does, it formats in the site's zone. See the datetime note in [pages.md](pages.md). |
 | Theme assets pipeline | Themes are self-contained CFML and inline CSS. Bundling, fingerprinting and a CDN are a later concern. |
 | Multiple layouts per theme | `renderLayout` already takes a layout name; nothing chooses a non-`main` one yet. |
+| Menu management | Navigation is assembled from providers, and a site cannot yet reorder or hide entries. That is the Menus area, and `SiteNavigationRegistry` is what it will build on. |
+| Marking the current item in the menu | Providers return `label`, `href` and `order`; nothing tells a theme which entry matches the current URL. |
 | Localisation | `sites.locale` reaches the `<html lang>` attribute and stops there. |
 
 ---
 
-## 7. Trying it
+## 7. Old URLs after content moves
+
+Renaming a page moved its URL and every URL beneath it, and nothing recorded the
+old one. Links a client had already published, and everything a search engine had
+indexed, began returning 404 the moment an editor tidied a title. Silent damage
+to work that was already correct.
+
+`site_redirects` and `RedirectService` now record the move. Core's front
+controller consults them **before** serving a 404, so an unknown path is still a
+404 and only a genuinely moved one redirects.
+
+Redirects live in Core, not in Pages: any module's content can move, and a
+visitor arriving on an old URL has no idea which module used to answer it. Both
+Pages and Blog record their own moves through it.
+
+The hard part is not storing a row — it is not accumulating a maze. Recording
+`A -> B`:
+
+1. **removes any redirect away from B**, because B resolves on its own now and a
+   redirect from it would be a loop;
+2. **repoints anything already aimed at A** so it aims at B, collapsing chains
+   instead of following them at request time;
+3. replaces any existing redirect from A.
+
+That order matters, and getting it wrong was not theoretical: with the repoint
+first, renaming a page **back** to a name it held before turned an existing row
+into a redirect to itself and the write failed outright. A `CHECK` constraint
+refuses a self-redirect at the database level too, so the invariant does not
+depend on the service alone.
+
+Renaming a parent records a redirect for every descendant as well, computed from
+the same prefix swap the database rewrite performs, so the two cannot drift.
+
+## 8. Encoding URLs in a theme
+
+Use `xmlFormat()` for a URL in an attribute, and `encodeForHTML()` for text.
+
+ColdFusion's `encodeForHTML` and `encodeForHTMLAttribute` both entity-encode `/`,
+`?` and `=`, so a path came out as `href="&##x2f;about&##x2f;team"`. Browsers
+decode that and the link works, which is exactly why it survived unnoticed —
+it is only visible when you read the markup. `xmlFormat` escapes `&`, `<`, `>`
+and `"`, which is what a double-quoted attribute actually needs, and leaves the
+path readable.
+
+## 9. Trying it
 
 Add a domain to a site, publish a page, and request it:
 

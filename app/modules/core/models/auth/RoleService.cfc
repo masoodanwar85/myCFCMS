@@ -7,6 +7,7 @@
 component singleton accessors="true" {
 
 	property name="roleRepository"       inject="RoleRepository@core";
+	property name="slugifier"        inject="Slugifier@core";
 	property name="permissionRepository" inject="PermissionRepository@core";
 	property name="siteRepository"       inject="SiteRepository@core";
 	property name="wirebox"              inject="wirebox";
@@ -288,11 +289,9 @@ component singleton accessors="true" {
 	}
 
 	string function slugify( required string value ){
-		var slug = lCase( trim( arguments.value ) );
-		slug     = reReplace( slug, "[^a-z0-9]+", "-", "all" );
-		slug     = reReplace( slug, "^-+|-+$", "", "all" );
-
-		return slug;
+		// Delegated: five copies of this each dropped accented
+		// characters instead of transliterating them.
+		return slugifier.slugify( arguments.value );
 	}
 
 	private function requireRole( required numeric roleId ){

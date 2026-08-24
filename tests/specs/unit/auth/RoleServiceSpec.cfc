@@ -33,6 +33,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					.setRoleRepository( roleRepo )
 					.setPermissionRepository( permissionRepo )
 					.setSiteRepository( siteRepo )
+					.setSlugifier( getInstance( "Slugifier@core" ) )
 					.setWirebox( getWireBox() );
 			} );
 

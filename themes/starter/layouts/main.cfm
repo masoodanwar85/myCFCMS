@@ -5,9 +5,10 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>#encodeForHTML( args.title )#</title>
-	<cfif len( args.metaDescription )>
-		<meta name="description" content="#encodeForHTML( args.metaDescription )#">
+	<cfif len( args.seo.description ?: args.metaDescription )>
+		<meta name="description" content="#xmlFormat( args.seo.description ?: args.metaDescription )#">
 	</cfif>
+	<cfinclude template="/core/views/seo/_head.cfm">
 	<style>
 		body { margin:0; font:16px/1.7 Georgia, "Times New Roman", serif; background:##faf8f4; color:##2b2b2b; }
 		.sheet { max-width:38rem; margin:0 auto; padding:3rem 1.25rem; }
@@ -20,12 +21,12 @@
 	<div class="sheet" data-theme="starter">
 		<p class="brand">#encodeForHTML( args.site.getName() )#</p>
 		<nav>
-			<cfloop array="#args.navigation#" index="item">
-				<a href="/#encodeForHTML( item.getPath() )#">#encodeForHTML( item.getTitle() )#</a>
-			</cfloop>
+			<cfset local.navItems = args.navigation>
+			<cfinclude template="/core/views/menu/_nav.cfm">
 		</nav>
 		<main>#args.body#</main>
 	</div>
+	<cfinclude template="/core/views/seo/_body.cfm">
 </body>
 </html>
 </cfoutput>

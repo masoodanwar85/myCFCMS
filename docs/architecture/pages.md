@@ -161,10 +161,10 @@ all resolve to the same page.
 | Area | Why it waits |
 | --- | --- |
 | Routing and rendering | **Delivered in Group 4.** The module still registers no routes; it supplies a content resolver that Core asks. See [routing-and-themes.md](routing-and-themes.md). |
-| Permission checks inside the service | `PageService` does not call `AuthorizationService`. Enforcement belongs at the request boundary — a handler or API endpoint — not buried in a service that CLI tasks and migrations also call. |
+| Permission checks inside the service | Still deliberate. Enforcement arrived in Group 5 at the request boundary — see [admin.md](admin.md) — leaving the service callable by CLI tasks and migrations. |
 | Revisions / version history | A real requirement, and a table of its own. No use case demands it yet. |
 | Scheduled publishing | `published_at` records when a page went live, not a future intent. Scheduling needs a job runner, which is explicitly out of scope. |
-| Slug transliteration | `slugify` strips non-ASCII rather than transliterating, so an accented title loses those characters. Doing it properly is per-locale, and `sites.locale` exists to inform that — worth revisiting when a non-English client lands. |
+| Slug transliteration for non-Latin scripts | Latin accents now transliterate (`Café Münster` → `cafe-muenster`) via Core's `Slugifier`. Scripts with no Latin equivalent — Greek, Cyrillic, CJK — still drop out, and a title entirely in one produces an empty slug the author must fill in. |
 | Templates / layouts per page | Belongs with themes. |
 | Content blocks, shortcodes | Core areas of their own. |
 | Full-text search | Needs a decision on MySQL full-text versus an external index. |
