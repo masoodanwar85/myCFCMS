@@ -52,6 +52,7 @@ Architecture documentation:
 - [media-and-mail.md](docs/architecture/media-and-mail.md) — uploads, safe file serving, and the mail layer.
 - [seo-and-menus.md](docs/architecture/seo-and-menus.md) — canonical addresses, sitemaps, robots, and editable navigation.
 - [shortcodes-and-api.md](docs/architecture/shortcodes-and-api.md) — shortcode expansion, API tokens, and the REST boundary.
+- [deployment/apache-modjk.md](docs/deployment/apache-modjk.md) — deploying behind Apache + mod_jk, and why the rewrite rules cannot live in `.htaccess`.
 
 Each records what is implemented and what is deliberately postponed.
 

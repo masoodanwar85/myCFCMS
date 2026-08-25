@@ -162,17 +162,58 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					menus.deleteItem( parent.getId(), site.getId() );
 				} );
 
-				it( "refuses a third level", function(){
-					var parent = addUrlItem( "P", "/p" );
-					var child  = menus.addItem( menuId = menu.getId(), siteId = site.getId(),
-						label = "C", linkType = "url", url = "/c", parentId = parent.getId() );
+				it( "nests four levels deep", function(){
+					// A firm with per-service, per-region and per-suburb pages
+					// has a genuine four-level structure. Capping at two meant
+					// the menu could not describe the site it belonged to.
+					var level = addUrlItem( "L1", "/l1" );
+					var first = level.getId();
+
+					for ( var depth = 2; depth <= 4; depth++ ) {
+						level = menus.addItem(
+							menuId   = menu.getId(),
+							siteId   = site.getId(),
+							label    = "L" & depth,
+							linkType = "url",
+							url      = "/l" & depth,
+							parentId = level.getId()
+						);
+					}
+
+					var tree = menus.getRenderableMenu( site.getId() ).filter( ( i ) => i.getLabel() == "L1" )[ 1 ];
+
+					expect( tree.getChildren()[ 1 ].getLabel() ).toBe( "L2" );
+					expect( tree.getChildren()[ 1 ].getChildren()[ 1 ].getLabel() ).toBe( "L3" );
+					expect( tree.getChildren()[ 1 ].getChildren()[ 1 ].getChildren()[ 1 ].getLabel() ).toBe( "L4" );
+
+					menus.deleteItem( first, site.getId() );
+				} );
+
+				it( "refuses a fifth level", function(){
+					// The cap is what stops a menu becoming a tree nobody can
+					// render or navigate.
+					var level = addUrlItem( "D1", "/d1" );
+					var first = level.getId();
+
+					for ( var depth = 2; depth <= 4; depth++ ) {
+						level = menus.addItem(
+							menuId   = menu.getId(),
+							siteId   = site.getId(),
+							label    = "D" & depth,
+							linkType = "url",
+							url      = "/d" & depth,
+							parentId = level.getId()
+						);
+					}
+
+					var deepest = level.getId();
 
 					expect( function(){
 						menus.addItem( menuId = menu.getId(), siteId = site.getId(),
-							label = "GC", linkType = "url", url = "/gc", parentId = child.getId() );
+							label = "D5", linkType = "url", url = "/d5", parentId = deepest );
 					} ).toThrow( type = "Menu.TooDeep" );
 
-					menus.deleteItem( parent.getId(), site.getId() );
+					menus.deleteItem( first, site.getId() );
 				} );
 
 				it( "deletes children with their parent", function(){

@@ -1,0 +1,528 @@
+[
+ {
+  "title": "Home",
+  "slug": "",
+  "children": []
+ },
+ {
+  "title": "About Us",
+  "slug": "about-us",
+  "children": []
+ },
+ {
+  "title": "Our Solicitor",
+  "slug": "our-solicitor",
+  "children": []
+ },
+ {
+  "title": "Legal Services",
+  "slug": "legal-services",
+  "children": [
+   {
+    "title": "Estate Planning",
+    "slug": "estate-planning",
+    "children": [
+     {
+      "title": "Estate Planning - Sydney West",
+      "slug": "estate-planning-sydney-west",
+      "children": [
+       {
+        "title": "Estate Planning - Newington",
+        "slug": "estate-planning-newington",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Parramatta",
+        "slug": "estate-planning-parramatta",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Estate Planning - Blue Mountains",
+      "slug": "estate-planning-blue-mountains",
+      "children": [
+       {
+        "title": "Estate Planning - Katoomba",
+        "slug": "estate-planning-katoomba",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Leura",
+        "slug": "estate-planning-leura",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Estate Planning - Central West NSW",
+      "slug": "estate-planning-central-west-nsw",
+      "children": [
+       {
+        "title": "Estate Planning - Parkes",
+        "slug": "estate-planning-parkes",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Forbes",
+        "slug": "estate-planning-forbes",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Orange",
+        "slug": "estate-planning-orange",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Bathurst",
+        "slug": "estate-planning-bathurst",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Estate Planning - Central Coast NSW",
+      "slug": "estate-planning-central-coast-nsw",
+      "children": [
+       {
+        "title": "Estate Planning - Avoca Beach",
+        "slug": "estate-planning-avoca-beach",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - North Avoca",
+        "slug": "estate-planning-north-avoca",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Terrigal",
+        "slug": "estate-planning-terrigal",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Erina",
+        "slug": "estate-planning-erina",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Gosford",
+        "slug": "estate-planning-gosford",
+        "children": []
+       },
+       {
+        "title": "Estate Planning - Ettalong Beach",
+        "slug": "estate-planning-ettalong-beach",
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Wills",
+    "slug": "wills",
+    "children": [
+     {
+      "title": "Wills - Sydney West",
+      "slug": "wills-sydney-west",
+      "children": [
+       {
+        "title": "Wills - Parramatta",
+        "slug": "wills-parramatta",
+        "children": []
+       },
+       {
+        "title": "Wills - Newington",
+        "slug": "wills-newington",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Wills - Blue Mountains",
+      "slug": "wills-blue-mountains",
+      "children": [
+       {
+        "title": "Wills - Katoomba",
+        "slug": "wills-katoomba",
+        "children": []
+       },
+       {
+        "title": "Wills - Leura",
+        "slug": "wills-leura",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Wills - Central West NSW",
+      "slug": "wills-central-west-nsw",
+      "children": [
+       {
+        "title": "Wills - Parkes",
+        "slug": "wills-parkes",
+        "children": []
+       },
+       {
+        "title": "Wills - Forbes",
+        "slug": "wills-forbes",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Wills - Central Coast NSW",
+      "slug": "wills-central-coast-nsw",
+      "children": [
+       {
+        "title": "Wills - Avoca",
+        "slug": "wills-avoca",
+        "children": []
+       },
+       {
+        "title": "Wills - North Avoca",
+        "slug": "wills-north-avoca",
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Creating a Will",
+    "slug": "creating-a-will",
+    "children": []
+   },
+   {
+    "title": "Power of Attorney",
+    "slug": "power-of-attorney",
+    "children": []
+   },
+   {
+    "title": "Enduring Guardian",
+    "slug": "enduring-guardian",
+    "children": []
+   },
+   {
+    "title": "Probate",
+    "slug": "probate",
+    "children": [
+     {
+      "title": "Probate - Sydney West",
+      "slug": "probate-sydney-west",
+      "children": [
+       {
+        "title": "Probate - Parramatta",
+        "slug": "probate-parramatta",
+        "children": []
+       },
+       {
+        "title": "Probate - Newington",
+        "slug": "probate-newington",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Probate - Blue Mountains",
+      "slug": "probate-blue-mountains",
+      "children": [
+       {
+        "title": "Probate - Katoomba",
+        "slug": "probate-katoomba",
+        "children": []
+       },
+       {
+        "title": "Probate - Leura",
+        "slug": "probate-leura",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Probate - Central West NSW",
+      "slug": "probate-central-west-nsw",
+      "children": [
+       {
+        "title": "Probate - Parkes",
+        "slug": "probate-parkes",
+        "children": []
+       },
+       {
+        "title": "Probate - Forbes",
+        "slug": "probate-forbes",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Probate - Central Coast NSW",
+      "slug": "probate-central-coast-nsw",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Letters of Administration",
+    "slug": "letters-of-administration",
+    "children": []
+   },
+   {
+    "title": "How it Works",
+    "slug": "how-it-works",
+    "children": []
+   },
+   {
+    "title": "Property Law",
+    "slug": "property-law",
+    "children": [
+     {
+      "title": "Property Transmissions",
+      "slug": "property-transmissions",
+      "children": []
+     },
+     {
+      "title": "Conveyancing - Sales",
+      "slug": "conveyancing-sales",
+      "children": []
+     },
+     {
+      "title": "Conveyancing - Purchases",
+      "slug": "conveyancing-purchases",
+      "children": []
+     },
+     {
+      "title": "Leasing",
+      "slug": "leasing",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Contracts",
+    "slug": "contracts",
+    "children": []
+   },
+   {
+    "title": "Non-Disclosure Agreements (NDA)",
+    "slug": "non-disclosure-agreements-nda",
+    "children": []
+   }
+  ]
+ },
+ {
+  "title": "will-wizard",
+  "slug": "will-wizard",
+  "children": []
+ },
+ {
+  "title": "Legal Resources",
+  "slug": "legal-resources",
+  "children": []
+ },
+ {
+  "title": "Registration",
+  "slug": "registration",
+  "children": []
+ },
+ {
+  "title": "Locations",
+  "slug": "locations",
+  "children": [
+   {
+    "title": "Parramatta & Sydney West",
+    "slug": "parramatta-sydney-west",
+    "children": [
+     {
+      "title": "Guildford",
+      "slug": "guildford",
+      "children": []
+     },
+     {
+      "title": "Merrylands",
+      "slug": "merrylands",
+      "children": []
+     },
+     {
+      "title": "Newington",
+      "slug": "newington",
+      "children": []
+     },
+     {
+      "title": "Parramatta",
+      "slug": "parramatta",
+      "children": [
+       {
+        "title": "Estate Planning",
+        "slug": "estate-planning",
+        "children": []
+       }
+      ]
+     },
+     {
+      "title": "Wentworthville",
+      "slug": "wentworthville",
+      "children": []
+     },
+     {
+      "title": "Westmead",
+      "slug": "westmead",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Blue Mountains",
+    "slug": "blue-mountains",
+    "children": [
+     {
+      "title": "Blackheath",
+      "slug": "blackheath",
+      "children": []
+     },
+     {
+      "title": "Blaxland",
+      "slug": "blaxland",
+      "children": []
+     },
+     {
+      "title": "Faulconbridge",
+      "slug": "faulconbridge",
+      "children": []
+     },
+     {
+      "title": "Katoomba",
+      "slug": "katoomba",
+      "children": []
+     },
+     {
+      "title": "Leura",
+      "slug": "leura",
+      "children": []
+     },
+     {
+      "title": "Springwood",
+      "slug": "springwood",
+      "children": []
+     },
+     {
+      "title": "Wentworth Falls",
+      "slug": "wentworth-falls",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Hawkesbury",
+    "slug": "hawkesbury",
+    "children": [
+     {
+      "title": "Richmond",
+      "slug": "richmond",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Hills District",
+    "slug": "hills-district",
+    "children": [
+     {
+      "title": "Castle Hill",
+      "slug": "castle-hill",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Central West",
+    "slug": "central-west",
+    "children": [
+     {
+      "title": "Bathurst",
+      "slug": "bathurst",
+      "children": []
+     },
+     {
+      "title": "Dubbo",
+      "slug": "dubbo",
+      "children": []
+     },
+     {
+      "title": "Forbes",
+      "slug": "forbes",
+      "children": []
+     },
+     {
+      "title": "Manildra",
+      "slug": "manildra",
+      "children": []
+     },
+     {
+      "title": "Orange",
+      "slug": "orange",
+      "children": []
+     },
+     {
+      "title": "Parkes",
+      "slug": "parkes",
+      "children": []
+     },
+     {
+      "title": "Peak Hill",
+      "slug": "peak-hill",
+      "children": []
+     }
+    ]
+   },
+   {
+    "title": "Central Coast NSW",
+    "slug": "central-coast-nsw",
+    "children": [
+     {
+      "title": "Ettalong Beach",
+      "slug": "ettalong-beach",
+      "children": []
+     },
+     {
+      "title": "North Avoca",
+      "slug": "north-avoca",
+      "children": []
+     },
+     {
+      "title": "Terrigal",
+      "slug": "terrigal",
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "title": "Blog",
+  "slug": "blog",
+  "children": [
+   {
+    "title": "Demystifying Estate Planning",
+    "slug": "demystifying-estate-planning",
+    "children": []
+   }
+  ]
+ },
+ {
+  "title": "Create your Will",
+  "slug": "create-your-will",
+  "children": [
+   {
+    "title": "What we Prepare",
+    "slug": "what-we-prepare",
+    "children": []
+   }
+  ]
+ },
+ {
+  "title": "Contact Us",
+  "slug": "contact-us",
+  "children": []
+ }
+]

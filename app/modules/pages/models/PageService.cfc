@@ -779,7 +779,11 @@ component singleton accessors="true" {
 	 * ------------------------------------------------------------------ */
 
 	boolean function isValidStatus( required string status ){
-		return [ "draft", "published", "archived" ].findNoCase( arguments.status ) > 0;
+		// `listFindNoCase` rather than a member call on an array literal.
+		// ColdFusion 2025 parses `[ "a", "b" ].findNoCase( x )`; 2023 does not,
+		// and fails to compile the whole component with an error pointing at
+		// whatever follows rather than at the literal.
+		return listFindNoCase( "draft,published,archived", arguments.status ) > 0;
 	}
 
 	string function slugify( required string value ){

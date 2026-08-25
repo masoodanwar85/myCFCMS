@@ -23,9 +23,20 @@ component singleton accessors="true" {
 	// The menu a theme renders in the header unless it asks for another.
 	this.PRIMARY = "primary";
 
-	// One level of children. Deeper menus are a design problem rather than a
-	// data one: a theme has to render them, and almost none do it well.
-	variables.MAX_DEPTH = 2;
+	/**
+	 * How many levels a menu may nest.
+	 *
+	 * Was 2, on the reasoning that deeper menus are a design problem rather
+	 * than a data one. That is still true of most sites and was wrong about
+	 * this one: a firm with per-service, per-region and per-suburb pages has a
+	 * genuine four-level structure, and capping it at two meant the menu could
+	 * not describe the site it belonged to.
+	 *
+	 * Four rather than unlimited, because the cap is what stops a menu becoming
+	 * a tree nobody can render or navigate, and because a cycle in the parent
+	 * chain would otherwise be an infinite loop rather than an error.
+	 */
+	variables.MAX_DEPTH = 4;
 
 	variables.LINK_TYPES = "url,content";
 	variables.TARGETS    = ",_blank";
@@ -173,10 +184,17 @@ component singleton accessors="true" {
 
 			// Depth is capped at the point of insertion, not at render time: a
 			// theme should never receive a shape it has no markup for.
-			if ( val( parent.getParentId() ?: 0 ) ) {
+			//
+			// Walking the ancestor chain rather than checking whether the
+			// parent has a parent — that shortcut only ever worked for a cap of
+			// two, and would have silently allowed unlimited nesting the moment
+			// the cap moved.
+			var parentDepth = depthOf( parent );
+
+			if ( parentDepth + 1 > variables.MAX_DEPTH ) {
 				throw(
 					type    = "Menu.TooDeep",
-					message = "Menus go #variables.MAX_DEPTH# levels deep. [#parent.getLabel()#] is already a sub-item."
+					message = "Menus go #variables.MAX_DEPTH# levels deep. [#parent.getLabel()#] is already at level #parentDepth#."
 				);
 			}
 
@@ -467,6 +485,32 @@ component singleton accessors="true" {
 		}
 
 		return roots;
+	}
+
+	/**
+	 * How deep an item sits, counting from 1 for a top-level item.
+	 *
+	 * Bounded by MAX_DEPTH + 1 so a parent chain that somehow forms a cycle —
+	 * corrupted data, a bad import — terminates with a refusal rather than
+	 * spinning. The chain cannot be built through this service, which is
+	 * exactly why the guard belongs here rather than being assumed away.
+	 */
+	private numeric function depthOf( required any item ){
+		var depth   = 1;
+		var current = arguments.item;
+
+		while ( val( current.getParentId() ?: 0 ) && depth <= variables.MAX_DEPTH + 1 ) {
+			var parent = menuRepository.findItemById( current.getParentId() );
+
+			if ( isNull( parent ) ) {
+				break;
+			}
+
+			depth++;
+			current = parent;
+		}
+
+		return depth;
 	}
 
 	private function requireMenu( required numeric menuId, required numeric siteId ){

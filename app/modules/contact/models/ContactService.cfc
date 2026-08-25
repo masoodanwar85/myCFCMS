@@ -274,7 +274,11 @@ component singleton accessors="true" {
 	 * @throws Contact.InvalidStatus
 	 */
 	function setStatus( required numeric submissionId, required string status ){
-		if ( ![ "new", "read", "spam" ].findNoCase( arguments.status ) ) {
+		// `listFindNoCase` rather than a member call on an array literal.
+		// ColdFusion 2025 parses `[ "a", "b" ].findNoCase( x )`; 2023 does not,
+		// and fails to compile the whole component with an error pointing at
+		// whatever follows rather than at the literal.
+		if ( !listFindNoCase( "new,read,spam", arguments.status ) ) {
 			throw( type = "Contact.InvalidStatus", message = "Unknown status [#arguments.status#]." );
 		}
 
