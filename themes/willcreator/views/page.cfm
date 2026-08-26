@@ -5,6 +5,7 @@
 	is impossible to place without them.
 --->
 <cfif args.breadcrumb.len() gt 1>
+	<div class="wrap">
 	<p class="crumbs">
 		<cfloop array="#args.breadcrumb#" index="crumb">
 			<cfif crumb.getId() neq args.page.getId()>
@@ -15,10 +16,13 @@
 			</cfif>
 		</cfloop>
 	</p>
+</div>
 </cfif>
 
-<article class="section">
-	<h1>#encodeForHTML( args.page.getTitle() )#</h1>
-	#args.page.getContent()#
-</article>
+<section class="section">
+	<div class="wrap">
+		<h1>#encodeForHTML( args.page.getTitle() )#</h1>
+		#args.page.getContent()#
+	</div>
+</section>
 </cfoutput>

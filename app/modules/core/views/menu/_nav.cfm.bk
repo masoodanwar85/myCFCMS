@@ -25,10 +25,10 @@
 <cfset local.navLevels[ local.navDepth ] = local.navItems>
 
 <cfif arrayLen( local.navLevels[ local.navDepth ] )>
-	<ul <cfif local.navDepth EQ 1>id="navPrimary" class="navbar-nav mr-auto nav-level nav-level-#local.navDepth#" <cfelse> class="dropdown-menu" </cfif>>
+	<ul class="nav-level nav-level-#local.navDepth#">
 		<cfloop array="#local.navLevels[ local.navDepth ]#" index="local.navItem">
 			<cfset local.navKids = structKeyExists( local.navItem, "children" ) ? local.navItem.children : []>
-			<li<cfif arrayLen( local.navKids )> class="nav-item dropdown has-children" <cfelse> class="nav-item" </cfif>>
+			<li<cfif arrayLen( local.navKids )> class="has-children"</cfif>>
 				<cfinclude template="/core/views/menu/_link.cfm">
 
 				<cfif arrayLen( local.navKids )>
