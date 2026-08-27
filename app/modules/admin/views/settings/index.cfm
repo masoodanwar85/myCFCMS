@@ -79,7 +79,7 @@
 		<div>
 			<label for="baseUrl">Site address</label>
 			<input type="text" id="baseUrl" name="baseUrl"
-			       value="#encodeForHTMLAttribute( prc.settings[ 'seo.baseUrl' ] ?: '' )#"
+			       value="#encodeForHTMLAttribute( prc.seoBaseUrlSetting )#"
 			       placeholder="#encodeForHTMLAttribute( prc.seoBaseUrl )#">
 			<p class="muted" style="font-size:.8rem">
 				Used for canonical tags, social previews and the sitemap. Leave blank to use the
@@ -92,7 +92,7 @@
 		<div>
 			<label for="defaultImage">Default social image</label>
 			<input type="text" id="defaultImage" name="defaultImage"
-			       value="#encodeForHTMLAttribute( prc.settings[ 'seo.defaultImage' ] ?: '' )#"
+			       value="#encodeForHTMLAttribute( prc.seoDefaultImage )#"
 			       placeholder="/media/2026/08/preview.png">
 			<p class="muted" style="font-size:.8rem">
 				Shown when a page has no image of its own. A path from the media library, or a full address.
@@ -102,12 +102,72 @@
 
 	<label for="defaultDescription">Default description</label>
 	<input type="text" id="defaultDescription" name="defaultDescription" maxlength="300"
-	       value="#encodeForHTMLAttribute( prc.settings[ 'seo.defaultDescription' ] ?: '' )#">
+	       value="#encodeForHTMLAttribute( prc.seoDefaultDescription )#">
 	<p class="muted" style="font-size:.8rem">
 		Used for any page that has not been given its own.
 	</p>
 
 	<div class="actions-bar"><button type="submit">Save search settings</button></div>
+</form>
+</cfif>
+
+<cfif prc.canTheme>
+<h2>reCAPTCHA</h2>
+<form method="post" action="/admin/settings/recaptcha">
+	<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
+
+	<p class="muted" style="font-size:.85rem">
+		Protects the public forms on this site &mdash; the contact form today, and anything
+		else that accepts input later. Keys come from
+		<a href="https://www.google.com/recaptcha/admin" target="_blank" rel="noopener">Google reCAPTCHA</a>;
+		choose <strong>v2 &ldquo;I&rsquo;m not a robot&rdquo;</strong>.
+		<cfif prc.recaptchaActive>
+			<span class="pill on">active</span>
+		<cfelse>
+			<span class="pill off">not active</span> &mdash; both keys are needed.
+		</cfif>
+	</p>
+
+	<div class="grid2">
+		<div>
+			<label for="recaptchaSiteKey">Site key</label>
+			<input type="text" id="recaptchaSiteKey" name="recaptchaSiteKey"
+			       value="#encodeForHTMLAttribute( prc.recaptchaSiteKey )#"
+			       autocomplete="off" spellcheck="false">
+			<p class="muted" style="font-size:.8rem">
+				Public. It appears in the page source, which is how the widget works.
+			</p>
+		</div>
+		<div>
+			<label for="recaptchaSecretKey">
+				Secret key
+				<cfif prc.recaptchaHasSecret><span class="pill on">set</span><cfelse><span class="pill off">not set</span></cfif>
+			</label>
+			<!---
+				Never rendered back. The field is always blank, and a blank value
+				means "leave the stored one alone" — otherwise opening this page
+				and pressing save would wipe the secret.
+			--->
+			<input type="password" id="recaptchaSecretKey" name="recaptchaSecretKey"
+			       placeholder="#prc.recaptchaHasSecret ? 'unchanged' : 'paste the secret key'#"
+			       autocomplete="new-password" spellcheck="false">
+			<p class="muted" style="font-size:.8rem">
+				Shared with Google and never shown again once saved. Leave blank to keep the current one.
+			</p>
+			<cfif prc.recaptchaHasSecret>
+				<div class="checks">
+					<label><input type="checkbox" name="clearRecaptchaSecret"> Remove the stored secret</label>
+				</div>
+			</cfif>
+		</div>
+	</div>
+
+	<p class="muted" style="font-size:.8rem">
+		While reCAPTCHA is active, a submission that cannot be verified is refused &mdash; including
+		when Google itself cannot be reached. Clear a key to turn it off.
+	</p>
+
+	<div class="actions-bar"><button type="submit">Save reCAPTCHA settings</button></div>
 </form>
 </cfif>
 

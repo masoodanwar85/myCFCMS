@@ -42,6 +42,23 @@
 		<label for="message">Message</label>
 		<textarea id="message" name="message" required rows="8" maxlength="10000">#encodeForHTML( args.values.message ?: '' )#</textarea>
 
+
+		<cfif len( args.recaptchaSiteKey ?: "" )>
+			<!---
+				Rendered only when the site has *both* keys. The `data-sitekey`
+				is public by design — the widget cannot work otherwise — and the
+				secret never appears here or anywhere else the browser can see.
+
+				`async defer` so a slow or blocked Google does not hold up the
+				rest of the page; the form still renders and the server still
+				refuses an unverified submission either way.
+			--->
+			<!--- Wrapped in `.g-recaptcha-container`, which this theme already styles. --->
+			<div class="g-recaptcha-container">
+				<div class="g-recaptcha" data-sitekey="#xmlFormat( args.recaptchaSiteKey )#"></div>
+			</div>
+			<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+		</cfif>
 		<p style="margin-top:1.5rem"><button type="submit">Send message</button></p>
 	</form>
 </article>

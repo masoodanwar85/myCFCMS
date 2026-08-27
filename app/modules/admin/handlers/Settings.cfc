@@ -11,6 +11,10 @@ component extends="core.models.security.SecuredHandler" {
 	property name="themeService"     inject="ThemeService@core";
 	property name="siteSettingsRepo" inject="SiteSettingsRepository@core";
 	property name="seoService"       inject="SeoService@core";
+	// Named `recaptchaService`, not `recaptcha`: the action below is called
+	// `recaptcha()`, and a component's methods and its injected properties
+	// share one `variables` scope — so the two would overwrite each other.
+	property name="recaptchaService" inject="RecaptchaService@core";
 
 	variables.permissions = {
 		"index"         : "site.view",
@@ -21,6 +25,7 @@ component extends="core.models.security.SecuredHandler" {
 		"primaryDomain" : "site.domains.manage",
 		"toggleDomain"  : "site.domains.manage",
 		"seo"           : "seo.manage",
+		"recaptcha"     : "site.settings.manage",
 		"$every"        : "site.view"
 	};
 
@@ -43,6 +48,21 @@ component extends="core.models.security.SecuredHandler" {
 		// site's primary domain, not whichever one they happen to be on.
 		prc.seoBaseUrl   = seoService.baseUrl( siteId );
 		prc.seoIndexable = seoService.isIndexable( siteId );
+
+		// The site key is public and shown in full. The secret is never read
+		// back into the page — only whether one exists.
+		// Read through the service's own getters, which return "" for a key that
+		// was never saved. The view used to do `prc.settings[ 'seo.baseUrl' ] ?: ''`
+		// — a bracket lookup on a key that may not exist, leaning on `?:` to
+		// swallow the error. ColdFusion 2025 tolerates that; 2023 does not, and
+		// a view has no business digging through a raw settings struct anyway.
+		prc.seoBaseUrlSetting    = siteSettingsRepo.getValue( siteId, seoService.KEY_BASE_URL, "" );
+		prc.seoDefaultImage      = siteSettingsRepo.getValue( siteId, seoService.KEY_IMAGE, "" );
+		prc.seoDefaultDescription = siteSettingsRepo.getValue( siteId, seoService.KEY_DESCRIPTION, "" );
+
+		prc.recaptchaSiteKey   = recaptchaService.getSiteKey( siteId );
+		prc.recaptchaHasSecret = recaptchaService.hasSecret( siteId );
+		prc.recaptchaActive    = recaptchaService.isConfigured( siteId );
 
 		event.setView( view = "settings/index", module = "admin" );
 	}
@@ -111,6 +131,39 @@ component extends="core.models.security.SecuredHandler" {
 		}
 
 		return done( "/admin/settings", "Search engine settings saved." );
+	}
+
+	/**
+	 * reCAPTCHA keys.
+	 *
+	 * The secret is **write-only**. The form posts it blank unless someone
+	 * types a new one, and a blank value leaves the stored secret alone —
+	 * otherwise simply opening the settings page and saving would wipe it.
+	 * Rendering it back into the form would also put a shared secret in the
+	 * HTML of every admin page load, and in the browser cache behind it.
+	 */
+	function recaptcha( event, rc, prc ){
+		var siteId = prc.currentSite.getId();
+
+		try {
+			siteSettingsRepo.put( siteId, recaptchaService.KEY_SITE, trim( rc.recaptchaSiteKey ?: "" ) );
+
+			var secret = trim( rc.recaptchaSecretKey ?: "" );
+
+			if ( len( secret ) ) {
+				siteSettingsRepo.put( siteId, recaptchaService.KEY_SECRET, secret );
+			}
+
+			// An explicit request to remove it, since a blank field cannot mean
+			// "clear" while it also means "unchanged".
+			if ( ( rc.clearRecaptchaSecret ?: "" ) == "on" ) {
+				siteSettingsRepo.put( siteId, recaptchaService.KEY_SECRET, "" );
+			}
+		} catch ( any e ) {
+			return done( "/admin/settings", e.message, "error" );
+		}
+
+		return done( "/admin/settings", "reCAPTCHA settings saved." );
 	}
 
 	function addDomain( event, rc, prc ){

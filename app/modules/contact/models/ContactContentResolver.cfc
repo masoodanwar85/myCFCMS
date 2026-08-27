@@ -16,6 +16,7 @@ component singleton accessors="true" {
 
 	property name="contactService" inject="ContactService@contact";
 	property name="csrf"           inject="CsrfService@core";
+	property name="recaptcha"      inject="RecaptchaService@core";
 	property name="settings"       inject="coldbox:moduleSettings:contact";
 	property name="log"            inject="logbox:logger:{this}";
 
@@ -81,6 +82,20 @@ component singleton accessors="true" {
 			return { "redirectTo" : "/" & basePath() & "/" & thankYouSegment() };
 		}
 
+		// After the honeypot on purpose: a bot caught by the free check should
+		// not cost a round trip to Google. Before validation and before
+		// anything is stored, because an unverified submission must not reach
+		// the database or the notification mail at all.
+		var challenge = recaptcha.verify(
+			siteId        = arguments.siteId,
+			token         = arguments.formData[ "g-recaptcha-response" ] ?: "",
+			remoteAddress = senderAddress()
+		);
+
+		if ( !challenge.success ) {
+			return failed( contactForm, arguments.formData, [ challenge.error ] );
+		}
+
 		var errors = contactService.validateSubmission( arguments.formData );
 
 		if ( errors.len() ) {
@@ -109,6 +124,7 @@ component singleton accessors="true" {
 
 	private function formResolution( required numeric siteId ){
 		var contactForm = contactService.getDefaultForm( arguments.siteId );
+		var siteIdOf    = arguments.siteId;
 
 		// No form configured: the site does not serve this URL at all, so Pages
 		// gets its turn and an ordinary /contact page still works.
@@ -124,7 +140,10 @@ component singleton accessors="true" {
 				"values"        : {},
 				"csrfToken"     : csrf.getCurrentToken(),
 				"honeypotField" : honeypotField(),
-				"action"        : "/" & basePath()
+				"action"        : "/" & basePath(),
+				// Public key only, and empty unless *both* keys are set — so a
+				// theme never renders a widget this site cannot verify.
+				"recaptchaSiteKey" : siteKeyFor( siteIdOf )
 			},
 			"title"           : contactForm.getName(),
 			"metaDescription" : "",
@@ -156,6 +175,8 @@ component singleton accessors="true" {
 		required struct values,
 		required array errors
 	){
+		var siteIdOf = arguments.form.getSiteId();
+
 		return {
 			"view" : "contact-form",
 			"args" : {
@@ -164,7 +185,10 @@ component singleton accessors="true" {
 				"values"        : arguments.values,
 				"csrfToken"     : csrf.getCurrentToken(),
 				"honeypotField" : honeypotField(),
-				"action"        : "/" & basePath()
+				"action"        : "/" & basePath(),
+				// Public key only, and empty unless *both* keys are set — so a
+				// theme never renders a widget this site cannot verify.
+				"recaptchaSiteKey" : siteKeyFor( siteIdOf )
 			},
 			"title"           : arguments.form.getName(),
 			"metaDescription" : "",
@@ -193,6 +217,17 @@ component singleton accessors="true" {
 	 * `X-Forwarded-For` is trivially forged, so it is only consulted when the
 	 * deployment says it sits behind a proxy that sets it.
 	 */
+	/**
+	 * The site key, or an empty string when reCAPTCHA is not fully configured.
+	 *
+	 * Going through `isConfigured()` rather than reading the key directly is
+	 * what stops a site with a site key and no secret from rendering a widget
+	 * that `verify()` would then wave through.
+	 */
+	private string function siteKeyFor( required numeric siteId ){
+		return recaptcha.isConfigured( arguments.siteId ) ? recaptcha.getSiteKey( arguments.siteId ) : "";
+	}
+
 	private string function senderAddress(){
 		if ( settings.trustForwardedFor ?: false ) {
 			var forwarded = trim( listFirst( cgi.http_x_forwarded_for ?: "" ) );
