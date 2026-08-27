@@ -3,6 +3,10 @@
 Two things: a rich text editor for content, and the first module that accepts
 input from people who are not signed in.
 
+To build another module on the same shape, follow
+[creating-a-module.md](../guides/creating-a-module.md) — it walks Contact
+step by step.
+
 ---
 
 ## 1. Rich text editing

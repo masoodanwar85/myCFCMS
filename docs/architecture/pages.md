@@ -11,7 +11,8 @@ first — pages hang off `sites` and are governed by the permission model.
 
 Groups 1 and 2 built Core. This one is the first thing built *on* Core, and its
 job is as much structural as functional: it is the template Blog, News and
-Contact will copy.
+Contact will copy. The step-by-step, using Contact as the worked example, is
+[creating-a-module.md](../guides/creating-a-module.md).
 
 ```
 app/modules/
