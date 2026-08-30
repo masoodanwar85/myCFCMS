@@ -57,6 +57,10 @@ component {
 			.register( "ContactNavigationProvider@contact", 60 );
 
 		wirebox
+			.getInstance( "LinkTargetRegistry@core" )
+			.register( "ContactLinkTargetProvider@contact", 60 );
+
+		wirebox
 			.getInstance( "AdminNavigationRegistry@core" )
 			.register(
 				label      = "Enquiries",
@@ -70,6 +74,7 @@ component {
 	function onUnload(){
 		wirebox.getInstance( "ContentResolverRegistry@core" ).unregister( "ContactContentResolver@contact" );
 		wirebox.getInstance( "SiteNavigationRegistry@core" ).unregister( "ContactNavigationProvider@contact" );
+		wirebox.getInstance( "LinkTargetRegistry@core" ).unregister( "ContactLinkTargetProvider@contact" );
 		wirebox.getInstance( "AdminNavigationRegistry@core" ).unregister( "/admin/contact" );
 	}
 

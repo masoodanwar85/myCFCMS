@@ -316,6 +316,10 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					expect(
 						getInstance( "SiteNavigationRegistry@core" ).getRegistered()
 					).toInclude( "ContactNavigationProvider@contact" );
+
+					expect(
+						getInstance( "LinkTargetRegistry@core" ).getRegistered()
+					).toInclude( "ContactLinkTargetProvider@contact" );
 				} );
 
 				it( "registers its permissions into Core's catalogue", function(){
