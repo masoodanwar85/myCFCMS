@@ -158,6 +158,16 @@
 	.media-actions{ display:flex; gap:.35rem; margin-top:.4rem; }
 	.media-actions .ico{ margin-left:0; }
 
+	/* A text input paired with picker buttons: the input takes the slack so the
+	   buttons stay their natural size at any width. */
+	.media-field{ display:flex; gap:.4rem; align-items:center; }
+	.media-field input[type=text]{ flex:1 1 auto; min-width:0; }
+	.media-field .ico{ margin-left:0; white-space:nowrap; }
+
+	/* Two fields side by side, stacking rather than shrinking on a narrow
+	   screen — a colour and a font stack are both unreadable in a 6rem box. */
+	.grid-2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(14rem,1fr)); gap:0 1rem; }
+
 	/* ---- grouped navigation ------------------------------------------ */
 	.adm-menu{ position:relative; }
 	.adm-menu > summary{ list-style:none; cursor:pointer; color:#cfd6e0;

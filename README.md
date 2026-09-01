@@ -54,6 +54,7 @@ Architecture documentation:
 - [shortcodes-and-api.md](docs/architecture/shortcodes-and-api.md) — shortcode expansion, API tokens, and the REST boundary.
 - [deployment/apache-modjk.md](docs/deployment/apache-modjk.md) — deploying behind Apache + mod_jk, and why the rewrite rules cannot live in `.htaccess`.
 - [guides/adding-a-site.md](docs/guides/adding-a-site.md) — provisioning a second site on the same instance.
+- [guides/theme-assets-and-branding.md](docs/guides/theme-assets-and-branding.md) — where logos, stylesheets and brand colours live when one app serves many sites.
 
 Each records what is implemented and what is deliberately postponed.
 

@@ -58,6 +58,116 @@
 	</cfif>
 </form>
 
+<h2>Branding</h2>
+<form method="post" action="/admin/settings/branding">
+	<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
+
+	<p class="muted">
+		Your theme supplies the layout and stylesheet; these are the parts that
+		belong to this site. Leave a field empty to use the theme's own value.
+	</p>
+
+	<label for="logoUrl">Logo</label>
+	<div class="media-field">
+		<input type="text" id="logoUrl" name="logoUrl"
+		       value="#encodeForHTMLAttribute( prc.branding.logoUrl )#"
+		       placeholder="/media/2026/09/logo-a1b2c3.png"
+		       #prc.canTheme ? '' : 'disabled'#>
+		<cfif prc.canTheme>
+			<button type="button" class="ico" data-pick-media="logoUrl">Choose&hellip;</button>
+			<button type="button" class="ico" data-clear-media="logoUrl">Clear</button>
+		</cfif>
+	</div>
+	<p class="muted">
+		<cfif len( prc.branding.logoUrl )>
+			<img src="#encodeForHTMLAttribute( prc.branding.logoUrl )#"
+			     alt="Current logo for #encodeForHTML( prc.currentSite.getName() )#"
+			     style="max-height:3rem;max-width:16rem;vertical-align:middle">
+		<cfelse>
+			No logo set, so the theme falls back to the site name.
+		</cfif>
+	</p>
+
+	<div class="grid-2">
+		<div>
+			<label for="colorPrimary">Primary colour</label>
+			<input type="text" id="colorPrimary" name="colorPrimary"
+			       value="#encodeForHTMLAttribute( prc.branding.colorPrimary )#"
+			       placeholder="##0f2a4a" #prc.canTheme ? '' : 'disabled'#>
+		</div>
+		<div>
+			<label for="colorAccent">Accent colour</label>
+			<input type="text" id="colorAccent" name="colorAccent"
+			       value="#encodeForHTMLAttribute( prc.branding.colorAccent )#"
+			       placeholder="##c19b43" #prc.canTheme ? '' : 'disabled'#>
+		</div>
+	</div>
+	<p class="muted">Hex values only &mdash; <code>##0f2a4a</code> or <code>##fff</code>.</p>
+
+	<div class="grid-2">
+		<div>
+			<label for="fontHeading">Heading font</label>
+			<input type="text" id="fontHeading" name="fontHeading"
+			       value="#encodeForHTMLAttribute( prc.branding.fontHeading )#"
+			       placeholder="'Source Serif 4', Georgia, serif" #prc.canTheme ? '' : 'disabled'#>
+		</div>
+		<div>
+			<label for="fontBody">Body font</label>
+			<input type="text" id="fontBody" name="fontBody"
+			       value="#encodeForHTMLAttribute( prc.branding.fontBody )#"
+			       placeholder="Inter, system-ui, sans-serif" #prc.canTheme ? '' : 'disabled'#>
+		</div>
+	</div>
+	<p class="muted">
+		A font stack. These name families the browser already has or the theme
+		already loads &mdash; setting one here does not download a webfont.
+	</p>
+
+	<cfif prc.canTheme>
+		<div class="actions-bar"><button type="submit">Save branding</button></div>
+	</cfif>
+</form>
+
+<script>
+/*
+	Wires the "Choose" buttons to the shared media picker in `_picker.cfm`.
+
+	Written as a delegated listener over `data-pick-media` rather than bound to
+	this one field, so a second media field anywhere in the admin needs markup
+	and no JavaScript. Without the picker the text input is still there and
+	still accepts a pasted URL, which is why the field is not read-only.
+*/
+document.addEventListener( "click", function ( e ) {
+	var pick = e.target.closest( "[data-pick-media]" );
+
+	if ( pick && window.cmsPickMedia ) {
+		window.cmsPickMedia().then( function ( item ) {
+			if ( !item ) {
+				return;
+			}
+
+			var field = document.getElementById( pick.getAttribute( "data-pick-media" ) );
+
+			if ( field ) {
+				field.value = item.url;
+			}
+		} );
+
+		return;
+	}
+
+	var clear = e.target.closest( "[data-clear-media]" );
+
+	if ( clear ) {
+		var target = document.getElementById( clear.getAttribute( "data-clear-media" ) );
+
+		if ( target ) {
+			target.value = "";
+		}
+	}
+} );
+</script>
+
 <cfif prc.canSeo>
 <h2>Search engines</h2>
 <form method="post" action="/admin/settings/seo">

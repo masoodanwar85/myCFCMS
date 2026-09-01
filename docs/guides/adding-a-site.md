@@ -252,6 +252,11 @@ provisioning. `ThemeService` falls back to the default theme — loudly, in the
 log — if a site names one that is not installed, so a bad deploy renders plainly
 instead of taking the site offline.
 
+Static assets do *not* go in that directory. CSS, JS and fonts belong under
+`public/assets/themes/acme/`, and the site's logo belongs in its media library —
+see [theme-assets-and-branding.md](theme-assets-and-branding.md) for the split
+and the reason for it.
+
 ## Outside the application
 
 Two things the CMS cannot do for you:

@@ -15,6 +15,7 @@ component extends="core.models.security.SecuredHandler" {
 	// `recaptcha()`, and a component's methods and its injected properties
 	// share one `variables` scope — so the two would overwrite each other.
 	property name="recaptchaService" inject="RecaptchaService@core";
+	property name="brandingService"  inject="SiteBrandingService@core";
 
 	variables.permissions = {
 		"index"         : "site.view",
@@ -26,6 +27,7 @@ component extends="core.models.security.SecuredHandler" {
 		"toggleDomain"  : "site.domains.manage",
 		"seo"           : "seo.manage",
 		"recaptcha"     : "site.settings.manage",
+		"branding"      : "site.settings.manage",
 		"$every"        : "site.view"
 	};
 
@@ -59,6 +61,8 @@ component extends="core.models.security.SecuredHandler" {
 		prc.seoBaseUrlSetting    = siteSettingsRepo.getValue( siteId, seoService.KEY_BASE_URL, "" );
 		prc.seoDefaultImage      = siteSettingsRepo.getValue( siteId, seoService.KEY_IMAGE, "" );
 		prc.seoDefaultDescription = siteSettingsRepo.getValue( siteId, seoService.KEY_DESCRIPTION, "" );
+
+		prc.branding = brandingService.brandingFor( siteId );
 
 		prc.recaptchaSiteKey   = recaptchaService.getSiteKey( siteId );
 		prc.recaptchaHasSecret = recaptchaService.hasSecret( siteId );
@@ -106,6 +110,35 @@ component extends="core.models.security.SecuredHandler" {
 		}
 
 		return done( "/admin/settings", "Theme changed." );
+	}
+
+	/**
+	 * Logo and brand tokens.
+	 *
+	 * The per-site half of a theme's appearance. Grouped with the theme rather
+	 * than with SEO because it answers the same question — what does this site
+	 * look like — and guarded by `site.settings.manage` for the same reason:
+	 * it changes presentation, not content.
+	 *
+	 * Validation lives in the service, not here. These values end up inside a
+	 * `<style>` block, and a handler is the wrong place for the only thing
+	 * standing between a settings form and arbitrary CSS.
+	 */
+	function branding( event, rc, prc ){
+		try {
+			brandingService.save(
+				siteId       = prc.currentSite.getId(),
+				logoUrl      = rc.logoUrl ?: "",
+				colorPrimary = rc.colorPrimary ?: "",
+				colorAccent  = rc.colorAccent ?: "",
+				fontHeading  = rc.fontHeading ?: "",
+				fontBody     = rc.fontBody ?: ""
+			);
+		} catch ( any e ) {
+			return done( "/admin/settings", e.message, "error" );
+		}
+
+		return done( "/admin/settings", "Branding saved." );
 	}
 
 	/**

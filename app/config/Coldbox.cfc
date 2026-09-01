@@ -43,7 +43,11 @@ component {
             invalidHTTPMethodHandler: '',
             exceptionHandler: 'main.onException',
             invalidEventHandler: '',
-            customErrorTemplate: '',
+            // Set for every environment on purpose: the template itself decides
+            // how much detail to show, based on who is asking. See the comment
+            // block in that file — `.env` is not read outside CommandBox, and
+            // Whoops cannot load its assets outside the CommandBox webroot.
+            customErrorTemplate: '/app/exceptions/BugReport.cfm',
             // Application Aspects
             handlerCaching: false,
             eventCaching: false,
@@ -176,6 +180,19 @@ component {
 
     /**
      * Development environment
+     *
+     * Only ever reached under CommandBox: ColdBox resolves the environment from
+     * `getSystemSetting( "ENVIRONMENT" )`, which reads JVM system properties and
+     * OS environment variables and never the `.env` file — CommandBox is what
+     * loads `.env` into the JVM at `server start`.
+     *
+     * Do NOT force this on with a JVM argument on a server running under Apache
+     * and ColdFusion. Whoops pulls its CSS and JS from
+     * `/coldbox/system/exceptions/`, a path made web-reachable by the alias in
+     * `server.json`; `lib/coldbox` is outside the webroot, so on a real web
+     * server those assets 404 and Whoops renders as an unusable shell. There,
+     * the gated `/app/exceptions/BugReport.cfm` configured above is what gives
+     * you full detail — and only to an allowlisted address.
      */
     function development() {
         variables.coldbox.customErrorTemplate = '/coldbox/system/exceptions/Whoops.cfm'; // interactive bug report

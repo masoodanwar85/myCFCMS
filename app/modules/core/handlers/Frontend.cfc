@@ -21,6 +21,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="navigation"    inject="NavigationService@core";
 	property name="redirects"     inject="RedirectService@core";
 	property name="seo"           inject="SeoService@core";
+	property name="branding"      inject="SiteBrandingService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
 
 	/**
@@ -84,8 +85,11 @@ component extends="coldbox.system.EventHandler" {
 			statusText = resolution.statusCode == 200 ? "OK" : "Not Found"
 		);
 
-		var viewArgs  = resolution.args;
-		viewArgs.site = site;
+		var viewArgs   = resolution.args;
+		viewArgs.site  = site;
+		// Views get the theme too, not just layouts: a view that needs an icon
+		// or a background image should build its URL the same way a layout does.
+		viewArgs.theme = theme;
 
 		var body = themeService.renderView( theme, resolution.view, viewArgs );
 
@@ -104,7 +108,12 @@ component extends="coldbox.system.EventHandler" {
 				// Canonical, robots and the social tags, with whatever the
 				// resolver left out filled in from the site's own defaults. A
 				// theme emits these; it does not work them out.
-				seo             : seo.metadataFor( site, path, resolution )
+				seo             : seo.metadataFor( site, path, resolution ),
+				// Logo and brand tokens. Passed to every layout render so a
+				// theme can rely on `args.branding` existing rather than
+				// testing for it, and so two sites can share one theme and
+				// still not look identical.
+				branding        : branding.brandingFor( site.getId() )
 			}
 		);
 	}
@@ -148,7 +157,9 @@ component extends="coldbox.system.EventHandler" {
 					site       = arguments.site,
 					path       = arguments.path,
 					resolution = { "statusCode" : 404 }
-				)
+				),
+				// A 404 is still this client's site, so it keeps their logo.
+				branding        : branding.brandingFor( arguments.site.getId() )
 			}
 		);
 	}

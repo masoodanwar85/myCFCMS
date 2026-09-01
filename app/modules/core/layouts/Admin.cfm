@@ -98,6 +98,13 @@
 	</div>
 </footer>
 
+<!---
+	The media picker is unconditional; the editor is not. Settings needs the
+	picker for the site logo and has no rich-text field, so gating it on
+	`useEditor` would leave that screen with a button that does nothing.
+--->
+<cfinclude template="/core/layouts/_picker.cfm">
+
 <cfif prc.useEditor ?: false>
 	<cfinclude template="/core/layouts/_editor.cfm">
 </cfif>
