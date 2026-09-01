@@ -208,9 +208,32 @@
 	/* Keyboard users must be able to see which tab they are on. */
 	.tabs > input[type=radio]:focus-visible + label{ outline:2px solid var(--accent); outline-offset:-2px; }
 	.tabs > .tab-panel{ display:none; padding:1.25rem; border-top:1px solid var(--line); }
-	.tabs > #tab-content:checked  ~ [data-for="tab-content"],
-	.tabs > #tab-seo:checked      ~ [data-for="tab-seo"],
-	.tabs > #tab-advanced:checked ~ [data-for="tab-advanced"]{ display:block; }
+
+	/*
+	   Which panel shows is matched by POSITION, not by id: the nth radio
+	   reveals the nth panel. These rules used to name #tab-content, #tab-seo
+	   and #tab-advanced one at a time, which meant every new tabbed screen had
+	   to come back and edit this file — and Settings alone has six sections.
+
+	   Two constraints come with it, and both are load-bearing:
+
+	     1. The radios must be the ONLY direct-child input elements of .tabs.
+	        :nth-of-type counts by element type and ignores the attribute
+	        filter, so a hidden input dropped in here would shift every panel by
+	        one. Put hidden fields inside a panel, or outside .tabs entirely.
+	     2. Panels must appear in the same order as their radios.
+
+	   data-for stays on each panel as documentation and as a hook for tests;
+	   nothing here selects on it.
+	*/
+	.tabs > input[type=radio]:nth-of-type(1):checked ~ section.tab-panel:nth-of-type(1),
+	.tabs > input[type=radio]:nth-of-type(2):checked ~ section.tab-panel:nth-of-type(2),
+	.tabs > input[type=radio]:nth-of-type(3):checked ~ section.tab-panel:nth-of-type(3),
+	.tabs > input[type=radio]:nth-of-type(4):checked ~ section.tab-panel:nth-of-type(4),
+	.tabs > input[type=radio]:nth-of-type(5):checked ~ section.tab-panel:nth-of-type(5),
+	.tabs > input[type=radio]:nth-of-type(6):checked ~ section.tab-panel:nth-of-type(6),
+	.tabs > input[type=radio]:nth-of-type(7):checked ~ section.tab-panel:nth-of-type(7),
+	.tabs > input[type=radio]:nth-of-type(8):checked ~ section.tab-panel:nth-of-type(8){ display:block; }
 	.tabs h2{ margin-top:1.6rem; font-size:.8rem; text-transform:uppercase;
 	          letter-spacing:.05em; color:var(--soft); }
 	.tabs h2:first-child{ margin-top:0; }

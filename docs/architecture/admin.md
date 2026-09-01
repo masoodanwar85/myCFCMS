@@ -240,6 +240,35 @@ done with it — an id is a guess anyone can make, and Group 2's isolation
 guarantees would mean nothing if a handler acted on one without asking whose it
 is. Super admins are never editable from a tenant's admin.
 
+### Tabs
+
+Screens that had grown to several screens of stacked sections — the page
+editor, Settings, the blog list, the post form — divide into tabs. They are
+**CSS-only**: radios and labels, with every panel left in the DOM. Nothing is
+swapped in and out, so switching a tab cannot lose typing, and a form spanning
+panels still posts every field.
+
+Which panel shows is decided by **position** — the nth radio reveals the nth
+panel — rather than by naming each id in the stylesheet, which had meant editing
+`_styles.cfm` for every new tabbed screen. Two rules follow, and both are
+load-bearing:
+
+1. The radios must be the only direct-child `input` elements of `.tabs`.
+   `:nth-of-type` counts by element type and ignores the attribute filter, so a
+   hidden field dropped into the strip shifts every panel by one. Put hidden
+   fields inside a panel.
+2. Panels must appear in the same order as their radios.
+
+Neither is visible from reading the CSS and both fail *silently* — the page
+renders and the wrong panel opens — so `TabbedScreensSpec` renders every tabbed
+screen and asserts them.
+
+Where panels hold separate forms (Settings), each keeps its own submit button,
+because each posts to its own action under its own permission. A panel whose
+permission the user lacks is still rendered and says so: a tab that vanished
+would leave someone hunting for a setting, and the positions have to stay stable
+for the CSS to line up.
+
 ---
 
 ## 7. When a record is not there

@@ -42,7 +42,10 @@ component extends="core.models.security.SecuredHandler" {
 
 		prc.canUpdate  = authorization.can( prc.currentUser, "site.update" );
 		prc.canDomains = authorization.can( prc.currentUser, "site.domains.manage" );
-		prc.canTheme   = authorization.can( prc.currentUser, "site.settings.manage" );
+		// Named for the permission, not for the first screen that used it:
+		// `site.settings.manage` also gates branding and the reCAPTCHA keys,
+		// and a flag called `canTheme` guarding those read as a mistake.
+		prc.canSettings = authorization.can( prc.currentUser, "site.settings.manage" );
 		prc.canSeo     = authorization.can( prc.currentUser, "seo.manage" );
 
 		// Shown rather than merely stored, so an editor can see the address the
