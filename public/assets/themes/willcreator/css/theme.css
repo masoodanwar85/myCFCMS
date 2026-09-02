@@ -548,6 +548,23 @@
 			 #primary-nav.is-open li.dropdown.open > ul.dropdown-menu {
 			   display: block;
 			 }
+
+			 /* A parent at ANY depth needs a caret here, not just the top row.
+			    Without one, a nested item that opens a submenu is
+			    indistinguishable from one that navigates — and tapping it does
+			    something different from what it looks like it will do. The
+			    desktop rule for this lives in the min-width block and so never
+			    applied on a phone. */
+			 #primary-nav li.dropdown > a.dropdown-toggle::after {
+			   content: " \25BE";
+			   float: right;
+			   font-size: 11px;
+			   margin-left: 10px;
+			 }
+
+			 #primary-nav li.dropdown.open > a.dropdown-toggle::after {
+			   content: " \25B4";
+			 }
 		   
 			 #primary-nav ul.dropdown-menu a.nav-link {
 			   color: #333333;

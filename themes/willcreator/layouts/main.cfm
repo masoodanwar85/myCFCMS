@@ -112,7 +112,19 @@
 						<span class="brand__name">#encodeForHTML( args.site.getName() )#</span>
 					</cfif>
 				</a>
-                <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Menu" onclick="var n=document.getElementById('primary-nav');var o=n.classList.toggle('is-open');this.setAttribute('aria-expanded',o)">
+				<!---
+					No `onclick` here. This button also has a listener bound in
+					the script at the top of this file, and both toggled
+					`is-open` — so one tap added the class and removed it again
+					and the menu never opened. The listener is the one that
+					stays: it is where the submenu behaviour lives, and it keeps
+					`aria-expanded` in step.
+
+					`type="button"` because a bare <button> defaults to
+					`type="submit"`, which would post the surrounding form the
+					day this markup moves inside one.
+				--->
+				<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Menu">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="##1C2B27" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
                 </button>
 			</div>
