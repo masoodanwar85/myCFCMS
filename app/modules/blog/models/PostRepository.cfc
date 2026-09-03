@@ -15,6 +15,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		"slug",
 		"excerpt",
 		"content",
+		"show_heading",
 		"status",
 		"published_at",
 		"meta_title",
@@ -40,6 +41,9 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"slug"             : arguments.post.getSlug(),
 					"excerpt"          : arguments.post.getExcerpt() ?: "",
 					"content"          : { value : arguments.post.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
+					// `null : false`: the column is NOT NULL with a default,
+					// and qb infers a null bind from a falsy value.
+					"show_heading"     : { value : arguments.post.getShowHeading() ? 1 : 0, cfsqltype : "cf_sql_tinyint", null : false },
 					"status"           : arguments.post.getStatus(),
 					"published_at"     : nullableTimestamp( arguments.post.getPublishedAt() ),
 					"meta_title"       : arguments.post.getMetaTitle() ?: "",
@@ -78,6 +82,9 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"slug"             : arguments.post.getSlug(),
 					"excerpt"          : arguments.post.getExcerpt() ?: "",
 					"content"          : { value : arguments.post.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
+					// `null : false`: the column is NOT NULL with a default,
+					// and qb infers a null bind from a falsy value.
+					"show_heading"     : { value : arguments.post.getShowHeading() ? 1 : 0, cfsqltype : "cf_sql_tinyint", null : false },
 					"status"           : arguments.post.getStatus(),
 					"published_at"     : nullableTimestamp( arguments.post.getPublishedAt() ),
 					"meta_title"       : arguments.post.getMetaTitle() ?: "",
@@ -296,6 +303,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setSlug( arguments.row.slug )
 			.setExcerpt( arguments.row.excerpt ?: "" )
 			.setContent( arguments.row.content ?: "" )
+			.setShowHeading( arguments.row.show_heading ? true : false )
 			.setStatus( arguments.row.status )
 			.setMetaTitle( arguments.row.meta_title ?: "" )
 			.setMetaDescription( arguments.row.meta_description ?: "" )

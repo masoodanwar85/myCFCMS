@@ -12,6 +12,15 @@ component accessors="true" {
 	property name="slug"            type="string";
 	property name="excerpt"         type="string";
 	property name="content"         type="string";
+
+	/**
+	 * Whether the theme prints this post's title as a heading above the content.
+	 *
+	 * A display switch, not a second title: with it off the title is still the
+	 * browser tab, the `<title>` tag, the archive listing and the link text —
+	 * only the on-page `<h1>` goes, for a post whose content supplies its own.
+	 */
+	property name="showHeading"     type="boolean";
 	property name="status"          type="string";
 	property name="metaTitle"       type="string";
 	property name="metaDescription" type="string";
@@ -30,6 +39,9 @@ component accessors="true" {
 	function init(){
 		variables.status     = this.STATUS_DRAFT;
 		variables.content    = "";
+
+		// The behaviour every post had before this option existed.
+		variables.showHeading = true;
 		variables.categories = [];
 		return this;
 	}

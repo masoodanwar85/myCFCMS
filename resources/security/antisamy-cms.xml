@@ -107,8 +107,8 @@
 		</tag>
 		<tag name="figcaption" action="validate"/>
 
-		<!-- Headings. The editor offers h2 and h3; the rest are allowed so
-		     pasted or imported content is not mangled. -->
+		<!-- Headings. The editor offers h1, h2 and h3; the rest are allowed
+		     so pasted or imported content is not mangled. -->
 		<tag name="h1" action="validate"/>
 		<tag name="h2" action="validate"/>
 		<tag name="h3" action="validate"/>

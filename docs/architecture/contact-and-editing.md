@@ -74,7 +74,7 @@ as text and never as markup, and repeated sends from one address are throttled.
 
 | Table | Notes |
 | --- | --- |
-| `contact_forms` | Per site. Most sites need one; a site with separate sales and support addresses needs two, and that is cheaper to allow now than to retrofit. |
+| `contact_forms` | **One per site**, enforced in the service. The table is plural for historical reasons; see "One form per site" below. |
 | `contact_submissions` | Composite foreign key `(form_id, site_id)`, so a message cannot be attached to another site's form. Carries `ip_address` and a `new`/`read`/`spam` status so a human can triage rather than delete. |
 
 ### How Core had to grow
@@ -126,6 +126,99 @@ There is still no mail layer. Submissions are stored and shown in the admin, and
 
 ---
 
+## One form per site
+
+`contact_forms` was plural in the database and singular in practice for a long
+time. `/contact` served the site's first active form **ordered by name**, and a
+second form had no URL, no menu entry and no way to be chosen &mdash; the admin
+let you create something you could not publish. Worse, the ordering meant
+renaming a form could silently change which one a site served.
+
+Contact is now what it always behaved like: **a site's enquiry form and its
+settings**. `ContactService.createForm()` refuses a second, and
+`getFormForSite()` returns the oldest active row by id &mdash; stable, and
+meaning "the one you set up first" rather than "the one that sorts earliest".
+
+A form with its own fields is a different thing and belongs to the **Forms**
+module, which owns field definitions, its own submissions and its own `[form]`
+shortcode. Splitting them keeps Contact small and stops the enquiry form growing
+a builder it does not need.
+
+Rows left over from the plural era are **not deleted by anything automatic** —
+one holds a recipient address somebody configured and may hold enquiries, and
+discarding that to tidy a data model would be the CMS losing a client's mail.
+The admin lists them under "Other forms" with their enquiry counts so an
+operator can move or remove them deliberately.
+
+## Embedding the form
+
+`[contact-form]` places the site's enquiry form in any page or post, so an
+author can put it under the copy that explains it rather than linking away to a
+bare URL. It takes no attributes.
+
+Rendering goes through the site's theme, not markup in the shortcode.
+`contact-form.cfm` and `contact-sent.cfm` already exist in every theme and a
+client may have styled them; an embedded form that looked different from the one
+at `/contact` would be a bug in waiting. The theme is passed `embedded`, so it
+drops its own `<h1>` and wrapper &mdash; the page around it already has both.
+
+### The round trip
+
+An embedded form posts back to **the page it sits on**.
+`ContactContentResolver.handleSubmission` claims that POST when it carries a
+marker matching this site's form; the marker is what makes claiming another
+module's path defensible, and without it the request is left alone.
+
+With one form per site the marker can only *confirm or deny* &mdash; it can no
+longer select between forms. That closes the hole where editing the hidden field
+in the page source routed a message to a different recipient.
+
+Both outcomes then answer with a redirect, and the state travels in flash:
+
+| | |
+|---|---|
+| Sent, no thank-you page | Back to the same path; the shortcode renders the success message in place of the form |
+| Sent, thank-you page set | Redirect to that path |
+| Refused | Back to the same path, with the errors and what was typed |
+
+The flash is keyed by form slug, so two forms on one page cannot show each
+other's messages, and it is read exactly once &mdash; a success message that
+survived into the next page view would tell a visitor they had sent something
+they had not. Only the four form fields are flashed back: the CSRF token and the
+reCAPTCHA response have no business in the session.
+
+`/contact` is unchanged. There a refusal still re-renders the form in place with
+a `422`, because that resolver owns the URL and can. An embedded form cannot
+&mdash; the page belongs to Pages &mdash; so the difference is forced by who
+owns the URL rather than chosen. A side effect is that an embedded refusal
+cannot be re-posted by refreshing, which the `422` path still allows.
+
+### The thank-you page
+
+`thank_you_path` is optional and blank by default, which means "stay on the
+page". It exists for one reason: advertising conversion tracking fires on a
+**page being loaded**, and a message swapped in by the server produces no URL for
+Google Ads or GA4 to see. A firm paying for clicks needs the redirect; a firm
+that is not should not have to configure one.
+
+Site-relative paths only, enforced in `ContactService.safeReturnPath()`. An open
+redirect on a public form is how a phishing page borrows a client's domain: the
+victim sees the firm's address in the link they were sent and lands somewhere
+else. A bad value is stored as empty rather than refused &mdash; a form is not
+worth failing to save over a mistyped path.
+
+### Two bugs this closed
+
+`findFormBySlug` did not filter on `is_active`, so a form somebody had switched
+off still accepted submissions from anyone who posted its slug. `is_active` now
+means what it says.
+
+And the themes have always emitted the form's slug in a hidden field while
+`/contact` ignored it on display and honoured it on submit &mdash; so a visitor
+could edit it and route their message to a different recipient. With one form
+per site the marker is only ever compared against that form, so there is nothing
+left to select.
+
 ## 3. What is implemented
 
 - CKEditor 5, self-hosted, on the page and post content forms.
@@ -134,6 +227,8 @@ There is still no mail layer. Submissions are stored and shown in the admin, and
 - `ContactService`, resolver, navigation provider and admin screens.
 - `handleSubmission` on the resolver contract, and POST routing in Core.
 - Three permissions, separating reading enquiries from configuring forms.
+- `[contact-form]`, so the enquiry form can be embedded in a page or post, with
+  an optional thank-you page for conversion tracking.
 - 424 passing specs across Groups 1–7.
 
 ## 4. What is intentionally postponed
@@ -144,7 +239,7 @@ There is still no mail layer. Submissions are stored and shown in the admin, and
 | CAPTCHA | The honeypot and throttle handle ordinary spam. A CAPTCHA is a real accessibility cost and should wait until abuse is actually observed. |
 | Submission retention / GDPR | `ip_address` is personal data with no expiry policy. A site should be able to say "delete enquiries after N days", and cannot yet. |
 | Export (CSV) of enquiries | Straightforward; nothing has asked for it. |
-| Per-form fields | Every form has name, email, subject, message. Custom fields need a field-definition table and a builder UI. |
+| Per-form fields | The enquiry form is fixed: name, email, subject, message. Forms with author-defined fields are the **Forms** module's job, not Contact's. |
 | Image uploads in the editor | **Delivered in Group 8.** |
 | Warning an author when sanitising removed something | `ContentSanitizer.isSafe()` exists for exactly this; no screen calls it. |
 

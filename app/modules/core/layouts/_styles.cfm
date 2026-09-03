@@ -238,6 +238,31 @@
 	          letter-spacing:.05em; color:var(--soft); }
 	.tabs h2:first-child{ margin-top:0; }
 
+	/* ---- field list --------------------------------------------------- */
+	/*
+	   A form's fields as rows that open in place. `<details>` rather than
+	   script: it works with the keyboard for free, and find-in-page still
+	   reaches a closed row.
+	*/
+	.field-list{ border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+	             background:var(--card); margin-bottom:1.5rem; }
+	.field-item + .field-item{ border-top:1px solid var(--line); }
+	.field-item > summary{ list-style:none; cursor:pointer; padding:.7rem .9rem;
+	                       display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+	.field-item > summary::-webkit-details-marker{ display:none; }
+	.field-item > summary:hover{ background:var(--bg); }
+	.field-item[open] > summary{ background:var(--bg); border-bottom:1px solid var(--line); }
+	/* The disclosure caret, drawn rather than relying on the platform marker so
+	   it sits where the row expects it in every browser. */
+	.field-item > summary::before{ content:"\25B8"; color:var(--soft); font-size:.75rem;
+	                               transition:transform .12s ease; }
+	.field-item[open] > summary::before{ transform:rotate(90deg); }
+	.field-item__order{ min-width:1.8rem; color:var(--soft); font-size:.78rem; font-variant-numeric:tabular-nums; }
+	.field-item__label{ font-weight:600; }
+	.field-item__key{ color:var(--soft); font-size:.78rem; }
+	.field-item__body{ padding:1rem .9rem 1.25rem; }
+	.field-item__body .actions-bar{ margin-bottom:.5rem; }
+
 	.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; align-items:start; }
 	@media (max-width:800px){
 		.grid3{ grid-template-columns:1fr; }

@@ -1,6 +1,12 @@
 <cfoutput>
-<article class="section">
-	<h1>#encodeForHTML( args.form.getName() )#</h1>
+<!---
+	`args.embedded` is true when this comes from the `[contact-form]` shortcode
+	rather than from `/contact`. The page around it already has a heading and a
+	wrapper, so both are dropped — a second `<h1>` would give the page two
+	competing titles, which is the same trap `show_heading` exists to avoid.
+--->
+<cfif !( args.embedded ?: false )><article class="section"></cfif>
+	<cfif !( args.embedded ?: false )><h1>#encodeForHTML( args.form.getName() )#</h1></cfif>
 
 	<cfif len( args.form.getIntro() ?: "" )>
 		<p>#encodeForHTML( args.form.getIntro() )#</p>
@@ -61,5 +67,5 @@
 		</cfif>
 		<p style="margin-top:1.5rem"><button type="submit">Send message</button></p>
 	</form>
-</article>
+<cfif !( args.embedded ?: false )></article></cfif>
 </cfoutput>

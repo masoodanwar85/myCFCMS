@@ -21,6 +21,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		"path",
 		"status",
 		"content",
+		"show_heading",
 		"meta_title",
 		"meta_description",
 		"meta_keywords",
@@ -66,6 +67,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"path"             : arguments.page.getPath(),
 					"status"           : arguments.page.getStatus(),
 					"content"          : { value : arguments.page.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
+					"show_heading"     : flag( arguments.page.getShowHeading() ),
 					"meta_title"       : arguments.page.getMetaTitle() ?: "",
 					"meta_description" : arguments.page.getMetaDescription() ?: "",
 					"meta_keywords"    : arguments.page.getMetaKeywords() ?: "",
@@ -127,6 +129,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"path"             : arguments.page.getPath(),
 					"status"           : arguments.page.getStatus(),
 					"content"          : { value : arguments.page.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
+					"show_heading"     : flag( arguments.page.getShowHeading() ),
 					"meta_title"       : arguments.page.getMetaTitle() ?: "",
 					"meta_description" : arguments.page.getMetaDescription() ?: "",
 					"meta_keywords"    : arguments.page.getMetaKeywords() ?: "",
@@ -349,6 +352,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setPath( arguments.row.path )
 			.setStatus( arguments.row.status )
 			.setContent( arguments.row.content ?: "" )
+			.setShowHeading( arguments.row.show_heading ? true : false )
 			.setMetaTitle( arguments.row.meta_title ?: "" )
 			.setMetaDescription( arguments.row.meta_description ?: "" )
 			.setMetaKeywords( arguments.row.meta_keywords ?: "" )

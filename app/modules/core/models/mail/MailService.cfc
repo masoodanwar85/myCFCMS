@@ -211,16 +211,54 @@ component singleton extends="core.models.persistence.BaseRepository" {
 	}
 
 	/**
-	 * Isolated so a test can replace delivery without a mail server.
+	 * Hand the message to ColdFusion's mail spool.
+	 *
+	 * Isolated so a test can replace delivery without a mail server — and, since
+	 * the tag itself lives in `_send.cfm`, so that an installation without the
+	 * mail package fails one send rather than failing to compile this component
+	 * and taking every screen that injects it down. See that file.
+	 *
+	 * @throws Mail.TagUnavailable when ColdFusion has no mail tag to call.
 	 */
 	private function sendViaServer( required struct args, required string body ){
-		var payload = arguments.body;
+		// Named for the include, which reads them out of this function's `local`
+		// scope. An included template shares it, which is the whole mechanism.
+		local.mailArgs = arguments.args;
+		local.mailBody = arguments.body;
 
-		mail( argumentCollection = arguments.args ){
-			writeOutput( payload );
+		try {
+			include "/core/models/mail/_send.cfm";
+		} catch ( any e ) {
+			if ( looksLikeMissingMailPackage( e ) ) {
+				throw(
+					type    = "Mail.TagUnavailable",
+					message = "ColdFusion has no mail tag available. Install the mail package: run "
+						& "<cf_root>/cfusion/bin/cfpm.sh, then `install mail`, then restart ColdFusion.",
+					detail  = e.message
+				);
+			}
+
+			rethrow;
 		}
 
 		return this;
+	}
+
+	/**
+	 * Whether a failure is ColdFusion lacking the mail tag rather than a mail
+	 * server refusing the message.
+	 *
+	 * Matched on the message because the engine reports it with no
+	 * distinguishing type. Kept narrow, so a genuine SMTP failure — a refused
+	 * connection, a bad host, a rejected login — is never relabelled as a
+	 * missing package and sent somebody to the wrong place.
+	 */
+	private boolean function looksLikeMissingMailPackage( required any error ){
+		var text = ( arguments.error.message ?: "" ) & " " & ( arguments.error.detail ?: "" );
+
+		return findNoCase( "mail package is not installed", text ) > 0
+			|| reFindNoCase( "variable\s+mail\s+is\s+undefined", text ) > 0
+			|| findNoCase( "could not find the coldfusion component or interface mail", text ) > 0;
 	}
 
 	private numeric function store( required struct record ){

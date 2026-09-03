@@ -115,6 +115,29 @@ raises a typed `Theme.ViewMissing` when it does not.
 
 ---
 
+## 3a. Title versus heading
+
+Posts carry the same `show_heading` switch as pages, and for the same reason: a
+post whose content opens with its own headline had that headline twice, once
+from the theme and once from the author. See
+[pages.md §4a](pages.md#4a-title-versus-heading) for the reasoning — this is a
+*display* switch, not a way to have a post without a title, and the title
+remains the browser tab, the `<title>` tag, the archive listing and the link
+text when it is off.
+
+Its own column on `blog_posts`, following the precedent this table already sets
+by keeping its own `meta_title` and `meta_description` rather than sharing
+Pages'. A join on every post render to avoid one `ALTER TABLE` is the wrong
+trade; a third content type wanting this is the moment to generalise.
+
+One difference from the pages implementation, and it matters. Page options
+travel in a struct, so `structKeyExists` distinguishes "set to false" from "not
+supplied". `updatePost` takes plain arguments instead, so `showHeading` is
+declared **without a default** and read through `isNull()`. A default of `true`
+would quietly turn the heading back on every time a post was edited from
+anywhere that did not mention it — the admin handler leans on this by adding the
+key to its argument struct only when the form actually carried the field.
+
 ## 4. What is implemented
 
 - `ContentSanitizer`, the `content.unfiltered` permission, and sanitising wired
@@ -124,6 +147,8 @@ raises a typed `Theme.ViewMissing` when it does not.
   rather than always.
 - `BlogContentResolver` and the three public URL shapes.
 - Admin screens for posts and categories, contributed by the module.
+- Per-post `show_heading`, so a post whose content carries its own headline does
+  not print the title twice.
 - `blog-index` and `blog-post` views in both themes.
 - 47 passing specs for this group; 470 across Groups 1-7.
 

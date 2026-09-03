@@ -21,7 +21,14 @@
 
 <section class="section">
 	<div class="wrap">
-		<h1>#encodeForHTML( args.page.getTitle() )#</h1>
+		<!---
+			Some pages carry their own headline in the content — a hero, or a
+			styled title block — and printing the page title above it says the
+			same thing twice. Off by choice, per page.
+		--->
+		<cfif args.page.getShowHeading()>
+			<h1>#encodeForHTML( args.page.getTitle() )#</h1>
+		</cfif>
 		#args.page.getContent()#
 	</div>
 </section>

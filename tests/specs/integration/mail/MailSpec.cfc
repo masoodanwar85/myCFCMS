@@ -12,21 +12,45 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 	function beforeAll(){
 		super.beforeAll();
-		variables.mail  = getInstance( "MailService@core" );
-		variables.sites = getInstance( "SiteService@core" );
+		variables.mail     = getInstance( "MailService@core" );
+		variables.sites    = getInstance( "SiteService@core" );
+		variables.settings = getInstance( "coldbox:moduleSettings:core" );
 		cleanup();
 		variables.site = sites.createSite( name = "Mail One", slug = PREFIX & "one" );
+
+		// Whatever this deployment is configured with, restored in afterAll.
+		//
+		// These specs used to read the live setting, so they passed only while
+		// the application happened to have mail switched off — and started
+		// failing the day somebody configured it, reporting a fault in the mail
+		// layer when the only thing that had changed was a config file. A spec
+		// about "what happens when sending is off" has to make that true itself.
+		variables.configuredMode = settings.mailMode ?: "off";
 	}
 
 	function afterAll(){
+		settings.mailMode = configuredMode;
 		cleanup();
 		super.afterAll();
+	}
+
+	/**
+	 * Set the mode and hand back the service, so a spec reads as one sentence.
+	 */
+	private function withMode( required string mode ){
+		settings.mailMode = arguments.mode;
+
+		return mail;
 	}
 
 	function run(){
 		describe( "MailService", function(){
 
 			describe( "recording", function(){
+
+				beforeEach( function(){
+					withMode( "off" );
+				} );
 
 				it( "records a message even when sending is off", function(){
 					var result = mail.send(
@@ -150,9 +174,25 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			describe( "modes", function(){
 
-				it( "defaults to off, so nothing is sent by accident", function(){
-					expect( mail.getMode() ).toBe( "off" );
-					expect( mail.isEnabled() ).toBeFalse();
+				afterEach( function(){
+					withMode( configuredMode );
+				} );
+
+				it( "reads the three modes it knows", function(){
+					expect( withMode( "off" ).getMode() ).toBe( "off" );
+					expect( withMode( "log" ).getMode() ).toBe( "log" );
+					expect( withMode( "send" ).getMode() ).toBe( "send" );
+				} );
+
+				/**
+				 * The property that matters: an unset or misspelt mode must not
+				 * be read as permission to send.
+				 */
+				it( "falls back to off for anything it does not recognise", function(){
+					expect( withMode( "" ).getMode() ).toBe( "off" );
+					expect( withMode( "SEND-IT" ).getMode() ).toBe( "off" );
+					expect( withMode( "off" ).isEnabled() ).toBeFalse();
+					expect( withMode( "log" ).isEnabled() ).toBeFalse();
 				} );
 
 			} );

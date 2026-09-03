@@ -130,9 +130,20 @@
 				withCredentials: true,
 				headers: token ? { "X-CSRF-Token": token.value } : {}
 			},
+			// The dropdown used to start at h2, on the reasoning that the
+			// theme already printed the page title as the h1 and a second one
+			// would be wrong. That held until pages gained `show_heading`:
+			// an author who turns the theme's heading off has to be able to
+			// write their own, and there was no way to do it — the sanitiser
+			// allowed h1 all along, the toolbar simply never offered it.
+			//
+			// "Page heading" rather than "Heading 1", because the choice being
+			// made is which of these is the page's one top-level heading, not
+			// which font size to apply.
 			heading: {
 				options: [
 					{ model: "paragraph", title: "Paragraph", class: "ck-heading_paragraph" },
+					{ model: "heading1", view: "h1", title: "Page heading", class: "ck-heading_heading1" },
 					{ model: "heading2", view: "h2", title: "Heading", class: "ck-heading_heading2" },
 					{ model: "heading3", view: "h3", title: "Subheading", class: "ck-heading_heading3" }
 				]

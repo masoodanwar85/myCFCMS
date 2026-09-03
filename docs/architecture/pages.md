@@ -147,6 +147,55 @@ all resolve to the same page.
 
 ---
 
+## 4a. Title versus heading
+
+A page's title does five jobs: the `<h1>` on the page, the browser tab, the
+`<title>` tag, the menu label and the breadcrumb. `show_heading` unpicks the
+first from the other four.
+
+It exists because some pages carry their own headline in the content — a
+landing page opening with a hero, or a body whose first element is a styled
+title block — and the theme's `<h1>` above it printed the same words twice. The
+only workaround was to name the page something blank-looking, which then broke
+the tab, the menu and the breadcrumb.
+
+So it is a **display switch, not a second title**. With it off the page still
+has a title everywhere a title is used; only the on-page heading goes. A page
+whose heading is hidden has no `<h1>` of its own, which the field's help text
+says outright — the content is expected to supply one.
+
+The column defaults to `1`, so every row that existed before it renders exactly
+as it did.
+
+### Writing your own
+
+Hiding the theme's heading is only half of it — the author then needs to be able
+to write one. The editor's style menu used to start at **Heading** (`h2`), on
+the reasoning that the theme supplied the `h1` and a second one would be wrong.
+With `show_heading` that reasoning inverts, and the option became a dead end:
+turn the heading off and the page had no `h1` at all, with no way to add one.
+
+The style menu now opens with **Page heading** (`h1`). The sanitiser had allowed
+`h1` through `h6` all along — only the toolbar withheld it — so nothing about
+storage or the policy changed.
+
+The pair does create one trap: heading on *and* an `h1` in the content is two
+top-level headings, which nothing would otherwise report and which reads as two
+competing titles to a screen reader and to a crawler. The editor flags it, with
+a substring check on the markup rather than a parse — a hint that is
+occasionally over-eager costs nothing, and a parser on every form render costs
+something every time.
+
+It travels in the same `seo` struct as the SEO fields, which is where the extra
+page options already ride — scheduling and raw markup are in there too, and
+neither is SEO. `PageService` handles it in its own `applyDisplay()` next to
+`applySchedule()` and `applyRawMarkup()`, so the distinction stays visible even
+though the transport is shared.
+
+Read with `structKeyExists`, never truthiness: `false` is the whole point of the
+field, and the elvis shortcut would make it impossible to turn off — the same
+trap that has caught `robotsIndex`, `sitemapInclude` and site settings before.
+
 ## 5. What is implemented
 
 - The `pages` table with hierarchy, materialised paths, SEO fields, publishing
@@ -155,6 +204,8 @@ all resolve to the same page.
 - Entity, repository and service, with full tree and path maintenance.
 - Five interception points for later modules to hang off.
 - Home-page designation via Core's site settings.
+- Per-page `show_heading`, so a page whose content carries its own headline does
+  not print the title twice.
 - 70 passing specs for this group; 258 across Groups 1–3.
 
 ## 6. What is intentionally postponed

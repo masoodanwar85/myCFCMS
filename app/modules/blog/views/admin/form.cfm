@@ -24,6 +24,14 @@
 
 		<section class="tab-panel" data-for="tab-content">
 
+			<!---
+				Tells the handler this tab was rendered, so an unticked checkbox
+				below reads as `false` rather than as "the form had no such
+				field". Inside the panel, not beside the radios: a direct-child
+				input of `.tabs` shifts every panel by one. See `_styles.cfm`.
+			--->
+			<input type="hidden" name="contentTabPresent" value="1">
+
 			<div class="grid2">
 				<div>
 					<label for="title">Title</label>
@@ -40,6 +48,31 @@
 			<label for="excerpt">Excerpt</label>
 			<input type="text" id="excerpt" name="excerpt" placeholder="Optional; taken from the content when blank"
 			       value="#editing ? encodeForHTMLAttribute( prc.post.getExcerpt() ?: '' ) : ''#">
+
+			<!---
+				A display switch, not a second title. With it off the title is
+				still the browser tab, the `<title>` tag, the archive listing
+				and the link text — only the on-page heading goes.
+			--->
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="showHeading"<cfif !editing || prc.post.getShowHeading()> checked</cfif>>
+					Show this title as a heading on the post
+				</label>
+			</div>
+			<p class="muted" style="font-size:.8rem">
+				Turn off for a post whose content already opens with its own headline, so the title
+				is not printed twice. Write one in the content using <strong>Page heading</strong>
+				in the editor's style menu.
+			</p>
+
+			<cfif editing && prc.post.getShowHeading() && findNoCase( "<h1", prc.post.getContent() ?: "" )>
+				<p class="flash error" style="font-size:.8rem">
+					This post's content already contains a <code>&lt;h1&gt;</code>, and the title is
+					also being shown as a heading &mdash; so the post has two top-level headings.
+					Untick the box above, or change the one in the content to <strong>Heading</strong>.
+				</p>
+			</cfif>
 
 			<label for="content">Content</label>
 			<textarea id="content" name="content" data-editor>#editing ? encodeForHTML( prc.post.getContent() ?: "" ) : ""#</textarea>

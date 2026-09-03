@@ -51,9 +51,57 @@
 
 		<!-- ------------------------------------------------------ content -->
 		<section class="tab-panel" data-for="tab-content">
+			<!---
+				Tells the handler this tab was rendered, so an unticked
+				checkbox below can be read as `false` rather than as "the form
+				did not include the field". Same reason `seoTabPresent` exists,
+				and separate from it so the two tabs stay independent.
+
+				Inside the panel, not next to the radios: a direct-child input
+				of `.tabs` shifts every panel by one. See `_styles.cfm`.
+			--->
+			<input type="hidden" name="contentTabPresent" value="1">
+
 			<label for="title">Title</label>
 			<input type="text" id="title" name="title" required
 			       value="#editing ? encodeForHTMLAttribute( p.getTitle() ) : ''#">
+
+			<!---
+				A display switch, not a second title. With it off the title is
+				still the browser tab, the menu label, the breadcrumb and the
+				`<title>` tag — only the on-page heading goes away.
+			--->
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="showHeading"<cfif !editing || p.getShowHeading()> checked</cfif>>
+					Show this title as a heading on the page
+				</label>
+			</div>
+			<p class="muted" style="font-size:.8rem">
+				Turn off for a page whose content already opens with its own headline &mdash; a
+				landing page with a hero, say &mdash; so the title is not printed twice. The page
+				then has no <code>&lt;h1&gt;</code> of its own, so write one in the content using
+				<strong>Page heading</strong> in the editor's style menu.
+			</p>
+
+			<!---
+				The trap this pair creates. Two `<h1>`s on a page is not an
+				error anything will report: it renders, and it reads as two
+				competing titles to a screen reader and to a crawler. Cheap to
+				spot here — the content is already in hand — and much harder to
+				notice once the page is live.
+
+				`findNoCase` on the raw markup rather than parsing it: this is a
+				hint, and a hint that is occasionally over-eager costs nothing,
+				while a parser on every form render costs something every time.
+			--->
+			<cfif editing && p.getShowHeading() && findNoCase( "<h1", p.getContent() ?: "" )>
+				<p class="flash error" style="font-size:.8rem">
+					This page's content already contains a <code>&lt;h1&gt;</code>, and the title is
+					also being shown as a heading &mdash; so the page has two top-level headings.
+					Untick the box above, or change the one in the content to <strong>Heading</strong>.
+				</p>
+			</cfif>
 
 			<div class="grid2">
 				<div>

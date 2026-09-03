@@ -72,7 +72,14 @@ component extends="core.models.security.SecuredHandler" {
 				metaDescription = rc.metaDescription ?: "",
 				categoryIds     = listToArray( rc.categoryIds ?: "" ),
 				authorId        = prc.currentUser.getId(),
-				allowUnfilteredHtml = mayPostRawHtml( prc )
+				allowUnfilteredHtml = mayPostRawHtml( prc ),
+				// An unticked checkbox posts nothing, so the hidden marker on
+				// the Content tab is what tells a cleared box from a form that
+				// never had the field. Without the marker this falls back to
+				// the service's own default rather than to `false`.
+				showHeading     = ( rc.contentTabPresent ?: "" ) == "1"
+				                  ? ( rc.showHeading ?: "" ) == "on"
+				                  : true
 			);
 		} catch ( any e ) {
 			return done( "/admin/blog/new", e.message, "error" );
@@ -98,17 +105,27 @@ component extends="core.models.security.SecuredHandler" {
 		var post = requireSitePost( rc.id ?: 0, prc );
 
 		try {
-			blogService.updatePost(
-				postId          = post.getId(),
-				title           = rc.title ?: post.getTitle(),
-				slug            = rc.slug ?: post.getSlug(),
-				excerpt         = rc.excerpt ?: "",
-				content         = rc.content ?: "",
-				metaTitle       = rc.metaTitle ?: "",
-				metaDescription = rc.metaDescription ?: "",
-				categoryIds     = listToArray( rc.categoryIds ?: "" ),
-				allowUnfilteredHtml = mayPostRawHtml( prc )
-			);
+			var args = {
+				postId          : post.getId(),
+				title           : rc.title ?: post.getTitle(),
+				slug            : rc.slug ?: post.getSlug(),
+				excerpt         : rc.excerpt ?: "",
+				content         : rc.content ?: "",
+				metaTitle       : rc.metaTitle ?: "",
+				metaDescription : rc.metaDescription ?: "",
+				categoryIds     : listToArray( rc.categoryIds ?: "" ),
+				allowUnfilteredHtml : mayPostRawHtml( prc )
+			};
+
+			// Added only when the form actually carried the field. `updatePost`
+			// leaves an argument it was not given alone, so omitting the key is
+			// how an update from elsewhere avoids resetting the switch —
+			// passing `false` and passing nothing mean different things.
+			if ( ( rc.contentTabPresent ?: "" ) == "1" ) {
+				args.showHeading = ( rc.showHeading ?: "" ) == "on";
+			}
+
+			blogService.updatePost( argumentCollection = args );
 		} catch ( any e ) {
 			return done( "/admin/blog/edit/" & post.getId(), e.message, "error" );
 		}

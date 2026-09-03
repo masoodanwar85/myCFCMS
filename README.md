@@ -52,6 +52,7 @@ Architecture documentation:
 - [media-and-mail.md](docs/architecture/media-and-mail.md) — uploads, safe file serving, and the mail layer.
 - [seo-and-menus.md](docs/architecture/seo-and-menus.md) — canonical addresses, sitemaps, robots, and editable navigation.
 - [shortcodes-and-api.md](docs/architecture/shortcodes-and-api.md) — shortcode expansion, API tokens, and the REST boundary.
+- [forms.md](docs/architecture/forms.md) — author-defined forms, their fields, and why an answer records the question it was asked.
 - [deployment/apache-modjk.md](docs/deployment/apache-modjk.md) — deploying behind Apache + mod_jk, and why the rewrite rules cannot live in `.htaccess`.
 - [guides/adding-a-site.md](docs/guides/adding-a-site.md) — provisioning a second site on the same instance.
 - [guides/theme-assets-and-branding.md](docs/guides/theme-assets-and-branding.md) — where logos, stylesheets and brand colours live when one app serves many sites.

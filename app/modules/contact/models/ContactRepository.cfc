@@ -6,7 +6,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 	variables.FORM_TABLE = "contact_forms";
 	variables.FORM_COLS  = [
 		"id", "site_id", "name", "slug", "intro",
-		"recipient_email", "success_message", "is_active", "created_at", "updated_at"
+		"recipient_email", "success_message", "thank_you_path", "is_active", "created_at", "updated_at"
 	];
 
 	variables.SUB_TABLE = "contact_submissions";
@@ -31,6 +31,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"intro"           : { value : arguments.form.getIntro() ?: "", cfsqltype : "cf_sql_longvarchar" },
 					"recipient_email" : arguments.form.getRecipientEmail() ?: "",
 					"success_message" : arguments.form.getSuccessMessage(),
+					"thank_you_path"  : arguments.form.getThankYouPath() ?: "",
 					"is_active"       : arguments.form.getIsActive() ? 1 : 0,
 					"created_at"      : { value : stamp, cfsqltype : "cf_sql_timestamp" },
 					"updated_at"      : { value : stamp, cfsqltype : "cf_sql_timestamp" }
@@ -60,6 +61,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 				"intro"           : { value : arguments.form.getIntro() ?: "", cfsqltype : "cf_sql_longvarchar" },
 				"recipient_email" : arguments.form.getRecipientEmail() ?: "",
 				"success_message" : arguments.form.getSuccessMessage(),
+				"thank_you_path"  : arguments.form.getThankYouPath() ?: "",
 				"is_active"       : arguments.form.getIsActive() ? 1 : 0,
 				"updated_at"      : { value : now(), cfsqltype : "cf_sql_timestamp" }
 			} );
@@ -71,18 +73,57 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		return toFormOrNull( formQuery().where( "id", arguments.id ).first() );
 	}
 
-	function findFormBySlug( required numeric siteId, required string slug ){
-		return toFormOrNull(
-			formQuery().where( "site_id", arguments.siteId ).where( "slug", arguments.slug ).first()
-		);
+	/**
+	 * @activeOnly Restrict to a form that is currently accepting messages.
+	 *             The public site always passes true: `is_active` is meant to
+	 *             stop a form receiving anything, and a lookup that ignored it
+	 *             meant a deactivated form still accepted submissions from
+	 *             anyone who knew its slug. The admin passes false, because it
+	 *             has to be able to load a form in order to switch it back on.
+	 */
+	function findFormBySlug(
+		required numeric siteId,
+		required string slug,
+		boolean activeOnly = false
+	){
+		var q = formQuery().where( "site_id", arguments.siteId ).where( "slug", arguments.slug );
+
+		if ( arguments.activeOnly ) {
+			q.where( "is_active", 1 );
+		}
+
+		return toFormOrNull( q.first() );
 	}
 
 	array function findFormsForSite( required numeric siteId ){
 		return formQuery()
 			.where( "site_id", arguments.siteId )
-			.orderBy( "name" )
+			.orderBy( "id" )
 			.get()
 			.map( ( row ) => toForm( row ) );
+	}
+
+	/**
+	 * A site's contact form.
+	 *
+	 * Oldest active row, by id. Deliberately not `orderBy( "name" )`, which is
+	 * what decided this before: which form a site served was then decided
+	 * alphabetically, so renaming a form could silently change which one
+	 * `/contact` showed. Id ordering is stable and means "the one you set up
+	 * first", which is the one a site has been using.
+	 */
+	function findFormForSite( required numeric siteId ){
+		return toFormOrNull(
+			formQuery()
+				.where( "site_id", arguments.siteId )
+				.where( "is_active", 1 )
+				.orderBy( "id" )
+				.first()
+		);
+	}
+
+	numeric function countFormsForSite( required numeric siteId ){
+		return variables.query.from( variables.FORM_TABLE ).where( "site_id", arguments.siteId ).count();
 	}
 
 	function deleteForm( required numeric formId ){
@@ -175,6 +216,10 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		return q.count();
 	}
 
+	numeric function countSubmissionsForForm( required numeric formId ){
+		return variables.query.from( variables.SUB_TABLE ).where( "form_id", arguments.formId ).count();
+	}
+
 	numeric function countByStatus( required numeric siteId, required string status ){
 		return variables.query
 			.from( variables.SUB_TABLE )
@@ -230,6 +275,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setIntro( arguments.row.intro ?: "" )
 			.setRecipientEmail( arguments.row.recipient_email ?: "" )
 			.setSuccessMessage( arguments.row.success_message )
+			.setThankYouPath( arguments.row.thank_you_path ?: "" )
 			.setIsActive( arguments.row.is_active ? true : false );
 	}
 

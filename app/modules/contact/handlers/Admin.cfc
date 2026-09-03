@@ -88,12 +88,34 @@ component extends="core.models.security.SecuredHandler" {
 	/* ------------------------------------------------------------------ forms */
 
 	function forms( event, rc, prc ){
-		prc.pageTitle = "Contact forms";
-		prc.forms     = contactService.getFormsForSite( prc.currentSite.getId() );
+		var siteId = prc.currentSite.getId();
+
+		prc.pageTitle = "Contact form";
+
+		// One form, and whatever else the multi-form era left behind. The
+		// extras are shown rather than hidden: a second row holds a recipient
+		// address somebody configured, and possibly enquiries, and quietly
+		// dropping it from the screen would look like the CMS had lost them.
+		prc.form   = contactService.getFormForSite( siteId );
+		prc.extras = contactService.getExtraFormsForSite( siteId );
+
+		// How much would be lost by deleting one. A delete confirmation that
+		// says "and every enquiry sent through it" is worth nothing if the
+		// screen does not say how many that is.
+		prc.extraCounts = {};
+		for ( var extra in prc.extras ) {
+			prc.extraCounts[ extra.getId() ] = contactService.countSubmissionsForForm( extra.getId() );
+		}
 
 		event.setView( view = "admin/forms", module = "contact" );
 	}
 
+	/**
+	 * Create this site's contact form.
+	 *
+	 * Still here, and still one action, because a site provisioned without a
+	 * form needs a way to get one. `ContactService` refuses a second.
+	 */
 	function createForm( event, rc, prc ){
 		try {
 			contactService.createForm(
@@ -120,6 +142,7 @@ component extends="core.models.security.SecuredHandler" {
 				intro          = rc.intro ?: "",
 				recipientEmail = rc.recipientEmail ?: "",
 				successMessage = rc.successMessage ?: "",
+				thankYouPath   = rc.thankYouPath ?: "",
 				isActive       = ( rc.isActive ?: "" ) == "yes"
 			);
 		} catch ( any e ) {

@@ -169,6 +169,57 @@ something.
 
 ---
 
+## `cfmail`, and why it lives in its own file
+
+The mail tag is called from `_send.cfm`, an included template, not from a line
+of cfscript in `MailService`. Two facts force that, and neither is obvious.
+
+**`mail()` is not Adobe syntax.** The unprefixed tag-in-script form is Lucee and
+BoxLang. Adobe ColdFusion does not resolve it and reports *"Variable MAIL is
+undefined"* — which reads like a coding slip and sends you hunting for a
+variable. `MailService` was written that way and so could never send on Adobe at
+all, whatever the configuration said.
+
+**`cfmail` is resolved at compile time.** ColdFusion 2021 and later ship
+modular, and `mail` is not among the packages a minimal install includes. Put
+`cfmail` directly in `MailService.cfc` on such an install and that whole
+component fails to compile — WireBox cannot build it, every screen injecting it
+breaks, and the symptom is an unrelated `Injector.InstanceNotFoundException`
+naming some other component entirely.
+
+Isolated in an included template, the same failure is an ordinary catchable
+exception at the point of the include. One send is recorded as `failed` with a
+usable reason; nothing else is affected.
+
+`attributeCollection` is what makes the tag form workable. `cfmail()` in
+cfscript rejects it, which would mean writing every attribute out twice — once
+with a reply-to and once without. The *tag* accepts it.
+
+The raw errors name neither mail nor packages, so `looksLikeMissingMailPackage()`
+translates them into the sentence an operator needs. It is matched narrowly on
+the message, because the engine reports it with no distinguishing type, and a
+genuine SMTP failure must never be relabelled as a missing package.
+
+### Four things must all be true
+
+| | |
+|---|---|
+| `core.mailMode` | `send`. `log` writes the rendered message to `app/logs/app.log` instead — worth using first. |
+| `core.mailFrom` | A real address. The default `no-reply@localhost` is rejected by most servers. |
+| `<module>.sendNotifications` | Per module, false by default. When false nothing is even queued, so `mail_messages` stays empty — which is how to tell this gate from the others. |
+| The ColdFusion mail package | `cfpm install mail`, then restart. Plus an SMTP server under Server Settings → Mail. |
+
+`resources/tools/MailCheck.cfm` walks all four and reports which one stopped a
+message.
+
+### A note on the specs
+
+`MailSpec` sets the mode it needs and restores the configured one afterwards. It
+used to read the live setting, so it passed only while the application happened
+to have mail switched off, and began failing the day somebody configured it —
+reporting a fault in the mail layer when the only thing that had changed was a
+config file.
+
 ## 4. What is implemented
 
 - `media` table, `MediaService`, admin library with pagination, per-site storage.

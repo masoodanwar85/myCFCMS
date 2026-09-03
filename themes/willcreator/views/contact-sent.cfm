@@ -1,7 +1,7 @@
 <cfoutput>
-<article class="section">
-	<h1>Thank you</h1>
+<cfif !( args.embedded ?: false )><article class="section"></cfif>
+	<cfif !( args.embedded ?: false )><h1>Thank you</h1></cfif>
 	<p>#encodeForHTML( args.message )#</p>
-	<p><a href="/">Back to the home page</a></p>
-</article>
+	<cfif !( args.embedded ?: false )><p><a href="/">Back to the home page</a></p></cfif>
+<cfif !( args.embedded ?: false )></article></cfif>
 </cfoutput>

@@ -36,7 +36,8 @@ component singleton accessors="true" {
 		string slug           = "",
 		string intro          = "",
 		string recipientEmail = "",
-		string successMessage = ""
+		string successMessage = "",
+		string thankYouPath   = ""
 	){
 		if ( isNull( siteRepository.findById( arguments.siteId ) ) ) {
 			throw( type = "Contact.SiteNotFound", message = "No site with id [#arguments.siteId#]." );
@@ -62,6 +63,22 @@ component singleton accessors="true" {
 			throw( type = "Contact.FormSlugExists", message = "This site already has a form at [#formSlug#]." );
 		}
 
+		// One contact form per site.
+		//
+		// The table has always been plural and the site has always shown one:
+		// `/contact` served whichever form sorted first, and a second had no
+		// URL, no menu entry and no way to be chosen. Rather than finish a
+		// feature nobody could reach, Contact is now what it always behaved
+		// like — a site's enquiry form and its settings. A form with its own
+		// fields is a different thing and belongs to the Forms module.
+		if ( contactRepository.countFormsForSite( arguments.siteId ) ) {
+			throw(
+				type    = "Contact.FormAlreadyExists",
+				message = "This site already has a contact form.",
+				detail  = "A site has one contact form. For a second form with its own fields, use the Forms module."
+			);
+		}
+
 		var contactForm = wirebox
 			.getInstance( "ContactForm@contact" )
 			.setSiteId( arguments.siteId )
@@ -74,6 +91,8 @@ component singleton accessors="true" {
 			contactForm.setSuccessMessage( trim( arguments.successMessage ) );
 		}
 
+		contactForm.setThankYouPath( safeReturnPath( arguments.thankYouPath ) );
+
 		return contactRepository.createForm( contactForm );
 	}
 
@@ -83,6 +102,7 @@ component singleton accessors="true" {
 		string intro,
 		string recipientEmail,
 		string successMessage,
+		string thankYouPath,
 		boolean isActive
 	){
 		var contactForm = requireForm( arguments.formId );
@@ -108,11 +128,46 @@ component singleton accessors="true" {
 		if ( !isNull( arguments.successMessage ) && len( trim( arguments.successMessage ) ) ) {
 			contactForm.setSuccessMessage( trim( arguments.successMessage ) );
 		}
+		if ( !isNull( arguments.thankYouPath ) ) {
+			contactForm.setThankYouPath( safeReturnPath( arguments.thankYouPath ) );
+		}
 		if ( !isNull( arguments.isActive ) ) {
 			contactForm.setIsActive( arguments.isActive );
 		}
 
 		return contactRepository.updateForm( contactForm );
+	}
+
+	/**
+	 * A path we are willing to redirect a visitor to after they send a message.
+	 *
+	 * Site-relative only: one leading slash, no scheme, no host, no
+	 * protocol-relative `//`. An open redirect on a public form is how a
+	 * phishing page borrows a client's domain for legitimacy — the victim sees
+	 * the firm's address in the link they were sent and lands somewhere else.
+	 *
+	 * Anything unusable becomes an empty string rather than an error, and empty
+	 * means "stay on the page", which is the safe default. A form is not worth
+	 * refusing to save over a mistyped path.
+	 */
+	string function safeReturnPath( required string path ){
+		var candidate = trim( arguments.path );
+
+		if ( !len( candidate ) || len( candidate ) > 500 ) {
+			return "";
+		}
+
+		// `//host` inherits the current scheme and leaves the site.
+		if ( !reFind( "^/[^/]", candidate ) ) {
+			return "";
+		}
+
+		// A newline would let a crafted value inject a second response header.
+		if ( reFind( "[[:cntrl:]]", candidate ) ) {
+			return "";
+		}
+
+		return candidate;
 	}
 
 	function deleteForm( required numeric formId ){
@@ -125,8 +180,19 @@ component singleton accessors="true" {
 		return contactRepository.findFormById( arguments.formId );
 	}
 
-	function getFormBySlug( required numeric siteId, required string slug ){
-		return contactRepository.findFormBySlug( arguments.siteId, slugify( arguments.slug ) );
+	/**
+	 * @activeOnly What the public site always wants. See the repository.
+	 */
+	function getFormBySlug(
+		required numeric siteId,
+		required string slug,
+		boolean activeOnly = false
+	){
+		return contactRepository.findFormBySlug(
+			arguments.siteId,
+			slugify( arguments.slug ),
+			arguments.activeOnly
+		);
 	}
 
 	array function getFormsForSite( required numeric siteId ){
@@ -134,21 +200,43 @@ component singleton accessors="true" {
 	}
 
 	/**
-	 * The form a site's `/contact` URL should show: its first active one.
+	 * A site's contact form, or null when it has none.
+	 */
+	function getFormForSite( required numeric siteId ){
+		return contactRepository.findFormForSite( arguments.siteId );
+	}
+
+	/**
+	 * @deprecated Use `getFormForSite`. Kept because "default" implied a choice
+	 *             between forms, and there is no longer one to make.
 	 */
 	function getDefaultForm( required numeric siteId ){
-		var active = contactRepository
-			.findFormsForSite( arguments.siteId )
-			.filter( ( candidate ) => candidate.getIsActive() );
+		return getFormForSite( arguments.siteId );
+	}
 
-		// An explicit return, not a ternary: a ternary cannot yield null on
-		// ColdFusion — it hands back an empty string, which `isNull()` then
-		// reports as present.
-		if ( active.len() ) {
-			return active[ 1 ];
+	/**
+	 * Rows beyond the site's one form.
+	 *
+	 * Not deleted by anything automatic: a second form holds a recipient
+	 * address somebody configured and may hold enquiries, and throwing that
+	 * away to tidy up a data model would be the CMS losing a client's mail.
+	 * The admin lists them so an operator can move or remove them deliberately.
+	 */
+	numeric function countSubmissionsForForm( required numeric formId ){
+		return contactRepository.countSubmissionsForForm( arguments.formId );
+	}
+
+	array function getExtraFormsForSite( required numeric siteId ){
+		var all     = contactRepository.findFormsForSite( arguments.siteId );
+		var primary = getFormForSite( arguments.siteId );
+
+		if ( isNull( primary ) ) {
+			return all;
 		}
 
-		return;
+		var primaryId = primary.getId();
+
+		return all.filter( ( candidate ) => candidate.getId() != primaryId );
 	}
 
 	/* ------------------------------------------------------------ submissions */

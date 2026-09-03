@@ -18,6 +18,7 @@ component singleton accessors="true" {
 	property name="csrf"           inject="CsrfService@core";
 	property name="recaptcha"      inject="RecaptchaService@core";
 	property name="settings"       inject="coldbox:moduleSettings:contact";
+	property name="flash"          inject="coldbox:flash";
 	property name="log"            inject="logbox:logger:{this}";
 
 	/* -------------------------------------------------------------- reading */
@@ -56,20 +57,36 @@ component singleton accessors="true" {
 		required string path,
 		required struct formData
 	){
-		if ( arguments.path != basePath() ) {
+		// Two ways a submission arrives, and they end differently.
+		//
+		//   * `/contact` — this resolver owns the URL, so a validation failure
+		//     can be answered by re-rendering the form in place.
+		//   * anywhere else — a `[contact-form]` embedded in a page that Pages
+		//     owns. This resolver cannot re-render that page, so both outcomes
+		//     are answered with a redirect and the state is carried in flash.
+		//
+		// The difference is forced by who owns the URL, not chosen.
+		var embedded = arguments.path != basePath();
+
+		var contactForm = contactService.getFormForSite( arguments.siteId );
+
+		if ( isNull( contactForm ) ) {
 			return;
 		}
 
-		var contactForm = resolveForm( arguments.siteId, arguments.formData.form ?: "" );
-
-		if ( isNull( contactForm ) ) {
+		// On someone else's URL the posted marker is the only thing saying this
+		// POST is ours at all, so it has to match this site's form. It is no
+		// longer a *lookup* — a site has one contact form, so the slug can only
+		// confirm or deny, never select. That closes the hole where editing the
+		// hidden field routed a message to a different recipient.
+		if ( embedded && ( arguments.formData.form ?: "" ) != contactForm.getSlug() ) {
 			return;
 		}
 
 		// A token proves the form came from a session that was actually served
 		// this page. Without it, anything on the internet could post here.
 		if ( !csrf.verify( arguments.formData.csrfToken ?: "" ) ) {
-			return failed( contactForm, arguments.formData, [ "That form expired. Please try again." ] );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, [ "That form expired. Please try again." ] );
 		}
 
 		// A field a person never sees and never fills in. Cheap, and it stops
@@ -93,13 +110,13 @@ component singleton accessors="true" {
 		);
 
 		if ( !challenge.success ) {
-			return failed( contactForm, arguments.formData, [ challenge.error ] );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, [ challenge.error ] );
 		}
 
 		var errors = contactService.validateSubmission( arguments.formData );
 
 		if ( errors.len() ) {
-			return failed( contactForm, arguments.formData, errors );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, errors );
 		}
 
 		try {
@@ -110,20 +127,109 @@ component singleton accessors="true" {
 				userAgent = cgi.http_user_agent ?: ""
 			);
 		} catch ( Contact.TooManySubmissions e ) {
-			return failed( contactForm, arguments.formData, [ e.message ] );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, [ e.message ] );
 		} catch ( Contact.InvalidSubmission e ) {
-			return failed( contactForm, arguments.formData, [ e.message ] );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, [ e.message ] );
 		} catch ( Contact.FormInactive e ) {
-			return failed( contactForm, arguments.formData, [ e.message ] );
+			return refuse( embedded, arguments.path, contactForm, arguments.formData, [ e.message ] );
 		}
 
-		return { "redirectTo" : "/" & basePath() & "/" & thankYouSegment() };
+		return succeed( embedded, arguments.path, contactForm );
+	}
+
+	/* ------------------------------------------------------------- outcomes */
+
+	/**
+	 * Where a visitor goes after their message is accepted.
+	 *
+	 * Three answers, in order of precedence:
+	 *
+	 *   1. The form's own `thankYouPath`, when one is configured. This is what
+	 *      advertising conversion tracking needs — Google Ads and GA4 fire on a
+	 *      URL being loaded, and a message swapped in by the server produces no
+	 *      such URL.
+	 *   2. Back to the page the form was embedded in, with the success message
+	 *      in flash for the shortcode to render in place of the form.
+	 *   3. `/contact/thank-you`, unchanged, for the standalone form.
+	 */
+	private struct function succeed(
+		required boolean embedded,
+		required string path,
+		required contact.models.ContactForm form
+	){
+		var configured = arguments.form.getThankYouPath() ?: "";
+
+		if ( len( configured ) ) {
+			return { "redirectTo" : configured };
+		}
+
+		if ( !arguments.embedded ) {
+			return { "redirectTo" : "/" & basePath() & "/" & thankYouSegment() };
+		}
+
+		flashFor( arguments.form, {
+			"sent"    : true,
+			"message" : arguments.form.getSuccessMessage()
+		} );
+
+		return { "redirectTo" : "/" & arguments.path };
+	}
+
+	/**
+	 * Where a visitor goes when their message is refused.
+	 *
+	 * On `/contact` this re-renders the form with its errors and a 422, as it
+	 * always has. Embedded, that is not available — the page belongs to another
+	 * module — so the errors and what was typed go into flash and the visitor is
+	 * sent back to the same URL. That also means a refusal cannot be re-posted
+	 * by refreshing, which the 422 path still allows.
+	 */
+	private struct function refuse(
+		required boolean embedded,
+		required string path,
+		required contact.models.ContactForm form,
+		required struct values,
+		required array errors
+	){
+		if ( !arguments.embedded ) {
+			return failed( arguments.form, arguments.values, arguments.errors );
+		}
+
+		flashFor( arguments.form, {
+			"sent"   : false,
+			"errors" : arguments.errors,
+			// Only the fields the form actually has. Flashing the whole post
+			// would put the CSRF token and the reCAPTCHA response into the
+			// session and back into the next page.
+			"values" : {
+				"name"    : arguments.values.name    ?: "",
+				"email"   : arguments.values.email   ?: "",
+				"subject" : arguments.values.subject ?: "",
+				"message" : arguments.values.message ?: ""
+			}
+		} );
+
+		return { "redirectTo" : "/" & arguments.path };
+	}
+
+	/**
+	 * Keyed by the form's slug, so two forms on one page — or the same
+	 * shortcode twice — cannot show each other's message.
+	 */
+	private function flashFor( required contact.models.ContactForm form, required struct state ){
+		flash.put( flashKey( arguments.form.getSlug() ), arguments.state );
+
+		return this;
+	}
+
+	string function flashKey( required string slug ){
+		return "contactForm_" & arguments.slug;
 	}
 
 	/* ---------------------------------------------------------------- shapes */
 
 	private function formResolution( required numeric siteId ){
-		var contactForm = contactService.getDefaultForm( arguments.siteId );
+		var contactForm = contactService.getFormForSite( arguments.siteId );
 		var siteIdOf    = arguments.siteId;
 
 		// No form configured: the site does not serve this URL at all, so Pages
@@ -152,7 +258,7 @@ component singleton accessors="true" {
 	}
 
 	private function thankYouResolution( required numeric siteId ){
-		var contactForm = contactService.getDefaultForm( arguments.siteId );
+		var contactForm = contactService.getFormForSite( arguments.siteId );
 
 		if ( isNull( contactForm ) ) {
 			return;
@@ -198,18 +304,6 @@ component singleton accessors="true" {
 	}
 
 	/* --------------------------------------------------------------- helpers */
-
-	private function resolveForm( required numeric siteId, required string slug ){
-		if ( len( trim( arguments.slug ) ) ) {
-			var named = contactService.getFormBySlug( arguments.siteId, arguments.slug );
-
-			if ( !isNull( named ) ) {
-				return named;
-			}
-		}
-
-		return contactService.getDefaultForm( arguments.siteId );
-	}
 
 	/**
 	 * The sender's address, preferring a proxy header when one is configured.

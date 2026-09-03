@@ -633,8 +633,30 @@ component singleton accessors="true" {
 			arguments.page.setSitemapChangefreq( fromList( given.sitemapChangefreq, variables.CHANGEFREQS, "weekly" ) );
 		}
 
+		applyDisplay( arguments.page, given );
 		applySchedule( arguments.page, given );
 		applyRawMarkup( arguments.page, given, arguments.allowRawMarkup );
+
+		return arguments.page;
+	}
+
+	/**
+	 * Presentation choices that are not SEO.
+	 *
+	 * `showHeading` arrives in the same struct as the SEO fields because that
+	 * struct is already how the extra page options travel — scheduling and raw
+	 * markup are in it too, and neither is SEO either. Kept in its own method
+	 * rather than folded into the block above so the distinction stays visible
+	 * to whoever adds the next one.
+	 *
+	 * `structKeyExists` rather than truthiness, for the reason it matters
+	 * everywhere in this file: `false` is a legitimate value, and a shortcut
+	 * that treats it as absent makes the option impossible to turn off.
+	 */
+	private function applyDisplay( required any page, required struct given ){
+		if ( structKeyExists( arguments.given, "showHeading" ) ) {
+			arguments.page.setShowHeading( asBoolean( arguments.given.showHeading ) );
+		}
 
 		return arguments.page;
 	}

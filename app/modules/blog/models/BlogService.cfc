@@ -40,7 +40,9 @@ component singleton accessors="true" {
 		string metaDescription = "",
 		array categoryIds      = [],
 		numeric authorId,
-		boolean allowUnfilteredHtml = false
+		boolean allowUnfilteredHtml = false,
+		// Defaults to the behaviour posts had before the option existed.
+		boolean showHeading    = true
 	){
 		if ( isNull( siteRepository.findById( arguments.siteId ) ) ) {
 			throw( type = "Blog.SiteNotFound", message = "No site with id [#arguments.siteId#]." );
@@ -85,7 +87,8 @@ component singleton accessors="true" {
 			.setContent( sanitizer.sanitize( arguments.content, arguments.allowUnfilteredHtml ) )
 			.setStatus( arguments.status )
 			.setMetaTitle( trim( arguments.metaTitle ) )
-			.setMetaDescription( trim( arguments.metaDescription ) );
+			.setMetaDescription( trim( arguments.metaDescription ) )
+			.setShowHeading( arguments.showHeading );
 
 		if ( !isNull( arguments.authorId ) ) {
 			post.setAuthorId( arguments.authorId );
@@ -115,7 +118,8 @@ component singleton accessors="true" {
 		string metaTitle,
 		string metaDescription,
 		array categoryIds,
-		boolean allowUnfilteredHtml = false
+		boolean allowUnfilteredHtml = false,
+		boolean showHeading
 	){
 		var post    = requirePost( arguments.postId );
 		var oldSlug = post.getSlug();
@@ -152,6 +156,12 @@ component singleton accessors="true" {
 		}
 		if ( !isNull( arguments.metaDescription ) ) {
 			post.setMetaDescription( trim( arguments.metaDescription ) );
+		}
+		// No default on the argument, so an update that says nothing about the
+		// heading leaves it alone. A default of `true` here would turn it back
+		// on every time somebody edited a post's content from anywhere else.
+		if ( !isNull( arguments.showHeading ) ) {
+			post.setShowHeading( arguments.showHeading );
 		}
 
 		var updated = postRepository.update( post );

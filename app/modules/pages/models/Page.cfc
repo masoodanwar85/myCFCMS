@@ -15,6 +15,16 @@ component accessors="true" {
 	property name="path"            type="string";
 	property name="status"          type="string";
 	property name="content"         type="string";
+
+	/**
+	 * Whether the theme prints this page's title as a heading above the content.
+	 *
+	 * A display switch, not a second title. The title is still the browser tab,
+	 * the menu label, the breadcrumb and the `<title>` tag when this is off —
+	 * only the on-page `<h1>` goes away, for pages whose content supplies its
+	 * own headline.
+	 */
+	property name="showHeading"     type="boolean";
 	property name="metaTitle"       type="string";
 	property name="metaDescription" type="string";
 	property name="sortOrder"       type="numeric";
@@ -58,6 +68,9 @@ component accessors="true" {
 		variables.status    = this.STATUS_DRAFT;
 		variables.sortOrder = 0;
 		variables.content   = "";
+
+		// The behaviour every page had before this option existed.
+		variables.showHeading = true;
 
 		// The behaviour that existed before these fields did, so a page created
 		// without touching the SEO tab presents exactly as it always has.

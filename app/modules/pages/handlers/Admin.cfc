@@ -118,6 +118,15 @@ component extends="core.models.security.SecuredHandler" {
 			given.sitemapInclude = ( arguments.rc.sitemapInclude ?: "" ) == "on";
 		}
 
+		// Its own marker, and not `seoTabPresent`: this checkbox lives on the
+		// Content tab, and reading it under the SEO tab's flag would tie two
+		// unrelated parts of the form together. An unticked checkbox posts
+		// nothing at all, so without a marker there is no way to tell "the
+		// author cleared it" from "this form had no such field".
+		if ( ( arguments.rc.contentTabPresent ?: "" ) == "1" ) {
+			given.showHeading = ( arguments.rc.showHeading ?: "" ) == "on";
+		}
+
 		// Raw markup is only read from the form when the author may write it.
 		// The service refuses it too — this is the outer of two gates, so a
 		// crafted post cannot reach the service with values it will silently

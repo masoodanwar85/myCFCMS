@@ -2,7 +2,9 @@
 <article>
 	<p class="crumbs"><a href="/#xmlFormat( args.basePath )#">Blog</a></p>
 
-	<h1>#encodeForHTML( args.post.getTitle() )#</h1>
+	<cfif args.post.getShowHeading()>
+		<h1>#encodeForHTML( args.post.getTitle() )#</h1>
+	</cfif>
 
 	<cfif !isNull( args.post.getPublishedAt() )>
 		<p style="color:##666;font-size:.85rem;margin:0 0 1.5rem">

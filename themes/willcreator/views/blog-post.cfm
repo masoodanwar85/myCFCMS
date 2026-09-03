@@ -7,7 +7,9 @@
 		</p>
 
 		<article class="section">
-			<h1>#encodeForHTML( args.post.getTitle() )#</h1>
+			<cfif args.post.getShowHeading()>
+				<h1>#encodeForHTML( args.post.getTitle() )#</h1>
+			</cfif>
 			<cfif !isNull( args.post.getPublishedAt() )>
 				<p style="color:##5b6675;font-size:.85rem;font-family:'Inter',sans-serif;margin-top:-.4rem">
 					<time datetime="#dateTimeFormat( args.post.getPublishedAt(), 'yyyy-mm-dd' )#">#dateFormat( args.post.getPublishedAt(), "d mmmm yyyy" )#</time>

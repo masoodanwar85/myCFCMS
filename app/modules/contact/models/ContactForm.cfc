@@ -10,6 +10,15 @@ component accessors="true" {
 	property name="intro"          type="string";
 	property name="recipientEmail" type="string";
 	property name="successMessage" type="string";
+
+	/**
+	 * Where to send the visitor after a successful send, or empty to leave them
+	 * on the page the form was embedded in.
+	 *
+	 * Site-relative only. An open redirect on a public form is how a phishing
+	 * page borrows a client's domain; `ContactService` is what enforces it.
+	 */
+	property name="thankYouPath"   type="string";
 	property name="isActive"       type="boolean";
 	property name="createdAt";
 	property name="updatedAt";

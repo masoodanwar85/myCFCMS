@@ -39,7 +39,7 @@ component {
 			// because it is trivially forged.
 			"trustForwardedFor" : false,
 			// Off until a mail layer exists and SMTP is configured.
-			"sendNotifications" : false
+			"sendNotifications" : true
 		};
 
 		routes = [ { pattern : "/:action?/:id?", handler : "Admin" } ];
@@ -61,6 +61,14 @@ component {
 			.register( "ContactLinkTargetProvider@contact", 60 );
 
 		wirebox
+			.getInstance( "ShortcodeRegistry@core" )
+			.register(
+				tag         = "contact-form",
+				id          = "ContactShortcode@contact",
+				description = "Embeds this site's contact form: [contact-form]"
+			);
+
+		wirebox
 			.getInstance( "AdminNavigationRegistry@core" )
 			.register(
 				label      = "Enquiries",
@@ -75,6 +83,7 @@ component {
 		wirebox.getInstance( "ContentResolverRegistry@core" ).unregister( "ContactContentResolver@contact" );
 		wirebox.getInstance( "SiteNavigationRegistry@core" ).unregister( "ContactNavigationProvider@contact" );
 		wirebox.getInstance( "LinkTargetRegistry@core" ).unregister( "ContactLinkTargetProvider@contact" );
+		wirebox.getInstance( "ShortcodeRegistry@core" ).unregister( "contact-form" );
 		wirebox.getInstance( "AdminNavigationRegistry@core" ).unregister( "/admin/contact" );
 	}
 

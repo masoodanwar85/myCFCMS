@@ -51,8 +51,8 @@ component {
 			// the log, `send` actually delivers. Defaults to `off` because no
 			// SMTP is configured — turning it on before that would fail every
 			// send rather than recording it for later.
-			"mailMode" : "off",
-			"mailFrom" : "no-reply@localhost"
+			"mailMode" : "send",
+			"mailFrom" : "info@willcreator.com.au"
 		};
 
 		/**
