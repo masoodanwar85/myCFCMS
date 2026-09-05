@@ -11,6 +11,7 @@
 component extends="core.models.security.SecuredHandler" {
 
 	property name="pageService" inject="PageService@pages";
+	property name="themeService" inject="ThemeService@core";
 
 	variables.permissions = {
 		"index"     : "pages.view",
@@ -47,6 +48,7 @@ component extends="core.models.security.SecuredHandler" {
 
 		prc.useEditor      = true;
 		prc.mayPostRawHtml = mayPostRawHtml( prc );
+		prc.templates      = templatesForSite( prc );
 
 		event.setView( view = "admin/form", module = "pages" );
 	}
@@ -84,6 +86,7 @@ component extends="core.models.security.SecuredHandler" {
 
 		prc.useEditor      = true;
 		prc.mayPostRawHtml = mayPostRawHtml( prc );
+		prc.templates      = templatesForSite( prc );
 
 		event.setView( view = "admin/form", module = "pages" );
 	}
@@ -99,6 +102,26 @@ component extends="core.models.security.SecuredHandler" {
 	 * companion hidden field the form always posts, which is what tells this
 	 * the tab was rendered at all.
 	 */
+	/**
+	 * The templates this site's theme offers.
+	 *
+	 * Read from the theme rather than from a list anywhere else: a template is a
+	 * file a developer deployed, so the filesystem is the only thing that knows
+	 * which exist. A site whose theme has none gets an empty array and the
+	 * picker does not appear.
+	 */
+	private array function templatesForSite( required struct prc ){
+		try {
+			return themeService
+				.getThemeForSite( arguments.prc.currentSite.getId() )
+				.templates();
+		} catch ( any e ) {
+			// A theme that will not load is already logged by ThemeService, and
+			// is not a reason the page form should refuse to open.
+			return [];
+		}
+	}
+
 	private struct function seoFrom( required struct rc, required struct prc ){
 		var given = {};
 
@@ -125,6 +148,12 @@ component extends="core.models.security.SecuredHandler" {
 		// author cleared it" from "this form had no such field".
 		if ( ( arguments.rc.contentTabPresent ?: "" ) == "1" ) {
 			given.showHeading = ( arguments.rc.showHeading ?: "" ) == "on";
+		}
+
+		// A `<select>` always posts, so its mere presence is enough — no marker
+		// needed, unlike the checkboxes above.
+		if ( structKeyExists( arguments.rc, "template" ) ) {
+			given.template = arguments.rc.template;
 		}
 
 		// Raw markup is only read from the form when the author may write it.

@@ -25,6 +25,14 @@ component accessors="true" {
 	 * own headline.
 	 */
 	property name="showHeading"     type="boolean";
+
+	/**
+	 * A template in the site's theme, or empty for the ordinary `page` view.
+	 *
+	 * A name, never code. See the migration for why that distinction is the
+	 * whole point of the feature.
+	 */
+	property name="template"        type="string";
 	property name="metaTitle"       type="string";
 	property name="metaDescription" type="string";
 	property name="sortOrder"       type="numeric";
@@ -69,8 +77,9 @@ component accessors="true" {
 		variables.sortOrder = 0;
 		variables.content   = "";
 
-		// The behaviour every page had before this option existed.
+		// The behaviour every page had before these options existed.
 		variables.showHeading = true;
+		variables.template    = "";
 
 		// The behaviour that existed before these fields did, so a page created
 		// without touching the SEO tab presents exactly as it always has.

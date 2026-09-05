@@ -158,6 +158,11 @@ component singleton accessors="true" {
 		var result = arguments.resolution;
 
 		result.view            = result.view ?: "page";
+
+		// A theme template to render through instead of the view, named by the
+		// resolver. Empty means the view, which is what every resolver that has
+		// never heard of templates returns.
+		result.template        = result.template ?: "";
 		result.args            = result.args ?: {};
 		result.title           = result.title ?: "";
 		result.metaDescription = result.metaDescription ?: "";

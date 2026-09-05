@@ -215,6 +215,66 @@ Admin and API areas will take reserved prefixes here in the same way.
 
 ---
 
+## Page templates
+
+A page renders through the theme's `page` view by default. When it needs its own
+logic — a fee calculator, a live listing, anything assembled at request time —
+it can name a **template** instead:
+
+    themes/willcreator/templates/fee-calculator.cfm
+
+The author picks it from a dropdown on the page's Advanced tab. The picker lists
+whatever `.cfm` files are in that directory, so a developer adds a template by
+deploying a file; there is nothing to register.
+
+A template receives the same `args` a view does — `args.page`, `args.breadcrumb`,
+`args.site`, `args.theme` — and is ordinary CFML, so it can reach any service
+through WireBox. The page's title, slug, SEO settings, menu position and publish
+window are untouched: a template changes how the body is drawn and nothing else.
+
+`themes/default/templates/example.cfm` is a working one, written to be copied.
+
+### Why a name, and never the code
+
+The obvious alternative is a column holding CFML that the CMS executes. It would
+be arbitrary code execution for anyone holding `pages.update`.
+
+`content.unfiltered` can gate raw HTML because HTML runs in the **visitor's**
+browser. CFML would run on the **server**, as the ColdFusion user, with the
+application's datasource — so an editor on one client's site could read the
+credentials and with them every other client's pages, users and enquiries, plus
+any file the ColdFusion user can reach. That is not a permission that can be
+scoped, because the code runs inside the boundary the permissions exist to
+protect rather than behind it.
+
+Storing a name costs nothing by comparison. Theme files already execute on every
+request and are deployed by whoever deploys code, so this adds no new surface at
+all.
+
+The name is reduced to `[a-z0-9_-]` **twice** — once by `PageService` before it
+is stored, and again by `Theme` when the path is built. Two passes because a row
+can reach `pages` from a migration, a seed or a direct `UPDATE`, not only through
+the service.
+
+### Choosing between the three
+
+| Reach for | When |
+|---|---|
+| **Shortcode** | A dynamic fragment inside prose an author is writing. |
+| **Page template** | One page with its own layout and logic, chosen per page. |
+| **A module with a resolver** | It is an application, not a page — its own URLs, its own storage. |
+
+### When a template is missing
+
+Named but not installed, the page falls back to the standard view and
+`Frontend` logs a warning. A theme change or a renamed file should leave a page
+rendering plainly and be noisy in the log, not take a client's page down over a
+display choice. Same rule `ThemeService` already applies to a missing theme.
+
+`template` is part of the resolution contract, normalised in
+`ContentResolverRegistry` like `view` and `canonicalPath`, so Blog or any other
+module can offer the same thing without Core changing again.
+
 ## 5. What is implemented
 
 - `ContentResolverRegistry` — priority-ordered, first-answer-wins, with

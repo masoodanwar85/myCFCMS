@@ -62,6 +62,50 @@ component accessors="true" {
 		return fileExists( assetDiskPath( arguments.path ) );
 	}
 
+	/**
+	 * The mapped path of one of this theme's page templates.
+	 *
+	 * Templates live in `templates/`, not beside the views, because the two are
+	 * different contracts. A theme must supply `page`, `404` and the rest — Core
+	 * asks for them by name. Templates are whatever a theme chooses to offer,
+	 * and a page opts into one; keeping them apart means a new template cannot
+	 * be mistaken for a view the framework expects.
+	 */
+	string function templatePath( required string template ){
+		return variables.mappedPath & "/templates/" & normalizeTemplate( arguments.template );
+	}
+
+	boolean function hasTemplate( required string template ){
+		var name = normalizeTemplate( arguments.template );
+
+		return len( name ) && fileExists( variables.diskPath & "/templates/" & name & ".cfm" );
+	}
+
+	/**
+	 * Every template this theme offers, for a picker.
+	 */
+	array function templates(){
+		var dir = variables.diskPath & "/templates";
+
+		if ( !directoryExists( dir ) ) {
+			return [];
+		}
+
+		return directoryList( dir, false, "name", "*.cfm" )
+			.map( ( file ) => reReplaceNoCase( file, "\.cfm$", "" ) )
+			.sort( "textnocase" );
+	}
+
+	/**
+	 * A template name addresses a file, so anything that could climb out of the
+	 * templates directory is stripped rather than escaped. The name reaches
+	 * here from a database column, and a column is only ever as trustworthy as
+	 * everything that has ever written to it.
+	 */
+	string function normalizeTemplate( required string template ){
+		return reReplace( lCase( trim( arguments.template ) ), "[^a-z0-9_-]", "", "all" );
+	}
+
 	boolean function hasView( required string view ){
 		return fileExists( variables.diskPath & "/views/" & arguments.view & ".cfm" );
 	}

@@ -136,6 +136,36 @@ component singleton accessors="true" {
 	}
 
 	/**
+	 * Render one of a theme's page templates.
+	 *
+	 * The same mechanism as `renderView`, pointed at `templates/` instead of
+	 * `views/`. Kept as its own method rather than a flag on that one because
+	 * the two answer to different contracts: Core asks a theme for `page` and
+	 * `404` by name and a theme must supply them, while a template is whatever
+	 * a theme chooses to offer and a page opts into.
+	 *
+	 * @throws Theme.TemplateMissing when the theme does not provide it.
+	 */
+	string function renderTemplate(
+		required core.models.theme.Theme theme,
+		required string template,
+		struct args = {}
+	){
+		if ( !arguments.theme.hasTemplate( arguments.template ) ) {
+			throw(
+				type    = "Theme.TemplateMissing",
+				message = "Theme [#arguments.theme.getSlug()#] has no template [#arguments.template#].",
+				detail  = "Expected #arguments.theme.getDiskPath()#/templates/#arguments.template#.cfm"
+			);
+		}
+
+		return renderer.externalView(
+			view = arguments.theme.templatePath( arguments.template ),
+			args = arguments.args
+		);
+	}
+
+	/**
 	 * Wrap already-rendered content in the theme's layout.
 	 *
 	 * The layout receives the content as `args.body`, rather than the theme

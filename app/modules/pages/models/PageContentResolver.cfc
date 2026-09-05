@@ -62,6 +62,10 @@ component singleton accessors="true" {
 
 		return {
 			"view"            : "page",
+			// A template the author picked, or empty. Frontend checks the theme
+			// actually provides it and falls back to the view if not, so a
+			// renamed template cannot take a page down.
+			"template"        : page.getTemplate() ?: "",
 			"args"            : {
 				"page"       : page,
 				"breadcrumb" : pageService.getBreadcrumb( page.getId() )

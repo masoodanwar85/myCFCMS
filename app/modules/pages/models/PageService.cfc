@@ -658,7 +658,28 @@ component singleton accessors="true" {
 			arguments.page.setShowHeading( asBoolean( arguments.given.showHeading ) );
 		}
 
+		if ( structKeyExists( arguments.given, "template" ) ) {
+			arguments.page.setTemplate( safeTemplateName( arguments.given.template ) );
+		}
+
 		return arguments.page;
+	}
+
+	/**
+	 * A template name we are willing to build a file path from.
+	 *
+	 * Reduced to letters, digits, underscore and hyphen — so `../../secrets`
+	 * becomes `secrets` and addresses nothing. Not rejected but cleaned,
+	 * because a name that cannot resolve simply falls back to the ordinary page
+	 * view: this is a display choice, and it is not worth refusing to save a
+	 * page over.
+	 *
+	 * The theme normalises again when it builds the path. Two passes on
+	 * purpose: this one guards what is stored, and that one guards what is
+	 * used — including rows written before this existed, or by anything else.
+	 */
+	string function safeTemplateName( required string template ){
+		return left( reReplace( lCase( trim( arguments.template ) ), "[^a-z0-9_-]", "", "all" ), 100 );
 	}
 
 	private function applySchedule( required any page, required struct given ){

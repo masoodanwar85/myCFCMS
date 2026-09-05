@@ -23,6 +23,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="seo"           inject="SeoService@core";
 	property name="branding"      inject="SiteBrandingService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
+	property name="log"           inject="logbox:logger:{this}";
 
 	/**
 	 * Serve any public URL.
@@ -91,7 +92,7 @@ component extends="coldbox.system.EventHandler" {
 		// or a background image should build its URL the same way a layout does.
 		viewArgs.theme = theme;
 
-		var body = themeService.renderView( theme, resolution.view, viewArgs );
+		var body = renderBody( theme, resolution, viewArgs );
 
 		return themeService.renderLayout(
 			theme = theme,
@@ -116,6 +117,32 @@ component extends="coldbox.system.EventHandler" {
 				branding        : branding.brandingFor( site.getId() )
 			}
 		);
+	}
+
+	/**
+	 * The page's own markup: a theme template when the content named one, the
+	 * resolver's view otherwise.
+	 *
+	 * A template that is named but not installed falls back to the view, with a
+	 * warning. A theme changed, or a template renamed, should leave a page
+	 * rendering plainly and be noisy in the log — not take a client's page down
+	 * over a display choice.
+	 */
+	private string function renderBody( required any theme, required struct resolution, required struct args ){
+		var wanted = arguments.resolution.template ?: "";
+
+		if ( len( wanted ) && arguments.theme.hasTemplate( wanted ) ) {
+			return themeService.renderTemplate( arguments.theme, wanted, arguments.args );
+		}
+
+		if ( len( wanted ) ) {
+			log.warn(
+				"Content asked for template [#wanted#], which theme [#arguments.theme.getSlug()#] "
+				& "does not provide. Rendered through the [#arguments.resolution.view#] view instead."
+			);
+		}
+
+		return themeService.renderView( arguments.theme, arguments.resolution.view, arguments.args );
 	}
 
 	/**

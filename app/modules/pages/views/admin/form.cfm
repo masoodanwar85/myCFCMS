@@ -256,6 +256,28 @@
 
 		<!-- ----------------------------------------------------- advanced -->
 		<section class="tab-panel" data-for="tab-advanced">
+			<!---
+				Only when the theme offers templates. A picker with one option
+				that says "Standard" is a control that does nothing, and a
+				client whose theme has no templates should never see it.
+			--->
+			<cfif prc.templates.len()>
+				<label for="template">Template</label>
+				<select id="template" name="template">
+					<option value="">Standard page</option>
+					<cfloop array="#prc.templates#" index="templateName">
+						<option value="#encodeForHTMLAttribute( templateName )#"
+						        <cfif editing && ( p.getTemplate() ?: "" ) eq templateName>selected</cfif>>#encodeForHTML( templateName )#</option>
+					</cfloop>
+				</select>
+				<p class="muted" style="font-size:.8rem">
+					Templates are built by your developer and live in the theme &mdash; a page that needs
+					its own logic, like a calculator or a live listing, uses one instead of the standard
+					layout. The page's title, SEO settings and menu position work exactly the same either
+					way. Choosing <strong>Standard page</strong> renders the content as usual.
+				</p>
+			</cfif>
+
 			<div class="grid2">
 				<div>
 					<label for="publishFrom">Publish from</label>
