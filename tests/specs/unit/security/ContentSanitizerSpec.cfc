@@ -120,6 +120,50 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			} );
 
+			/**
+			 * The editor's `htmlSupport` allow-list mirrors these rules, so that
+			 * what CKEditor preserves and what the sanitiser keeps are the same
+			 * set. When they disagree the author sees markup survive the editor
+			 * and then vanish on save, which looks like data loss rather than a
+			 * policy.
+			 */
+			describe( "structural markup", function(){
+
+				it( "keeps a div, with its class", function(){
+					var clean = sanitizer.sanitize( '<div class="callout">hello</div>' );
+
+					expect( clean ).toInclude( "<div" );
+					expect( clean ).toInclude( 'class="callout"' );
+				} );
+
+				it( "keeps nested divs", function(){
+					var clean = sanitizer.sanitize( '<div class="wrap"><div class="inner"><p>deep</p></div></div>' );
+
+					expect( clean ).toInclude( "inner" );
+					expect( clean ).toInclude( "<p>deep</p>" );
+				} );
+
+				it( "keeps an inline span", function(){
+					expect( sanitizer.sanitize( '<p>a <span class="lead">b</span> c</p>' ) )
+						.toInclude( '<span class="lead">' );
+				} );
+
+				it( "drops an id, which the editor also refuses", function(){
+					var clean = sanitizer.sanitize( '<div id="x" class="ok">hello</div>' );
+
+					expect( clean ).notToInclude( "id=" );
+					expect( clean ).toInclude( 'class="ok"' );
+				} );
+
+				it( "drops an event handler on a div", function(){
+					var clean = sanitizer.sanitize( '<div onclick="alert(1)" class="ok">hello</div>' );
+
+					expect( clean ).notToInclude( "onclick" );
+					expect( clean ).notToInclude( "alert" );
+				} );
+
+			} );
+
 			it( "keeps ordinary formatting", function(){
 				var clean = sanitizer.sanitize( "<p>Hello <b>there</b> and <em>welcome</em></p>" );
 

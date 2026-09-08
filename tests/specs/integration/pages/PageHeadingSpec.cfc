@@ -132,6 +132,33 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				 * editor's style menu was what withheld it, which made the
 				 * hide-the-heading option a dead end.
 				 */
+				/**
+				 * CKEditor 5 discards any element no plugin claims, silently and
+				 * on load as well as on paste — so a `<div>` typed in Source
+				 * view survived until the editor next read the content back.
+				 * `GeneralHtmlSupport` plus an allow-list is what keeps it, and
+				 * that list mirrors the sanitiser's own rules.
+				 */
+				it( "keeps structural markup the sanitiser allows", function(){
+					var html = adminForm();
+
+					expect( html ).toInclude( "GeneralHtmlSupport" );
+					expect( html ).toInclude( "htmlSupport" );
+					expect( html ).toInclude( "div|span" );
+				} );
+
+				it( "does not let the editor keep attributes the sanitiser strips", function(){
+					var html = adminForm();
+					var block = mid( html, findNoCase( "htmlSupport", html ), 400 );
+
+					// `id` and `style` are not granted to a div by
+					// antisamy-cms.xml, so the editor must not preserve them
+					// either — otherwise they survive the editor and vanish on
+					// save, which reads as data loss.
+					expect( block ).notToInclude( '"id"' );
+					expect( block ).notToInclude( '"style"' );
+				} );
+
 				it( "offers a Page heading style, so the author can write their own h1", function(){
 					var html = adminForm();
 

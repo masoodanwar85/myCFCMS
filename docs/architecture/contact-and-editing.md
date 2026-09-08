@@ -219,6 +219,32 @@ could edit it and route their message to a different recipient. With one form
 per site the marker is only ever compared against that form, so there is nothing
 left to select.
 
+## The editor and the sanitiser have to agree
+
+CKEditor 5 keeps a schema of the elements it understands and **discards
+everything else** — silently, on load as well as on paste. So a `<div>` typed in
+Source view lived until the editor next read the content back, then vanished.
+That looked like the sanitiser eating it. It never was: `antisamy-cms.xml` has
+allowed `div` and `span` all along.
+
+`GeneralHtmlSupport` with an explicit allow-list is what keeps them, and the list
+mirrors the policy exactly:
+
+| | `div` / `span` |
+|---|---|
+| `class`, `lang`, `title`, `dir` | kept by both |
+| `id`, `style` | dropped by both |
+| `onclick` and every other handler | dropped by both |
+
+The mirroring is the point. Letting the editor preserve an attribute the
+sanitiser then strips is worse than not preserving it — the author watches it
+work, saves, and finds it gone, which reads as data loss rather than as a
+policy. Specs on both sides assert the same set, so the two cannot drift apart
+quietly.
+
+`section` and `article` are allowed by the policy too; adding them is one word in
+the editor's allow-list.
+
 ## 3. What is implemented
 
 - CKEditor 5, self-hosted, on the page and post content forms.

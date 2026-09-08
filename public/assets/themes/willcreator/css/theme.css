@@ -889,6 +889,191 @@ main .section img {
     display: block;
 }
 
+/* ============================================================================
+	SERVICE SHOWCASE (alternating image / copy bands)
+	========================================================================== */
+	.service-showcase {
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+	}
+	.service-showcase__title,
+	main .section .service-showcase > h1,
+	main .section .service-showcase > h2 {
+		font-family: var(--display);
+		font-weight: 400;
+		font-size: var(--step-3);
+		letter-spacing: -.01em;
+		text-align: center;
+		color: var(--ink);
+		margin: 0 0 .4rem;
+		padding: 0;
+		border: 0;
+		display: block;
+		width: 100%;
+	}
+	.service-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-items: stretch;
+		min-height: 280px;
+		overflow: hidden;
+		background: var(--ink);
+		background: color-mix(in srgb, var(--eucalypt) 86%, #000);
+		box-shadow: var(--shadow);
+		border-radius: 4.5rem 0 4.5rem 0;
+	}
+	.service-row--flip {
+		border-radius: 0 4.5rem 0 4.5rem;
+	}
+	.service-row--flip .service-row__media {
+		order: 2;
+	}
+	.service-row__media {
+		position: relative;
+		min-height: 260px;
+		overflow: hidden;
+	}
+	.service-row__media img,
+	main .section .service-row__media img,
+	.service-row__media figure,
+	.service-row__media figure img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		margin: 0;
+		border-radius: 0;
+		display: block;
+		max-width: none;
+	}
+	.service-row__media figure {
+		margin: 0;
+	}
+	.service-row__body {
+		position: relative;
+		isolation: isolate;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 1rem;
+		padding: clamp(2rem, 4.5vw, 3.4rem) clamp(1.8rem, 4vw, 3.4rem);
+		color: var(--white);
+		overflow: hidden;
+	}
+	.service-row__body::before {
+		content: "";
+		position: absolute;
+		width: min(72%, 280px);
+		aspect-ratio: 1;
+		inset: auto -18% -38% auto;
+		pointer-events: none;
+		z-index: 0;
+		background:
+			radial-gradient(circle at 100% 100%,
+				transparent 26%,
+				color-mix(in srgb, var(--brass) 28%, transparent) 27%,
+				color-mix(in srgb, var(--brass) 28%, transparent) 40%,
+				transparent 41%,
+				transparent 50%,
+				rgba(255,253,248,.10) 51%,
+				rgba(255,253,248,.10) 64%,
+				transparent 65%);
+	}
+	.service-row--flip .service-row__body {
+		text-align: right;
+		align-items: flex-end;
+	}
+	.service-row--flip .service-row__body::before {
+		inset: auto auto -38% -18%;
+		transform: scaleX(-1);
+	}
+	.service-row__body > * {
+		position: relative;
+		z-index: 1;
+	}
+	main .section .service-row__body h3,
+	.service-row__body h3 {
+		font-family: var(--display);
+		font-weight: 400;
+		font-size: var(--step-2);
+		line-height: 1.15;
+		letter-spacing: -.01em;
+		color: var(--white);
+		margin: 0;
+		padding: 0;
+		border: 0;
+		display: block;
+	}
+	main .section .service-row__body p,
+	.service-row__body p {
+		margin: 0;
+		color: rgba(255, 253, 248, .86);
+		text-align: inherit;
+		hyphens: none;
+		max-width: 42ch;
+		font-size: var(--step-0);
+		line-height: 1.6;
+	}
+	.service-row__more,
+	main .section .service-row__more {
+		display: inline-flex;
+		align-items: center;
+		gap: .85rem;
+		margin-top: .55rem;
+		font-family: var(--body);
+		font-weight: 600;
+		font-size: var(--step--1);
+		letter-spacing: .02em;
+		color: var(--brass);
+		text-decoration: none;
+		text-underline-offset: 3px;
+	}
+	.service-row__more::before {
+		content: "";
+		width: 2.1rem;
+		height: 1px;
+		background: var(--brass);
+		flex: none;
+	}
+	.service-row__more:hover,
+	main .section .service-row__more:hover {
+		color: var(--white);
+	}
+	.service-row__more:hover::before {
+		background: var(--white);
+	}
+	.service-row__more:focus-visible {
+		outline: 3px solid var(--brass);
+		outline-offset: 4px;
+	}
+
+	@media (max-width: 720px) {
+		.service-row,
+		.service-row--flip {
+			grid-template-columns: 1fr;
+			border-radius: 2rem;
+			min-height: 0;
+		}
+		.service-row__media,
+		.service-row--flip .service-row__media {
+			order: 0;
+			min-height: 200px;
+			aspect-ratio: 16 / 10;
+		}
+		.service-row__body,
+		.service-row--flip .service-row__body {
+			text-align: left;
+			align-items: flex-start;
+		}
+		.service-row--flip .service-row__body::before,
+		.service-row__body::before {
+			inset: auto -18% -38% auto;
+			transform: none;
+		}
+	}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
     body { font-size: 17px; }

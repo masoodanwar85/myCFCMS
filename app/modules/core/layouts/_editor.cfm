@@ -107,6 +107,7 @@
 				C.Bold, C.Italic, C.Underline, C.Strikethrough,
 				C.Link, C.List, C.BlockQuote, C.HorizontalLine,
 				C.Table, C.TableToolbar, C.PasteFromOffice, C.SourceEditing,
+				C.GeneralHtmlSupport,
 				C.Image, C.ImageToolbar, C.ImageCaption, C.ImageStyle,
 				C.ImageResize, C.ImageUpload, C.SimpleUploadAdapter,
 				MediaLibrary
@@ -148,7 +149,33 @@
 					{ model: "heading3", view: "h3", title: "Subheading", class: "ck-heading_heading3" }
 				]
 			},
-			table: { contentToolbar: [ "tableColumn", "tableRow", "mergeTableCells" ] }
+			table: { contentToolbar: [ "tableColumn", "tableRow", "mergeTableCells" ] },
+
+			// Elements CKEditor has no plugin for, and therefore discards.
+			//
+			// CKEditor 5 keeps a schema of what it understands and drops
+			// anything outside it — silently, and on load as well as on paste.
+			// So a `<div>` typed in Source view survived until the editor next
+			// read the content back, and then vanished. That looked like the
+			// sanitiser eating it; the sanitiser has always allowed `div`.
+			//
+			// The attribute lists mirror `antisamy-cms.xml` exactly. Letting
+			// the editor keep an attribute the sanitiser then strips is worse
+			// than not keeping it: the author sees it work, saves, and finds it
+			// gone. `id` and `style` are absent here because they are absent
+			// there — `style` is only granted to the few tags that name it.
+			//
+			// `section` and `article` are allowed by the sanitiser too; add
+			// them to this list if an author needs them.
+			htmlSupport: {
+				allow: [
+					{
+						name: /^(div|span)$/,
+						classes: true,
+						attributes: [ "lang", "title", "dir" ]
+					}
+				]
+			}
 		} ).then( function ( editor ) {
 			// Write the editor's content back into the textarea before the form
 			// is posted. ClassicEditor usually does this itself; doing it
