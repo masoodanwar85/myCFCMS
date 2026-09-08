@@ -377,11 +377,8 @@ component singleton accessors="true" {
 
 	private function ensureDirectory( required string path ){
 		if ( !directoryExists( arguments.path ) ) {
-			if (listFirst(SERVER.coldfusion.productversion) > "2023"){
-				directoryCreate( arguments.path, true );
-			} else {
-				directoryCreate( arguments.path );
-			}
+			// directoryCreate( arguments.path, true );
+			directoryCreate( arguments.path );
 		}
 
 		return this;
