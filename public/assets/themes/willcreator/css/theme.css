@@ -177,7 +177,15 @@
 	}
 	.deed__head { text-align: center; border-bottom: 1px solid var(--paper-line); padding-bottom: 1.1rem; margin-bottom: 1.3rem; }
 	.deed__title { font-family: var(--display); font-size: 1.5rem; letter-spacing: .02em; }
-	.deed__sub { font-size: .68rem; letter-spacing: .28em; text-transform: uppercase; color: var(--brass-d); margin-top: .35rem; }
+	.deed__sub {
+	font-size: .68rem;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: var(--brass-d);
+	margin-top: .35rem;
+	max-width: 100%;
+	white-space: normal;
+}
 	.deed__list { list-style: none; padding: 0; display: grid; gap: .1rem; }
 	.deed__list li { display: flex; align-items: center; gap: .85rem; padding: .7rem 0; border-bottom: 1px dashed var(--paper-line); }
 	.deed__list li:last-child { border-bottom: 0; }
@@ -1409,4 +1417,166 @@ div.service-row a {
 
 div.service-row a:hover {
   color: #fff;
+}
+
+/* ============================================================================
+	HOME PAGE
+	The marketing home is a full-bleed landing layout, not a white article card.
+	`main .section` (padding, navy headings, gold ticks) must not wrap it.
+	========================================================================== */
+html:has(.home),
+body:has(.home),
+main:has(.home) {
+	padding: 0;
+	max-width: 100%;
+	overflow-x: clip;
+}
+.home {
+	font-family: "Public Sans", var(--body);
+	color: var(--ink);
+	overflow-x: clip;
+}
+.home .wrap {
+	width: 100%;
+	max-width: var(--wrap);
+	margin-inline: auto;
+	padding-inline: 1.5rem;
+	box-sizing: border-box;
+}
+.home,
+.hero,
+.hero__grid,
+.hero__grid > *,
+.home-block,
+.instruments,
+.instrument,
+.process,
+.process__step,
+.assure,
+.assure .wrap {
+	min-width: 0;
+	max-width: 100%;
+}
+.home .section__head {
+	min-width: 0;
+	max-width: min(60ch, calc(100vw - 3rem));
+}
+.home h1,
+.home h2,
+.home h3,
+.home h4 {
+	font-family: "Fraunces", var(--display);
+	color: var(--ink);
+	overflow-wrap: break-word;
+}
+.hero {
+	overflow: visible;
+	background:
+		radial-gradient(ellipse 70% 55% at 8% -10%, color-mix(in srgb, var(--sage-tint) 85%, transparent), transparent 58%),
+		radial-gradient(ellipse 45% 40% at 100% 10%, color-mix(in srgb, var(--brass) 14%, transparent), transparent 52%);
+}
+.hero h1,
+.hero__lead,
+.hero__note,
+.home h2,
+.home .section__head p,
+.deed__title,
+.deed__sub {
+	width: 100%;
+	max-width: min(100%, calc(100vw - 3rem));
+}
+.hero h1 {
+	font-size: var(--step-4) !important;
+	font-weight: 400;
+	letter-spacing: -.015em;
+}
+.hero__line {
+	display: block;
+}
+@media (min-width: 901px) {
+	.hero h1 {
+		max-width: 12em;
+	}
+}
+.home .instrument p,
+.home .process__step p,
+.home .service-row__body p,
+.home .assure p,
+.home .cta-band p {
+	max-width: min(46ch, calc(100vw - 3rem));
+}
+.hero__note {
+	margin-top: 1.25rem;
+}
+.hero__note::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--brass);
+	flex: none;
+}
+.home-block {
+	padding-block: clamp(3.5rem, 7vw, 6rem);
+}
+.home-block--paper {
+	background: var(--paper-2);
+	border-block: 1px solid var(--paper-line);
+}
+.home .instrument h3 {
+	font-family: "Fraunces", var(--display);
+	font-size: var(--step-1);
+	font-weight: 400;
+	border: 0;
+	padding: 0;
+	display: block;
+	color: var(--ink);
+}
+.home .instrument__link {
+	color: var(--eucalypt);
+}
+.home-services__foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.85rem;
+	justify-content: center;
+	margin-top: 2.6rem;
+}
+.home .cta-band .btn--ghost {
+	color: var(--ink);
+}
+@media (max-width: 720px) {
+	main:has(.home) {
+		padding: 0;
+	}
+	.hero h1 {
+		font-size: 1.5rem !important;
+		line-height: 1.2;
+	}
+	.home h2 {
+		font-size: 1.55rem !important;
+		line-height: 1.2;
+		max-width: 20rem;
+	}
+	.hero__lead,
+	.hero__note,
+	.home .section__head p {
+		max-width: 20rem;
+	}
+	.hero__actions .btn {
+		flex: 1 1 100%;
+		justify-content: center;
+	}
+	.deed {
+		padding: 1.5rem 1.2rem 1.7rem;
+		overflow: hidden;
+	}
+	.deed__sub {
+		letter-spacing: .06em;
+		font-size: .6rem;
+		white-space: normal;
+	}
+	.home .service-row__body p {
+		max-width: none;
+	}
 }
