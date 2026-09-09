@@ -90,7 +90,7 @@
 
 				<div class="service-row">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/wills.jpg' )#" alt="A solicitor meeting with clients about their will">
+						<img src="#args.theme.assetUrl( 'img/services/wills-379a4e46.jpg' )#" alt="A solicitor meeting with clients about their will">
 					</div>
 					<div class="service-row__body">
 						<h3>Wills &amp; Estate Planning</h3>
@@ -101,7 +101,7 @@
 
 				<div class="service-row service-row--flip">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/probate.jpg' )#" alt="A professional handshake after completing probate">
+						<img src="#args.theme.assetUrl( 'img/services/probate-c898909b.jpg' )#" alt="A professional handshake after completing probate">
 					</div>
 					<div class="service-row__body">
 						<h3>Probate</h3>
@@ -112,7 +112,7 @@
 
 				<div class="service-row">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/power-of-attorney.jpg' )#" alt="Signing a power of attorney">
+						<img src="#args.theme.assetUrl( 'img/services/power-of-attorney-7d2e8226.jpg' )#" alt="Signing a power of attorney">
 					</div>
 					<div class="service-row__body">
 						<h3>Power of Attorney</h3>
@@ -123,7 +123,7 @@
 
 				<div class="service-row service-row--flip">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/enduring-guardian.jpg' )#" alt="A trusted person ready to make health decisions">
+						<img src="#args.theme.assetUrl( 'img/services/enduring-guardian-20e63144.jpg' )#" alt="A trusted person ready to make health decisions">
 					</div>
 					<div class="service-row__body">
 						<h3>Enduring Guardian</h3>
@@ -134,7 +134,7 @@
 
 				<div class="service-row">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/letters.jpg' )#" alt="Working through estate administration papers">
+						<img src="#args.theme.assetUrl( 'img/services/letters-1040a3dc.jpg' )#" alt="Working through estate administration papers">
 					</div>
 					<div class="service-row__body">
 						<h3>Letters of Administration</h3>
@@ -145,7 +145,7 @@
 
 				<div class="service-row service-row--flip">
 					<div class="service-row__media">
-						<img src="#args.theme.assetUrl( 'img/services/property.jpg' )#" alt="House keys representing property law services">
+						<img src="#args.theme.assetUrl( 'img/services/property-46fecd3f.jpg' )#" alt="House keys representing property law services">
 					</div>
 					<div class="service-row__body">
 						<h3>Property Law</h3>
