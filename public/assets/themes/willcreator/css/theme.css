@@ -1401,3 +1401,12 @@ button[type="submit"]:active,
 input[type="submit"]:active {
   transform: translateY(1px);
 }
+
+
+div.service-row a {
+  color: #B08A4F;
+}
+
+div.service-row a:hover {
+  color: #fff;
+}
