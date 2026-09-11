@@ -52,7 +52,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 			} );
 
 			var screens = {
-				"Settings"       : { uri : "/admin/settings", tabs : 6 },
+				"Settings"       : { uri : "/admin/settings", tabs : 7 },
 				"the blog list"  : { uri : "/admin/blog",     tabs : 2 },
 				"the post form"  : { uri : "/admin/blog/new", tabs : 2 },
 				"the page form"  : { uri : "/admin/pages/new", tabs : 3 }

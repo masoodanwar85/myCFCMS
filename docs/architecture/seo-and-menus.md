@@ -341,3 +341,59 @@ places in that file, with a spec that round-trips `"false"`, `"0"`, `"no"` and
 | Drag-and-drop menu ordering | `moveItem` already does the work; a UI can call it |
 | Menu items pointing at a category or tag | The registry accepts any provider; Blog simply does not offer them yet |
 | Redirect management UI | `RedirectService` records moves automatically; nothing yet lists or edits them |
+## Analytics
+
+**Settings → Analytics** takes a Google tag ID and the CMS writes the script
+itself, on every page of that site, just before `</head>`.
+
+### An ID, not the snippet
+
+Google's instructions say to paste a `<script>` block into every page, so the
+obvious field is a textarea holding it. That field would be arbitrary JavaScript
+on every page, saved by anyone with settings access and run in every visitor's
+browser — a permission meant for "change this site's configuration", not "run
+code on the public site". It is the same argument as page templates and brand
+colours, and it lands the same way.
+
+An ID is a value, not a program:
+
+- it is validated against `^G-[A-Z0-9]{4,20}$` or `^GTM-[A-Z0-9]{4,20}$`, so
+  nothing that reaches the page can close a string or a tag;
+- it cannot be pasted twice, which is Google's own first warning;
+- the snippet lives in `AnalyticsService`, so when Google changes it there is
+  one place to change rather than every site's settings row.
+
+Validated on the way in **and** again on read, because a row can reach
+`site_settings` from a migration, a seed or a direct `UPDATE`.
+
+### Two products, one field
+
+Google calls both a "tag" and the prefix is the only difference:
+
+| | |
+|---|---|
+| `G-XXXXXXXXXX` | The Google tag, gtag.js — GA4. A script in the head. |
+| `GTM-XXXXXXX` | A Tag Manager container. A head script **and** a `<noscript>` iframe immediately after `<body>`. |
+
+Both are accepted and told apart by prefix, because somebody asked to "add Tag
+Manager" may paste either. `UA-` is refused with an explanation: Universal
+Analytics stopped collecting in 2023, and accepting one silently would leave a
+site that looks measured and is not.
+
+### Where it renders
+
+`_head.cfm` emits the head half, so every theme that includes it gets the tag
+without changing — and the admin, which does not include it, never loads
+analytics. The `<noscript>` half is in each theme's layout after `<body>`,
+because only a layout knows where `<body>` is; it is empty for a `G-` tag and
+for a site with no tag, so a theme carries it harmlessly either way.
+
+A site with no ID emits no script and makes no request to Google at all.
+
+### Consent is not handled
+
+The tag loads a third-party script that sets cookies. Whether a consent banner
+must run first is a legal question about a site's visitors, not a technical one,
+and the CMS does not answer it. The admin says so at the point of entry rather
+than leaving it implied.
+

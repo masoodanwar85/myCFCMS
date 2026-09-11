@@ -16,6 +16,7 @@ component extends="core.models.security.SecuredHandler" {
 	// share one `variables` scope — so the two would overwrite each other.
 	property name="recaptchaService" inject="RecaptchaService@core";
 	property name="brandingService"  inject="SiteBrandingService@core";
+	property name="analyticsService" inject="AnalyticsService@core";
 
 	variables.permissions = {
 		"index"         : "site.view",
@@ -28,6 +29,9 @@ component extends="core.models.security.SecuredHandler" {
 		"seo"           : "seo.manage",
 		"recaptcha"     : "site.settings.manage",
 		"branding"      : "site.settings.manage",
+		// Grouped with SEO rather than with general settings: both decide what
+		// the outside world sees of this site, and neither is a content job.
+		"analytics"     : "seo.manage",
 		"$every"        : "site.view"
 	};
 
@@ -66,6 +70,9 @@ component extends="core.models.security.SecuredHandler" {
 		prc.seoDefaultDescription = siteSettingsRepo.getValue( siteId, seoService.KEY_DESCRIPTION, "" );
 
 		prc.branding = brandingService.brandingFor( siteId );
+
+		prc.analyticsTagId = analyticsService.tagIdFor( siteId );
+		prc.analyticsIsGtm = len( prc.analyticsTagId ) && analyticsService.isGtm( prc.analyticsTagId );
 
 		prc.recaptchaSiteKey   = recaptchaService.getSiteKey( siteId );
 		prc.recaptchaHasSecret = recaptchaService.hasSecret( siteId );
@@ -127,6 +134,23 @@ component extends="core.models.security.SecuredHandler" {
 	 * `<style>` block, and a handler is the wrong place for the only thing
 	 * standing between a settings form and arbitrary CSS.
 	 */
+	/**
+	 * The site's Google measurement tag.
+	 *
+	 * Takes an id, not the script Google shows you. `AnalyticsService` explains
+	 * why, and does the validating — a handler is the wrong place for the only
+	 * thing standing between a settings form and a script on every page.
+	 */
+	function analytics( event, rc, prc ){
+		try {
+			analyticsService.save( prc.currentSite.getId(), rc.googleTagId ?: "" );
+		} catch ( any e ) {
+			return done( "/admin/settings", e.message, "error" );
+		}
+
+		return done( "/admin/settings", "Analytics saved." );
+	}
+
 	function branding( event, rc, prc ){
 		try {
 			brandingService.save(

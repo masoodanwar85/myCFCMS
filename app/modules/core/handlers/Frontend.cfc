@@ -22,6 +22,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="redirects"     inject="RedirectService@core";
 	property name="seo"           inject="SeoService@core";
 	property name="branding"      inject="SiteBrandingService@core";
+	property name="analytics"     inject="AnalyticsService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
 	property name="log"           inject="logbox:logger:{this}";
 
@@ -114,7 +115,12 @@ component extends="coldbox.system.EventHandler" {
 				// theme can rely on `args.branding` existing rather than
 				// testing for it, and so two sites can share one theme and
 				// still not look identical.
-				branding        : branding.brandingFor( site.getId() )
+				branding        : branding.brandingFor( site.getId() ),
+				// The site's measurement tag, ready to emit. Built here rather
+				// than looked up in the view so a theme that renders outside
+				// the front controller — a preview, a test — is not a broken
+				// page for want of a service.
+				analytics       : analytics.analyticsFor( site.getId() )
 			}
 		);
 	}
@@ -186,7 +192,8 @@ component extends="coldbox.system.EventHandler" {
 					resolution = { "statusCode" : 404 }
 				),
 				// A 404 is still this client's site, so it keeps their logo.
-				branding        : branding.brandingFor( arguments.site.getId() )
+				branding        : branding.brandingFor( arguments.site.getId() ),
+				analytics       : analytics.analyticsFor( arguments.site.getId() )
 			}
 		);
 	}

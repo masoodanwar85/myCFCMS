@@ -91,6 +91,13 @@
 		</script>
 </head>
 <body>
+<!---
+	Tag Manager's fallback for a visitor with JavaScript off. Google requires it
+	immediately after `<body>`, and it is empty for a GA4 `G-` tag or when no
+	tag is configured — so a theme carries it harmlessly either way.
+--->
+<cfif len( args.analytics.body ?: "" )>#args.analytics.body#</cfif>
+
 	<header class="site-head" style="box-shadow: none;">
 		<div class="wrap site-head__bar" style="justify-content: flex-start;">
 			<div class="brand-logo">

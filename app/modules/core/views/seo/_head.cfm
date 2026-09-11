@@ -21,6 +21,7 @@
 	turns a readable description into noise in the page source.
 --->
 <cfset local.seo = args.seo ?: {}>
+<cfset local.analytics = args.analytics ?: {}>
 
 <cfif len( local.seo.canonical ?: "" )>
 	<link rel="canonical" href="#xmlFormat( local.seo.canonical )#">
@@ -99,5 +100,20 @@
 	<cfif isDate( local.seo.modifiedAt ?: "" )>
 		<meta property="article:modified_time" content="#dateTimeFormat( local.seo.modifiedAt, 'iso' )#">
 	</cfif>
+</cfif>
+<!---
+	The site's Google tag.
+
+	Emitted from the id in Settings, never from pasted markup — see
+	`AnalyticsService` for why that distinction matters. Not escaped, because
+	this string was built here from an id already matched against
+	`^G-[A-Z0-9]{4,20}$`; nothing a client typed reaches the page verbatim.
+
+	Last in the head so the metadata above is parsed first, and absent entirely
+	when no id is set — a site with no tag emits no script and makes no request
+	to Google.
+--->
+<cfif len( local.analytics.head ?: "" )>
+	#local.analytics.head#
 </cfif>
 </cfoutput>

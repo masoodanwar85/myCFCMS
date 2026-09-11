@@ -33,6 +33,9 @@
 	<input type="radio" name="settingsTab" id="tab-seo">
 	<label for="tab-seo">Search engines</label>
 
+	<input type="radio" name="settingsTab" id="tab-analytics">
+	<label for="tab-analytics">Analytics</label>
+
 	<input type="radio" name="settingsTab" id="tab-recaptcha">
 	<label for="tab-recaptcha">reCAPTCHA</label>
 
@@ -263,6 +266,57 @@
 		<cfelse>
 			
 				<p class="muted">You do not have permission to change these.</p>
+		</cfif>
+		</section>
+
+		<section class="tab-panel" data-for="tab-analytics">
+		<cfif prc.canSeo>
+		<form method="post" action="/admin/settings/analytics">
+			<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
+
+			<label for="googleTagId">Google tag ID</label>
+			<input type="text" id="googleTagId" name="googleTagId"
+			       value="#encodeForHTMLAttribute( prc.analyticsTagId )#"
+			       placeholder="G-XXXXXXXXXX"
+			       autocomplete="off" spellcheck="false" style="max-width:22rem">
+
+			<p class="muted" style="font-size:.8rem">
+				Paste only the ID, not the script Google showed you &mdash; the CMS writes the tag
+				itself, on every page of this site, immediately before <code>&lt;/head&gt;</code>.
+				That way it cannot end up on the page twice, which is Google's own first warning.
+			</p>
+
+			<p class="muted" style="font-size:.8rem">
+				<strong>G-XXXXXXXXXX</strong> is a Google tag (GA4) &mdash; find it in Analytics under
+				Admin &rarr; Data Streams.<br>
+				<strong>GTM-XXXXXXX</strong> is a Tag Manager container &mdash; find it at the top of
+				the Tag Manager workspace. Either works; the CMS writes whichever kind you give it.
+			</p>
+
+			<cfif len( prc.analyticsTagId )>
+				<p class="muted" style="font-size:.8rem">
+					Currently active:
+					<span class="pill on">#encodeForHTML( prc.analyticsTagId )#</span>
+					<cfif prc.analyticsIsGtm>
+						Tag Manager container &mdash; the CMS also writes the
+						<code>&lt;noscript&gt;</code> fallback after <code>&lt;body&gt;</code>.
+					<cfelse>
+						Google tag (GA4).
+					</cfif>
+					Clear the field to stop measuring; the site then makes no request to Google at all.
+				</p>
+			</cfif>
+
+			<p class="muted" style="font-size:.8rem">
+				This loads a third-party script that sets cookies. Whether you need a consent banner
+				before it runs is a legal question about your visitors, not a technical one &mdash;
+				the CMS does not decide it for you.
+			</p>
+
+			<div class="actions-bar"><button type="submit">Save analytics</button></div>
+		</form>
+		<cfelse>
+			<p class="muted">You do not have permission to change these.</p>
 		</cfif>
 		</section>
 
