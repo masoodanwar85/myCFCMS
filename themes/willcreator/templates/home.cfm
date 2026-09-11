@@ -148,7 +148,7 @@
 						<img src="/media/2026/09/property-46fecd3f.jpg" alt="House keys representing property law services">
 					</div>
 					<div class="service-row__body">
-						<h3>Property Law</h3>
+						<h3>Estate Litigation</h3>
 						<p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
 						<p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
 					</div>
