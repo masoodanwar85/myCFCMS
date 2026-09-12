@@ -1420,7 +1420,7 @@ div.service-row a:hover {
 }
 
 div.service-row h3 {
-	color: #fff;
+	color: #fff !important;
 }
 
 /* ============================================================================
