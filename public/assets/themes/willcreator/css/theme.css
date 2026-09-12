@@ -1419,6 +1419,10 @@ div.service-row a:hover {
   color: #fff;
 }
 
+div.service-row h3 {
+	color: #fff;
+}
+
 /* ============================================================================
 	HOME PAGE
 	The marketing home is a full-bleed landing layout, not a white article card.
