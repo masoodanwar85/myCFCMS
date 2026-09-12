@@ -3,7 +3,7 @@
 <p class="sub">Configuration for #encodeForHTML( prc.currentSite.getName() )#.</p>
 
 <!---
-	Six tabs rather than one page of six stacked forms. Settings had grown to
+	Eight tabs rather than one page of stacked forms. Settings had grown to
 	the point where the domain list — the part with the most consequence
 	attached to it — was three screens below the fold.
 
@@ -35,6 +35,9 @@
 
 	<input type="radio" name="settingsTab" id="tab-analytics">
 	<label for="tab-analytics">Analytics</label>
+
+	<input type="radio" name="settingsTab" id="tab-notice">
+	<label for="tab-notice">Notice</label>
 
 	<input type="radio" name="settingsTab" id="tab-recaptcha">
 	<label for="tab-recaptcha">reCAPTCHA</label>
@@ -314,6 +317,66 @@
 			</p>
 
 			<div class="actions-bar"><button type="submit">Save analytics</button></div>
+		</form>
+		<cfelse>
+			<p class="muted">You do not have permission to change these.</p>
+		</cfif>
+		</section>
+
+		<section class="tab-panel" data-for="tab-notice">
+		<cfif prc.canSettings>
+		<form method="post" action="/admin/settings/notice">
+			<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
+
+			<p class="muted" style="font-size:.85rem">
+				A dialog shown the first time someone visits this site in their browser.
+				It is not part of the theme &mdash; turning it off, or changing the copy,
+				does not require a deploy. After the end date it stops appearing on its own.
+			</p>
+
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="noticeEnabled"<cfif prc.notice.enabled> checked</cfif>>
+					Show this notice to first-time visitors
+				</label>
+			</div>
+
+			<label for="noticeHeading">Heading</label>
+			<input type="text" id="noticeHeading" name="noticeHeading" maxlength="80"
+			       value="#encodeForHTMLAttribute( prc.notice.heading )#"
+			       placeholder="Special:">
+
+			<label for="noticeBody">Message</label>
+			<textarea id="noticeBody" name="noticeBody" rows="4" maxlength="600"
+			          placeholder="Use our Will Creation Tool and create a Will at a reduced rate (a 50% discount) from now through till 31 October 2026.">#encodeForHTML( prc.notice.body )#</textarea>
+
+			<div class="grid2">
+				<div>
+					<label for="noticeCtaUrl">Button address</label>
+					<input type="text" id="noticeCtaUrl" name="noticeCtaUrl"
+					       value="#encodeForHTMLAttribute( prc.notice.ctaUrl )#"
+					       placeholder="/will">
+					<p class="muted" style="font-size:.8rem">
+						A path on this site, such as <code>/will</code>, or a full http(s) address.
+					</p>
+				</div>
+				<div>
+					<label for="noticeCtaLabel">Button label</label>
+					<input type="text" id="noticeCtaLabel" name="noticeCtaLabel" maxlength="40"
+					       value="#encodeForHTMLAttribute( prc.notice.ctaLabel )#"
+					       placeholder="Create your Will">
+				</div>
+			</div>
+
+			<label for="noticeExpiresAt">Show until</label>
+			<input type="date" id="noticeExpiresAt" name="noticeExpiresAt"
+			       value="#encodeForHTMLAttribute( prc.notice.expiresAt )#"
+			       style="max-width:16rem">
+			<p class="muted" style="font-size:.8rem">
+				Inclusive of that day. Leave blank to keep showing it until you turn it off.
+			</p>
+
+			<div class="actions-bar"><button type="submit">Save notice</button></div>
 		</form>
 		<cfelse>
 			<p class="muted">You do not have permission to change these.</p>

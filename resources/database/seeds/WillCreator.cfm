@@ -301,6 +301,21 @@ settings.put( site.getId(), "seo.defaultDescription", "Fixed-fee wills, powers o
 settings.put( site.getId(), "seo.baseUrl", "" );
 
 say( "SEO:     indexable, canonical URLs from the primary domain" );
+
+/* --------------------------------------------------------------- notice */
+
+notice = wb.getInstance( "SiteNoticeService@core" );
+notice.save(
+	siteId    = site.getId(),
+	enabled   = true,
+	heading   = "Special" & ":",
+	body      = "Use our Will Creation Tool and create a Will at a reduced rate (a 50% discount) from now through till 31 October 2026.",
+	ctaUrl    = "/will",
+	ctaLabel  = "Create your Will",
+	expiresAt = "2026-10-31"
+);
+
+say( "Notice:  first-visit will discount, through 31 October 2026" );
 say( "" );
 say( "Visit:   http://willcreator.srv1902739.hstgr.cloud/" );
 say( "Admin:   http://willcreator.srv1902739.hstgr.cloud/admin" );

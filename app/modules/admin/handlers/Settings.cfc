@@ -17,6 +17,7 @@ component extends="core.models.security.SecuredHandler" {
 	property name="recaptchaService" inject="RecaptchaService@core";
 	property name="brandingService"  inject="SiteBrandingService@core";
 	property name="analyticsService" inject="AnalyticsService@core";
+	property name="noticeService"    inject="SiteNoticeService@core";
 
 	variables.permissions = {
 		"index"         : "site.view",
@@ -32,6 +33,7 @@ component extends="core.models.security.SecuredHandler" {
 		// Grouped with SEO rather than with general settings: both decide what
 		// the outside world sees of this site, and neither is a content job.
 		"analytics"     : "seo.manage",
+		"notice"        : "site.settings.manage",
 		"$every"        : "site.view"
 	};
 
@@ -73,6 +75,8 @@ component extends="core.models.security.SecuredHandler" {
 
 		prc.analyticsTagId = analyticsService.tagIdFor( siteId );
 		prc.analyticsIsGtm = len( prc.analyticsTagId ) && analyticsService.isGtm( prc.analyticsTagId );
+
+		prc.notice = noticeService.settingsFor( siteId );
 
 		prc.recaptchaSiteKey   = recaptchaService.getSiteKey( siteId );
 		prc.recaptchaHasSecret = recaptchaService.hasSecret( siteId );
@@ -149,6 +153,31 @@ component extends="core.models.security.SecuredHandler" {
 		}
 
 		return done( "/admin/settings", "Analytics saved." );
+	}
+
+	/**
+	 * First-visit notice.
+	 *
+	 * Copy and an expiry date, not markup. `SiteNoticeService` explains why,
+	 * and does the validating — a handler is the wrong place for the only
+	 * thing standing between a settings form and a dialog on every page.
+	 */
+	function notice( event, rc, prc ){
+		try {
+			noticeService.save(
+				siteId    = prc.currentSite.getId(),
+				enabled   = ( rc.noticeEnabled ?: "" ) == "on",
+				heading   = rc.noticeHeading ?: "",
+				body      = rc.noticeBody ?: "",
+				ctaUrl    = rc.noticeCtaUrl ?: "",
+				ctaLabel  = rc.noticeCtaLabel ?: "",
+				expiresAt = rc.noticeExpiresAt ?: ""
+			);
+		} catch ( any e ) {
+			return done( "/admin/settings", e.message, "error" );
+		}
+
+		return done( "/admin/settings", "Notice saved." );
 	}
 
 	function branding( event, rc, prc ){

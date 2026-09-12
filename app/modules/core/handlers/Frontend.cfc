@@ -23,6 +23,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="seo"           inject="SeoService@core";
 	property name="branding"      inject="SiteBrandingService@core";
 	property name="analytics"     inject="AnalyticsService@core";
+	property name="noticeService" inject="SiteNoticeService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
 	property name="log"           inject="logbox:logger:{this}";
 
@@ -120,7 +121,12 @@ component extends="coldbox.system.EventHandler" {
 				// than looked up in the view so a theme that renders outside
 				// the front controller — a preview, a test — is not a broken
 				// page for want of a service.
-				analytics       : analytics.analyticsFor( site.getId() )
+				analytics       : analytics.analyticsFor( site.getId() ),
+				// First-visit campaign dialog. Built here for the same reason
+				// as analytics: a theme rendered outside this handler must not
+				// 500 for want of a service, and the copy is a setting, not
+				// a design decision.
+				notice          : noticeService.noticeFor( site.getId() )
 			}
 		);
 	}
@@ -193,7 +199,8 @@ component extends="coldbox.system.EventHandler" {
 				),
 				// A 404 is still this client's site, so it keeps their logo.
 				branding        : branding.brandingFor( arguments.site.getId() ),
-				analytics       : analytics.analyticsFor( arguments.site.getId() )
+				analytics       : analytics.analyticsFor( arguments.site.getId() ),
+				notice          : noticeService.noticeFor( arguments.site.getId() )
 			}
 		);
 	}
