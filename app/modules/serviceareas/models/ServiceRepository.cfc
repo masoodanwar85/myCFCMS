@@ -186,6 +186,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 				s.sort_order AS service_sort,
 				l.id AS location_id,
 				l.name AS location_name,
+				l.region AS location_region,
 				l.href AS location_href,
 				sl.href AS pairing_href
 			" )
@@ -218,8 +219,9 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			var fallback = trim( row.location_href ?: "" );
 			var svcHref  = trim( row.service_href ?: "" );
 			arrayAppend( index[ key ].places, {
-				"label" : row.location_name,
-				"href"  : len( pairing ) ? pairing : ( len( fallback ) ? fallback : svcHref )
+				"label"  : row.location_name,
+				"region" : row.location_region ?: "",
+				"href"   : len( pairing ) ? pairing : ( len( fallback ) ? fallback : svcHref )
 			} );
 		}
 

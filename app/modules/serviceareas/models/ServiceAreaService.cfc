@@ -12,13 +12,29 @@ component singleton accessors="true" {
 	property name="slugifier"          inject="Slugifier@core";
 	property name="wirebox"            inject="wirebox";
 
+	variables.AREA_ORDER = [
+		"Sydney",
+		"Parramatta & Sydney West",
+		"Blue Mountains",
+		"Hawkesbury & Hills District",
+		"NSW Central Coast",
+		"Central West NSW"
+	];
+
 	/**
 	 * Tabs and town grids for the public template.
 	 *
-	 * A service with no attached active locations is omitted.
+	 * A service with no attached active locations is omitted. Towns are grouped
+	 * under the area names the client asked for.
 	 */
 	array function getPanelsForSite( required numeric siteId ){
-		return serviceRepository.findPanelsForSite( arguments.siteId );
+		var panels = serviceRepository.findPanelsForSite( arguments.siteId );
+
+		for ( var i = 1; i <= arrayLen( panels ); i++ ) {
+			panels[ i ][ "groups" ] = groupPlaces( panels[ i ].places ?: [] );
+		}
+
+		return panels;
 	}
 
 	array function getServicesForSite( required numeric siteId ){
@@ -285,6 +301,67 @@ component singleton accessors="true" {
 		}
 
 		return location;
+	}
+
+	array function groupPlaces( required array places ){
+		var buckets = {};
+
+		for ( var place in arguments.places ) {
+			var area = displayArea( place.region ?: "" );
+			if ( !len( area ) ) {
+				area = "Other";
+			}
+			if ( !structKeyExists( buckets, area ) ) {
+				buckets[ area ] = [];
+			}
+			arrayAppend( buckets[ area ], place );
+		}
+
+		var groups = [];
+
+		for ( var name in variables.AREA_ORDER ) {
+			if ( structKeyExists( buckets, name ) && arrayLen( buckets[ name ] ) ) {
+				arrayAppend( groups, { "name" : name, "places" : buckets[ name ] } );
+				structDelete( buckets, name );
+			}
+		}
+
+		var leftovers = structKeyArray( buckets );
+		arraySort( leftovers, "textnocase" );
+
+		for ( var name in leftovers ) {
+			if ( arrayLen( buckets[ name ] ) ) {
+				arrayAppend( groups, { "name" : name, "places" : buckets[ name ] } );
+			}
+		}
+
+		return groups;
+	}
+
+	string function displayArea( required string region ){
+		switch ( lCase( trim( arguments.region ) ) ) {
+			case "sydney":
+				return "Sydney";
+			case "parramatta & sydney west":
+			case "parramatta and sydney west":
+			case "sydney west":
+				return "Parramatta & Sydney West";
+			case "blue mountains":
+				return "Blue Mountains";
+			case "hawkesbury":
+			case "hills district":
+			case "hawkesbury & hills district":
+			case "hawkesbury and hills district":
+				return "Hawkesbury & Hills District";
+			case "central coast nsw":
+			case "nsw central coast":
+				return "NSW Central Coast";
+			case "central west":
+			case "central west nsw":
+				return "Central West NSW";
+			default:
+				return trim( arguments.region );
+		}
 	}
 
 }

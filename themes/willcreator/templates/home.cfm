@@ -156,7 +156,7 @@
 			</div>
 			<p class="home-services__foot">
 				<a class="btn btn--ghost" href="/legal-services">View all legal services</a>
-				<a class="btn btn--ghost" href="/service-locations">Areas we serve</a>
+				<a class="btn btn--ghost" href="/locations/service-locations">Areas we serve</a>
 			</p>
 		</div>
 	</section>

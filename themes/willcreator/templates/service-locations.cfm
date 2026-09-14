@@ -150,6 +150,31 @@
 		margin: 0 0 1.55rem !important;
 		border: 0 !important;
 	}
+	.areas-serve__area {
+		margin: 0 0 1.35rem !important;
+		padding: 0 !important;
+		border: 0 !important;
+		background: none !important;
+	}
+	.areas-serve__area:last-child {
+		margin-bottom: 0 !important;
+	}
+	main .section .areas-serve__area-name,
+	.areas-serve__area-name {
+		font-family: var(--body) !important;
+		font-weight: 700 !important;
+		font-size: 1.05rem !important;
+		line-height: 1.3 !important;
+		color: var(--eucalypt) !important;
+		letter-spacing: 0 !important;
+		text-transform: none !important;
+		margin: 0 0 0.7rem !important;
+		padding: 0 !important;
+		border: 0 !important;
+		display: block !important;
+		text-align: left !important;
+		background: none !important;
+	}
 	.areas-serve__grid {
 		display: grid !important;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -303,15 +328,20 @@
 								Will Creator serves families across New South Wales, including the locations below:
 							</p>
 							<p class="areas-serve__banner">Serving Sydney, Regional NSW &amp; the Central Coast</p>
-							<cfif arrayLen( local.panel.places )>
-								<div class="areas-serve__grid">
-									<cfloop array="#local.panel.places#" item="local.place">
-										<a class="areas-serve__place-link" href="#encodeForHTMLAttribute( local.place.href )#">
-											<span class="areas-serve__svc">#encodeForHTML( local.panel.title )#</span>
-											<span class="areas-serve__place">#encodeForHTML( local.place.label )#</span>
-										</a>
-									</cfloop>
-								</div>
+							<cfif arrayLen( local.panel.groups ?: [] )>
+								<cfloop array="#local.panel.groups#" item="local.group">
+									<section class="areas-serve__area">
+										<h3 class="areas-serve__area-name">#encodeForHTML( local.group.name )#</h3>
+										<div class="areas-serve__grid">
+											<cfloop array="#local.group.places#" item="local.place">
+												<a class="areas-serve__place-link" href="#encodeForHTMLAttribute( local.place.href )#">
+													<span class="areas-serve__svc">#encodeForHTML( local.panel.title )#</span>
+													<span class="areas-serve__place">#encodeForHTML( local.place.label )#</span>
+												</a>
+											</cfloop>
+										</div>
+									</section>
+								</cfloop>
 							<cfelse>
 								<p class="areas-serve__empty">
 									See our

@@ -15,7 +15,7 @@
 	<section class="tab-panel" data-for="tab-services">
 		<div class="adm-toolbar">
 			<cfif prc.canManage><a class="btn" href="/admin/serviceareas/newService">+ New service</a></cfif>
-			<a class="btn secondary" href="/service-locations" target="_blank" rel="noopener">View page &nearr;</a>
+			<a class="btn secondary" href="/locations/service-locations" target="_blank" rel="noopener">View page &nearr;</a>
 			<span class="adm-count">#prc.services.len()# services</span>
 		</div>
 

@@ -115,6 +115,46 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				expect( hrefs ).toInclude( "/admin/serviceareas" );
 			} );
 
+			it( "groups towns under the client's area headings and skips empty areas", function(){
+				var katoomba   = areas.createLocation( siteId = siteOne.getId(), name = "Katoomba", region = "Blue Mountains" );
+				var leura      = areas.createLocation( siteId = siteOne.getId(), name = "Leura", region = "Blue Mountains" );
+				var richmond   = areas.createLocation( siteId = siteOne.getId(), name = "Richmond", region = "Hawkesbury" );
+				var castleHill = areas.createLocation( siteId = siteOne.getId(), name = "Castle Hill", region = "Hills District" );
+				var terrigal   = areas.createLocation( siteId = siteOne.getId(), name = "Terrigal", region = "Central Coast NSW" );
+				var service    = areas.createService(
+					siteId      = siteOne.getId(),
+					name        = "Grouped Wills",
+					locationIds = [
+						katoomba.getId(),
+						leura.getId(),
+						richmond.getId(),
+						castleHill.getId(),
+						terrigal.getId()
+					]
+				);
+
+				var panels = areas.getPanelsForSite( siteOne.getId() );
+				var panel  = panels.filter( ( p ) => p.title == "Grouped Wills" )[ 1 ];
+				var names  = panel.groups.map( ( g ) => g.name );
+
+				expect( names ).toBe( [
+					"Blue Mountains",
+					"Hawkesbury & Hills District",
+					"NSW Central Coast"
+				] );
+				expect( names ).notToInclude( "Sydney" );
+				expect( panel.groups[ 1 ].places.len() ).toBe( 2 );
+				expect( panel.groups[ 2 ].places.len() ).toBe( 2 );
+				expect( panel.groups[ 3 ].places[ 1 ].label ).toBe( "Terrigal" );
+
+				areas.deleteService( service.getId() );
+				areas.deleteLocation( katoomba.getId() );
+				areas.deleteLocation( leura.getId() );
+				areas.deleteLocation( richmond.getId() );
+				areas.deleteLocation( castleHill.getId() );
+				areas.deleteLocation( terrigal.getId() );
+			} );
+
 		} );
 	}
 
