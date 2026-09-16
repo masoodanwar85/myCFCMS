@@ -105,7 +105,7 @@ component singleton accessors="true" {
 		}
 
 		return directoryList( root, false, "name" )
-			.filter( ( name ) => directoryExists( root & "/" & name ) )
+			.filter( ( name ) => directoryExists( root & "/" & name ) && name != "common" )
 			.sort( "textnocase" )
 			.map( ( name ) => getTheme( name ) );
 	}
