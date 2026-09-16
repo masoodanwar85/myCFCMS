@@ -115,7 +115,7 @@
 						<img src="/media/2026/09/power-of-attorney-7d2e8226.jpg" alt="Signing a power of attorney">
 					</div>
 					<div class="service-row__body">
-						<h3>Power of Attorney</h3>
+						<h3>Leasing</h3>
 						<p>Appoint someone you trust to manage your finances and legal affairs, and choose exactly when that authority begins.</p>
 						<p><a class="service-row__more" href="/legal-services/power-of-attorney">Find out more</a></p>
 					</div>
@@ -126,7 +126,7 @@
 						<img src="/media/2026/09/enduring-guardian-20e63144.jpg" alt="A trusted person ready to make health decisions">
 					</div>
 					<div class="service-row__body">
-						<h3>Enduring Guardian</h3>
+						<h3>Intellectual Property</h3>
 						<p>Decide who will make decisions about your health, medical treatment and where you live, should you lose capacity.</p>
 						<p><a class="service-row__more" href="/legal-services/enduring-guardian">Find out more</a></p>
 					</div>
@@ -137,7 +137,7 @@
 						<img src="/media/2026/09/letters-1040a3dc.jpg" alt="Working through estate administration papers">
 					</div>
 					<div class="service-row__body">
-						<h3>Letters of Administration</h3>
+						<h3>Employment Law</h3>
 						<p>When there is no valid Will, we help the next of kin apply to the Court and administer the estate according to the law.</p>
 						<p><a class="service-row__more" href="/legal-services/letters-of-administration">Find out more</a></p>
 					</div>
@@ -148,11 +148,21 @@
 						<img src="/media/2026/09/property-46fecd3f.jpg" alt="House keys representing property law services">
 					</div>
 					<div class="service-row__body">
-						<h3>Estate Litigation</h3>
+						<h3>Property Law</h3>
 						<p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
 						<p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
 					</div>
 				</div>
+				<div class="service-row service-row--flip">
+                                        <div class="service-row__media">
+                                                <img src="/media/2026/09/property-46fecd3f.jpg" alt="House keys representing property law services">
+                                        </div>          
+                                        <div class="service-row__body">
+                                                <h3>Sports Law</h3>
+                                                <p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
+                                                <p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
+                                        </div>  
+                                </div>   
 			</div>
 			<p class="home-services__foot">
 				<a class="btn btn--ghost" href="/legal-services">View all legal services</a>
