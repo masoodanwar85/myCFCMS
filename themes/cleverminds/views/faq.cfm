@@ -19,7 +19,7 @@
 </section>
 
 <style>
-	.faq-list{ max-width:48rem; margin:1.5rem 0 0; }
+	.faq-list{ margin:1.5rem 0 0; }
 	.faq-item{
 		border:1px solid var(--paper-line, ##E2DBC9); border-radius:var(--radius, 3px);
 		margin:0 0 .6rem; background:var(--white, ##FFFDF8);
