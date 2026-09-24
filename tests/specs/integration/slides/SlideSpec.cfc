@@ -91,6 +91,20 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					slides.deleteSlide( other.getId() );
 				} );
 
+				it( "keeps overlay button markup and link classes", function(){
+					var slide = slides.createSlide(
+						siteId      = siteOne.getId(),
+						overlayHtml = '<p><a class="btn" href="/will">Start</a> <button type="button" class="btn">Go</button></p>',
+						isPublished = false
+					);
+
+					expect( slide.getOverlayHtml() ).toInclude( 'class="btn"' );
+					expect( slide.getOverlayHtml() ).toInclude( "<button" );
+					expect( slide.getOverlayHtml() ).toInclude( 'href="/will"' );
+
+					slides.deleteSlide( slide.getId() );
+				} );
+
 			} );
 
 			describe( "rendering", function(){

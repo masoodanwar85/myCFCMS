@@ -28,7 +28,8 @@
 	<textarea id="overlayHtml" name="overlayHtml" data-editor>#editing ? encodeForHTML( prc.slide.getOverlayHtml() ?: "" ) : ""#</textarea>
 	<p class="muted" style="font-size:.8rem">
 		Headings, copy and buttons. Use the theme's button classes, e.g.
-		<code>&lt;a class="btn" href="/will"&gt;Start your Will&lt;/a&gt;</code>.
+		<code>&lt;a class="btn" href="/will"&gt;Start your Will&lt;/a&gt;</code>
+		or <code>&lt;button type="button" class="btn"&gt;Start&lt;/button&gt;</code>.
 	</p>
 
 	<div class="grid2">

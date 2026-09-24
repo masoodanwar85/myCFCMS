@@ -8,9 +8,10 @@
 	produces, which would have destroyed authors' work without telling them.
 
 	This policy allows what an editor legitimately writes and nothing that can
-	execute. Deliberately absent: script, style, iframe, object, embed, form,
-	input, and every `on*` event attribute. `href` and `src` are constrained by
-	regexp, so `javascript:` cannot survive.
+	execute. 	Deliberately absent: script, style, iframe, object, embed, form,
+	input, and every `on*` event attribute. `button` is allowed without a
+	form — overlay CTAs use it — but `formaction` is not. `href` and `src`
+	are constrained by regexp, so `javascript:` cannot survive.
 
 	Images are permitted so that content stays intact if a Media library is
 	added later; nothing in the CMS produces them yet.
@@ -56,6 +57,15 @@
 		     below, which allows nothing but width and height. It is NOT in
 		     <global-tag-attributes>, so only the tags that name it get it. -->
 		<attribute name="style" description="Inline CSS, checked against css-rules"/>
+		<attribute name="disabled" description="Boolean disabled flag">
+			<literal-list>
+				<literal value="disabled"/>
+				<literal value="true"/>
+			</literal-list>
+		</attribute>
+		<attribute name="type" description="Control type">
+			<regexp-list><regexp name="anything"/></regexp-list>
+		</attribute>
 	</common-attributes>
 
 	<global-tag-attributes>
@@ -84,7 +94,6 @@
 		<tag name="applet"   action="remove"/>
 		<tag name="form"     action="remove"/>
 		<tag name="input"    action="remove"/>
-		<tag name="button"   action="remove"/>
 		<tag name="textarea" action="remove"/>
 		<tag name="select"   action="remove"/>
 		<tag name="option"   action="remove"/>
@@ -171,6 +180,25 @@
 		<tag name="td" action="validate">
 			<attribute name="colspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
 			<attribute name="rowspan"><regexp-list><regexp name="number"/></regexp-list></attribute>
+		</tag>
+
+		<!-- A labelled control for overlay CTAs. Not a form control: `form`
+		     and `input` stay removed, and `formaction` is not granted, so this
+		     cannot post anywhere. `class` comes from the global list. -->
+		<tag name="button" action="validate">
+			<attribute name="type">
+				<literal-list>
+					<literal value="button"/>
+					<literal value="submit"/>
+					<literal value="reset"/>
+				</literal-list>
+			</attribute>
+			<attribute name="disabled">
+				<literal-list>
+					<literal value="disabled"/>
+					<literal value="true"/>
+				</literal-list>
+			</attribute>
 		</tag>
 
 		<!-- Links. The URL regexps are what stop `javascript:` surviving. -->

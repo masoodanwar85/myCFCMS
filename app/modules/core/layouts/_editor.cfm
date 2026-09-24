@@ -151,28 +151,36 @@
 			},
 			table: { contentToolbar: [ "tableColumn", "tableRow", "mergeTableCells" ] },
 
-			// Elements CKEditor has no plugin for, and therefore discards.
+			// Elements and attributes CKEditor has no plugin for, and therefore
+			// discards. CKEditor 5 keeps a schema of what it understands and
+			// drops anything outside it — silently, and on load as well as on
+			// paste. A `<div>` or `<button class="btn">` typed in Source view
+			// survived until the editor next read the content back, then
+			// vanished. Same for `class` on an `<a>`: the Link plugin stores
+			// href, not class, so a theme button (`<a class="btn">`) was wiped
+			// on the next open. That looked like the sanitiser eating it.
 			//
-			// CKEditor 5 keeps a schema of what it understands and drops
-			// anything outside it — silently, and on load as well as on paste.
-			// So a `<div>` typed in Source view survived until the editor next
-			// read the content back, and then vanished. That looked like the
-			// sanitiser eating it; the sanitiser has always allowed `div`.
-			//
-			// The attribute lists mirror `antisamy-cms.xml` exactly. Letting
-			// the editor keep an attribute the sanitiser then strips is worse
-			// than not keeping it: the author sees it work, saves, and finds it
-			// gone. `id` and `style` are absent here because they are absent
-			// there — `style` is only granted to the few tags that name it.
-			//
-			// `section` and `article` are allowed by the sanitiser too; add
-			// them to this list if an author needs them.
+			// The lists mirror `antisamy-cms.xml`. Letting the editor keep an
+			// attribute the sanitiser then strips is worse than not keeping it:
+			// the author sees it work, saves, and finds it gone. `id` and
+			// `style` are absent here because they are absent there — `style`
+			// is only granted to the few tags that name it.
 			htmlSupport: {
 				allow: [
 					{
 						name: /^(div|span)$/,
 						classes: true,
 						attributes: [ "lang", "title", "dir" ]
+					},
+					{
+						name: "a",
+						classes: true,
+						attributes: [ "href", "rel", "target", "lang", "title", "dir" ]
+					},
+					{
+						name: "button",
+						classes: true,
+						attributes: [ "type", "disabled", "lang", "title", "dir" ]
 					}
 				]
 			}

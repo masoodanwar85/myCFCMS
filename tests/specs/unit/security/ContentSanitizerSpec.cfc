@@ -148,6 +148,35 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 						.toInclude( '<span class="lead">' );
 				} );
 
+				it( "keeps a class on a link, which the editor also keeps", function(){
+					var clean = sanitizer.sanitize( '<p><a class="btn" href="/will">Start</a></p>' );
+
+					expect( clean ).toInclude( "<a" );
+					expect( clean ).toInclude( 'class="btn"' );
+					expect( clean ).toInclude( 'href="/will"' );
+				} );
+
+				it( "keeps a button and its class, without form attributes", function(){
+					var clean = sanitizer.sanitize(
+						'<p><button type="button" class="btn" formaction="/x">Go</button></p>'
+					);
+
+					expect( clean ).toInclude( "<button" );
+					expect( clean ).toInclude( 'class="btn"' );
+					expect( clean ).toInclude( 'type="button"' );
+					expect( clean ).notToInclude( "formaction" );
+				} );
+
+				it( "drops an event handler on a button", function(){
+					var clean = sanitizer.sanitize(
+						'<button type="button" class="btn" onclick="alert(1)">Go</button>'
+					);
+
+					expect( clean ).notToInclude( "onclick" );
+					expect( clean ).notToInclude( "alert" );
+					expect( clean ).toInclude( "Go" );
+				} );
+
 				it( "drops an id, which the editor also refuses", function(){
 					var clean = sanitizer.sanitize( '<div id="x" class="ok">hello</div>' );
 
