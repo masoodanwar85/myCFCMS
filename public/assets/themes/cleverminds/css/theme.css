@@ -925,6 +925,7 @@ main .section img {
 		grid-template-columns: 1fr 1fr;
 		align-items: stretch;
 		min-height: 280px;
+    	margin-bottom: 20px;
 		overflow: hidden;
 		background: var(--ink);
 		background: color-mix(in srgb, var(--eucalypt) 86%, #000);

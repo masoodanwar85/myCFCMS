@@ -6,6 +6,8 @@
 --->
 <div class="home">
 
+<!--- 
+
 	<section class="hero">
 		<div class="wrap hero__grid">
 			<div>
@@ -82,13 +84,48 @@
 			</div>
 		</div>
 	</section>
+    
+ --->   
 
-	<section class="home-block" id="our-services">
+	
 		<div class="wrap">
-			<div class="service-showcase">
+			
+                <p class="hero__lead">
+				<h3>
+    				Welcome to Cleverminds
+				</h3>
+                <p>
+                &nbsp;
+                </p>
+				<p>
+    				Welcome to <strong>Cleverminds Law</strong>, your modern legal partner built around your schedule. We understand that life doesn’t stop between 9 and 5. 
+                    If you are balancing a busy career, family commitments, or a hectic lifestyle, finding time to see a lawyer can be a challenge. 
+                    That is why we have reimagined standard legal services to fit your life, operating <strong>primarily online and after hours and weekends</strong> 
+                    to provide premium legal support when it suits you best.
+				</p>
+                <p>
+                &nbsp;
+                </p>
+				<p>
+    				While we leverage seamless digital solutions to keep things simple, our roots are firmly local. We proudly serve individuals, families, 
+                    and businesses across greater Sydney and througout NSW and specifically:<br>
+    			<br>
+    				<strong>Greater Western Sydney, the Blue Mountains, the Central Coast, and Central West NSW</strong>.&nbsp;<br>
+    			<br>
+    				Wherever you are located across these regions, you can access reliable, expert legal advice right from the comfort of your home or office.
+                <br>
+    				We look forward to working with you on the legal issue whilst offering you an exceptional personal service.
+				</p>
+				</p>
+                
+	<section class="home-block" id="our-services">
+				<div class="service-showcase">
 				<h2 class="service-showcase__title">Our Services</h2>
-
-				<div class="service-row">
+                <div>
+                <p>
+                &nbsp:
+                </p>
+                <div class="service-row">
 					<div class="service-row__media">
 						<img src="/media/2026/09/wills-379a4e46.jpg" alt="A solicitor meeting with clients about their will">
 					</div>
@@ -101,7 +138,7 @@
 
 				<div class="service-row service-row--flip">
 					<div class="service-row__media">
-						<img src="/media/2026/09/probate-c898909b.jpg" alt="A professional handshake after completing probate">
+						<img src="/media/2026/09/probate-pic-d7e57652.jpeg" alt="A professional handshake after completing probate">
 					</div>
 					<div class="service-row__body">
 						<h3>Probate</h3>
@@ -109,43 +146,10 @@
 						<p><a class="service-row__more" href="/legal-services/probate">Find out more</a></p>
 					</div>
 				</div>
-
-				<div class="service-row">
+                
+                <div class="service-row">
 					<div class="service-row__media">
-						<img src="/media/2026/09/power-of-attorney-7d2e8226.jpg" alt="Signing a power of attorney">
-					</div>
-					<div class="service-row__body">
-						<h3>Leasing</h3>
-						<p>Appoint someone you trust to manage your finances and legal affairs, and choose exactly when that authority begins.</p>
-						<p><a class="service-row__more" href="/legal-services/power-of-attorney">Find out more</a></p>
-					</div>
-				</div>
-
-				<div class="service-row service-row--flip">
-					<div class="service-row__media">
-						<img src="/media/2026/09/enduring-guardian-20e63144.jpg" alt="A trusted person ready to make health decisions">
-					</div>
-					<div class="service-row__body">
-						<h3>Intellectual Property</h3>
-						<p>Decide who will make decisions about your health, medical treatment and where you live, should you lose capacity.</p>
-						<p><a class="service-row__more" href="/legal-services/enduring-guardian">Find out more</a></p>
-					</div>
-				</div>
-
-				<div class="service-row">
-					<div class="service-row__media">
-						<img src="/media/2026/09/letters-1040a3dc.jpg" alt="Working through estate administration papers">
-					</div>
-					<div class="service-row__body">
-						<h3>Employment Law</h3>
-						<p>When there is no valid Will, we help the next of kin apply to the Court and administer the estate according to the law.</p>
-						<p><a class="service-row__more" href="/legal-services/letters-of-administration">Find out more</a></p>
-					</div>
-				</div>
-
-				<div class="service-row service-row--flip">
-					<div class="service-row__media">
-						<img src="/media/2026/09/property-46fecd3f.jpg" alt="House keys representing property law services">
+						<img src="/media/2026/09/property-law-pic-8b559892.jpeg" alt="House keys representing property law services">
 					</div>
 					<div class="service-row__body">
 						<h3>Property Law</h3>
@@ -153,16 +157,51 @@
 						<p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
 					</div>
 				</div>
+
 				<div class="service-row service-row--flip">
-                                        <div class="service-row__media">
-                                                <img src="/media/2026/09/property-46fecd3f.jpg" alt="House keys representing property law services">
-                                        </div>          
-                                        <div class="service-row__body">
-                                                <h3>Sports Law</h3>
-                                                <p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
-                                                <p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
-                                        </div>  
-                                </div>   
+					<div class="service-row__media">
+						<img src="/media/2026/09/power-of-attorney-7d2e8226.jpg" alt="Signing a power of attorney">
+					</div>
+					<div class="service-row__body">
+						<h3>Leasing</h3>
+						<p>Retail leases and commercial leases both involve the letting of a property to a tenant for the purpose of allowing them to take exclusive possession of a premises, usually to carry on a business.</p>
+						<p><a class="service-row__more" href="/legal-services/leasing-retail-and-commercial">Find out more</a></p>
+					</div>
+				</div>
+
+				<div class="service-row">
+					<div class="service-row__media">
+						<img src="/media/2026/09/enduring-guardian-20e63144.jpg" alt="A trusted person ready to make health decisions">
+					</div>
+					<div class="service-row__body">
+						<h3>Intellectual Property</h3>
+						<p>Intellectual property can be the most important asset owned by a business, so we work hard to protect its value.</p>
+						<p><a class="service-row__more" href="/legal-services/intellectual-property">Find out more</a></p>
+					</div>
+				</div>
+
+				<div class="service-row  service-row--flip">
+					<div class="service-row__media">
+						<img src="/media/2026/09/letters-1040a3dc.jpg" alt="Working through estate administration papers">
+					</div>
+					<div class="service-row__body">
+						<h3>Employment Law</h3>
+						<p>Employment law services include protect workplace rights and resolve disputes through contracts, compliance advice, and litigation support</p>
+						<p><a class="service-row__more" href="/legal-services/employment-law">Find out more</a></p>
+					</div>
+				</div>
+
+				
+				<div class="service-row">
+                	<div class="service-row__media">
+                    	<img src="/media/2026/09/sports-law-79c606a5.png" alt="House keys representing property law services">
+                    </div>          
+                    <div class="service-row__body">
+                    	<h3>Sports Law</h3>
+                        <p>Providing clear, pragmatic advice based on our experience and knowledge of this high-profile, highly regulated and public-facing environment.</p>
+                        <p><a class="service-row__more" href="/legal-services/sports-law">Find out more</a></p>
+                    </div>  
+                </div>   
 			</div>
 			<p class="home-services__foot">
 				<a class="btn btn--ghost" href="/legal-services">View all legal services</a>
@@ -170,6 +209,8 @@
 			</p>
 		</div>
 	</section>
+    </div>
+ <!---  
 
 	<section class="home-block home-block--paper">
 		<div class="wrap">
@@ -240,6 +281,8 @@
 			</div>
 		</div>
 	</section>
+    
+ --->
 
 </div>
 </cfoutput>

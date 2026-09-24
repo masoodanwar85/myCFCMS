@@ -149,8 +149,8 @@
 					</div>
 					<div class="service-row__body">
 						<h3>Estate Litigation</h3>
-						<p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
-						<p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
+						<p>We help people contest Wills, challenge unfair provisions and assist to resolve estate disputes</p>
+						<p><a class="service-row__more" href="/legal-services/estate-litigation">Find out more</a></p>
 					</div>
 				</div>
 			</div>
