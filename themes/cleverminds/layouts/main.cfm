@@ -35,6 +35,8 @@
 		exposing this directory would make it directly requestable.
 	--->
 	<link rel="stylesheet" href="#args.theme.assetUrl( 'css/theme.css' )#">
+	<link rel="stylesheet" href="/includes/vendor/splide/splide.min.css">
+	<link rel="stylesheet" href="/includes/vendor/splide/hero-slider.css">
 
 	<!---
 		This site's own colours and fonts, after the stylesheet so they win.
@@ -223,6 +225,8 @@
 	</footer>
 
 	<cfinclude template="/core/views/seo/_body.cfm">
+	<script src="/includes/vendor/splide/splide.min.js" defer></script>
+	<script src="/includes/vendor/splide/hero-slider.js" defer></script>
 </body>
 </html>
 </cfoutput>

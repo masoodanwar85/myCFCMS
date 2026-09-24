@@ -9,6 +9,8 @@
 		<meta name="description" content="#xmlFormat( args.seo.description ?: args.metaDescription )#">
 	</cfif>
 	<cfinclude template="/core/views/seo/_head.cfm">
+	<link rel="stylesheet" href="/includes/vendor/splide/splide.min.css">
+	<link rel="stylesheet" href="/includes/vendor/splide/hero-slider.css">
 	<!---
 		This theme keeps its stylesheet inline. It is two dozen rules, and the
 		fallback theme should render correctly with nothing else deployed —
@@ -80,6 +82,8 @@
 		</footer>
 	</div>
 	<cfinclude template="/core/views/seo/_body.cfm">
+	<script src="/includes/vendor/splide/splide.min.js" defer></script>
+	<script src="/includes/vendor/splide/hero-slider.js" defer></script>
 </body>
 </html>
 </cfoutput>

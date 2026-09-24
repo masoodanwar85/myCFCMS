@@ -9,6 +9,8 @@
 		<meta name="description" content="#xmlFormat( args.seo.description ?: args.metaDescription )#">
 	</cfif>
 	<cfinclude template="/core/views/seo/_head.cfm">
+	<link rel="stylesheet" href="/includes/vendor/splide/splide.min.css">
+	<link rel="stylesheet" href="/includes/vendor/splide/hero-slider.css">
 	<style>
 		body { margin:0; font:16px/1.7 Georgia, "Times New Roman", serif; background:##faf8f4; color:##2b2b2b; }
 		.sheet { max-width:38rem; margin:0 auto; padding:3rem 1.25rem; }
@@ -34,6 +36,8 @@
 		<main>#args.body#</main>
 	</div>
 	<cfinclude template="/core/views/seo/_body.cfm">
+	<script src="/includes/vendor/splide/splide.min.js" defer></script>
+	<script src="/includes/vendor/splide/hero-slider.js" defer></script>
 </body>
 </html>
 </cfoutput>

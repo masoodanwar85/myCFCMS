@@ -5,6 +5,12 @@
 	work in a glance. The old copy stays in the database if it is wanted again.
 --->
 <div class="home">
+<cfscript>
+	local.heroSlider = application.wirebox.getInstance( "SlideService@slides" ).renderHeroSlider( args.site.getId() );
+</cfscript>
+<cfif len( trim( local.heroSlider ) )>
+	#local.heroSlider#
+<cfelse>
 
 	<section class="hero">
 		<div class="wrap hero__grid">
@@ -52,6 +58,8 @@
 			</aside>
 		</div>
 	</section>
+
+</cfif>
 
 	<section class="home-block home-block--paper" id="how-it-works">
 		<div class="wrap">
