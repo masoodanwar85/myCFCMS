@@ -27,5 +27,19 @@
 		</button>
 	</cfif>
 </div>
+<script>
+(function () {
+	function boot() {
+		if (typeof window.cmsMountHeroSliders === "function") {
+			window.cmsMountHeroSliders();
+		}
+	}
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", boot);
+	} else {
+		boot();
+	}
+})();
+</script>
 </cfif>
 </cfoutput>

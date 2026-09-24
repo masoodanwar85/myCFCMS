@@ -82,8 +82,8 @@
 		</footer>
 	</div>
 	<cfinclude template="/core/views/seo/_body.cfm">
-	<script src="/includes/vendor/splide/splide.min.js" defer></script>
-	<script src="/includes/vendor/splide/hero-slider.js" defer></script>
+	<script src="/includes/vendor/splide/splide.min.js"></script>
+	<script src="/includes/vendor/splide/hero-slider.js"></script>
 </body>
 </html>
 </cfoutput>
