@@ -662,7 +662,97 @@ component singleton accessors="true" {
 			arguments.page.setTemplate( safeTemplateName( arguments.given.template ) );
 		}
 
+		if ( structKeyExists( arguments.given, "featuredImage" ) ) {
+			arguments.page.setFeaturedImage( safeImageUrl( arguments.given.featuredImage ) );
+		}
+
+		// `structKeyExists`, not truthiness: `false` is a real answer here, and
+		// the shortcut would make inheritance impossible to switch off.
+		if ( structKeyExists( arguments.given, "inheritFeaturedImage" ) ) {
+			arguments.page.setInheritFeaturedImage( asBoolean( arguments.given.inheritFeaturedImage ) );
+		}
+
 		return arguments.page;
+	}
+
+	/**
+	 * The picture this page actually shows, and where it came from.
+	 *
+	 * A page with its own image uses it. One without falls back to the
+	 * **nearest ancestor** that has one — not merely its parent. On a tree four
+	 * deep, a parent-only rule leaves the deepest pages with nothing precisely
+	 * when only the top of the branch carries an image, which is the usual
+	 * case: one picture on "Legal Services" should cover everything beneath it.
+	 *
+	 * The walk stops at any ancestor that has inheritance switched off. That
+	 * page has said its branch does not take pictures from above, and quietly
+	 * reaching over it would make the setting a lie.
+	 *
+	 * @breadcrumb The page's ancestors, root first, *including the page*. Passed
+	 *             in rather than loaded here because every caller already has
+	 *             it — the resolver loads it for the breadcrumb trail — and
+	 *             fetching it again would be a query per page render.
+	 *
+	 * @return { url, inherited, source } — `source` is the ancestor's title, or
+	 *         an empty string when the page used its own or found nothing.
+	 */
+	struct function resolveFeaturedImage( required any page, array breadcrumb = [] ){
+		var own = trim( arguments.page.getFeaturedImage() ?: "" );
+
+		if ( len( own ) ) {
+			return { "url" : own, "inherited" : false, "source" : "" };
+		}
+
+		if ( !arguments.page.getInheritFeaturedImage() ) {
+			return { "url" : "", "inherited" : false, "source" : "" };
+		}
+
+		// Nearest first: the trail arrives root-first and the page itself is
+		// its last entry, so walking backwards from the page's parent asks the
+		// closest ancestor before the furthest.
+		for ( var i = arrayLen( arguments.breadcrumb ) - 1; i >= 1; i-- ) {
+			var ancestor = arguments.breadcrumb[ i ];
+			var candidate = trim( ancestor.getFeaturedImage() ?: "" );
+
+			if ( len( candidate ) ) {
+				return { "url" : candidate, "inherited" : true, "source" : ancestor.getTitle() };
+			}
+
+			// This ancestor takes no picture from above, so neither does
+			// anything beneath it.
+			if ( !ancestor.getInheritFeaturedImage() ) {
+				break;
+			}
+		}
+
+		return { "url" : "", "inherited" : false, "source" : "" };
+	}
+
+	/**
+	 * A URL we are willing to put in `src`.
+	 *
+	 * Site-relative or an explicit http(s) address, with the whole string
+	 * constrained rather than just the prefix — anchoring only the start would
+	 * accept `https://x" onerror="alert(1)`. Cleaned to empty rather than
+	 * refused: a picture is a display choice, and it is not worth failing to
+	 * save a page over.
+	 */
+	string function safeImageUrl( required string url ){
+		var candidate = trim( arguments.url );
+
+		if ( !len( candidate ) || len( candidate ) > 500 ) {
+			return "";
+		}
+
+		if ( reFind( "[^A-Za-z0-9\-._~:/?##\[\]@!$&''()*+,;=%]", candidate ) ) {
+			return "";
+		}
+
+		// A protocol-relative `//host` inherits the page's scheme and leaves
+		// the site, so it is excluded along with everything else.
+		return ( reFindNoCase( "^/[^/]", candidate ) || reFindNoCase( "^https?://[a-z0-9]", candidate ) )
+			? candidate
+			: "";
 	}
 
 	/**

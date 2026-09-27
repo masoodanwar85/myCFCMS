@@ -157,45 +157,11 @@
 			</cfif>
 		</form>
 
-		<script>
-		/*
-			Wires the "Choose" buttons to the shared media picker in `_picker.cfm`.
-
-			Written as a delegated listener over `data-pick-media` rather than bound to
-			this one field, so a second media field anywhere in the admin needs markup
-			and no JavaScript. Without the picker the text input is still there and
-			still accepts a pasted URL, which is why the field is not read-only.
-		*/
-		document.addEventListener( "click", function ( e ) {
-			var pick = e.target.closest( "[data-pick-media]" );
-
-			if ( pick && window.cmsPickMedia ) {
-				window.cmsPickMedia().then( function ( item ) {
-					if ( !item ) {
-						return;
-					}
-
-					var field = document.getElementById( pick.getAttribute( "data-pick-media" ) );
-
-					if ( field ) {
-						field.value = item.url;
-					}
-				} );
-
-				return;
-			}
-
-			var clear = e.target.closest( "[data-clear-media]" );
-
-			if ( clear ) {
-				var target = document.getElementById( clear.getAttribute( "data-clear-media" ) );
-
-				if ( target ) {
-					target.value = "";
-				}
-			}
-		} );
-		</script>
+		<!---
+			The "Choose" and "Clear" buttons are wired in `_picker.cfm`, which every
+			admin screen already loads. The listener lived here until a second screen
+			wanted a media field and found the buttons inert.
+		--->
 		</section>
 
 		<section class="tab-panel" data-for="tab-theme">

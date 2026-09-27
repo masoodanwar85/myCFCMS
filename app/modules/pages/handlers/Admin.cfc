@@ -50,6 +50,12 @@ component extends="core.models.security.SecuredHandler" {
 		prc.mayPostRawHtml = mayPostRawHtml( prc );
 		prc.templates      = templatesForSite( prc );
 
+		// What this page would show if its own image were left empty, so an
+		// editor can see the inheritance without publishing and looking.
+		prc.featured = isObject( prc.page ?: "" )
+			? pageService.resolveFeaturedImage( prc.page, pageService.getBreadcrumb( prc.page.getId() ) )
+			: { "url" : "", "inherited" : false, "source" : "" };
+
 		event.setView( view = "admin/form", module = "pages" );
 	}
 
@@ -87,6 +93,12 @@ component extends="core.models.security.SecuredHandler" {
 		prc.useEditor      = true;
 		prc.mayPostRawHtml = mayPostRawHtml( prc );
 		prc.templates      = templatesForSite( prc );
+
+		// What this page would show if its own image were left empty, so an
+		// editor can see the inheritance without publishing and looking.
+		prc.featured = isObject( prc.page ?: "" )
+			? pageService.resolveFeaturedImage( prc.page, pageService.getBreadcrumb( prc.page.getId() ) )
+			: { "url" : "", "inherited" : false, "source" : "" };
 
 		event.setView( view = "admin/form", module = "pages" );
 	}
@@ -154,6 +166,14 @@ component extends="core.models.security.SecuredHandler" {
 		// needed, unlike the checkboxes above.
 		if ( structKeyExists( arguments.rc, "template" ) ) {
 			given.template = arguments.rc.template;
+		}
+
+		if ( structKeyExists( arguments.rc, "featuredImage" ) ) {
+			given.featuredImage = arguments.rc.featuredImage;
+		}
+
+		if ( ( arguments.rc.contentTabPresent ?: "" ) == "1" ) {
+			given.inheritFeaturedImage = ( arguments.rc.inheritFeaturedImage ?: "" ) == "on";
 		}
 
 		// Raw markup is only read from the form when the author may write it.
@@ -264,14 +284,34 @@ component extends="core.models.security.SecuredHandler" {
 	}
 
 	/**
-	 * Flatten the tree for a table, carrying depth so it can be indented.
+	 * Flatten the tree for a table, carrying what the table needs to fold it.
+	 *
+	 * `depth` indents a row; `parentId` and `childCount` are what let the view
+	 * hide a branch. The table stays flat — a nested markup structure cannot be
+	 * a table, and the columns have to line up across every level — so the
+	 * parentage travels as data on each row instead.
+	 *
+	 * `parentId` is 0 for a top-level page, matching how `parentId` is treated
+	 * everywhere else in this module: zero is not a page, it means "no parent".
 	 */
-	private array function flatten( required array nodes, required numeric depth ){
+	private array function flatten(
+		required array nodes,
+		required numeric depth,
+		numeric parentId = 0
+	){
 		var rows = [];
 
 		for ( var node in arguments.nodes ) {
-			rows.append( { "page" : node.page, "depth" : arguments.depth } );
-			rows.append( flatten( node.children, arguments.depth + 1 ), true );
+			rows.append( {
+				"page"       : node.page,
+				"depth"      : arguments.depth,
+				"parentId"   : arguments.parentId,
+				// `arrayLen`, not `.len()`: a member call on a struct member
+				// is one of the constructs that parses on 2025 and not on 2023.
+				"childCount" : arrayLen( node.children )
+			} );
+
+			rows.append( flatten( node.children, arguments.depth + 1, node.page.getId() ), true );
 		}
 
 		return rows;

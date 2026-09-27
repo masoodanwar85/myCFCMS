@@ -33,6 +33,21 @@ component accessors="true" {
 	 * whole point of the feature.
 	 */
 	property name="template"        type="string";
+
+	/**
+	 * A picture shown *on* this page — a banner, or a thumbnail in a listing.
+	 *
+	 * Deliberately not `ogImage`, which is the card a social network shows when
+	 * the page is shared and which nobody sees on the site. Different purpose,
+	 * usually a different shape.
+	 */
+	property name="featuredImage"   type="string";
+
+	/**
+	 * Whether an empty `featuredImage` falls back to the nearest ancestor that
+	 * has one. Means nothing when this page has its own.
+	 */
+	property name="inheritFeaturedImage" type="boolean";
 	property name="metaTitle"       type="string";
 	property name="metaDescription" type="string";
 	property name="sortOrder"       type="numeric";
@@ -80,6 +95,11 @@ component accessors="true" {
 		// The behaviour every page had before these options existed.
 		variables.showHeading = true;
 		variables.template    = "";
+		variables.featuredImage = "";
+
+		// On by default. A sub-page with no picture almost always wants its
+		// parent's; the exceptions are few and switch it off individually.
+		variables.inheritFeaturedImage = true;
 
 		// The behaviour that existed before these fields did, so a page created
 		// without touching the SEO tab presents exactly as it always has.

@@ -23,6 +23,8 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		"content",
 		"show_heading",
 		"template",
+		"featured_image",
+		"inherit_featured_image",
 		"meta_title",
 		"meta_description",
 		"meta_keywords",
@@ -70,6 +72,8 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"content"          : { value : arguments.page.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
 					"show_heading"     : flag( arguments.page.getShowHeading() ),
 					"template"         : arguments.page.getTemplate() ?: "",
+					"featured_image"   : arguments.page.getFeaturedImage() ?: "",
+					"inherit_featured_image" : flag( arguments.page.getInheritFeaturedImage() ),
 					"meta_title"       : arguments.page.getMetaTitle() ?: "",
 					"meta_description" : arguments.page.getMetaDescription() ?: "",
 					"meta_keywords"    : arguments.page.getMetaKeywords() ?: "",
@@ -133,6 +137,8 @@ component singleton extends="core.models.persistence.BaseRepository" {
 					"content"          : { value : arguments.page.getContent() ?: "", cfsqltype : "cf_sql_longvarchar" },
 					"show_heading"     : flag( arguments.page.getShowHeading() ),
 					"template"         : arguments.page.getTemplate() ?: "",
+					"featured_image"   : arguments.page.getFeaturedImage() ?: "",
+					"inherit_featured_image" : flag( arguments.page.getInheritFeaturedImage() ),
 					"meta_title"       : arguments.page.getMetaTitle() ?: "",
 					"meta_description" : arguments.page.getMetaDescription() ?: "",
 					"meta_keywords"    : arguments.page.getMetaKeywords() ?: "",
@@ -357,6 +363,8 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setContent( arguments.row.content ?: "" )
 			.setShowHeading( arguments.row.show_heading ? true : false )
 			.setTemplate( arguments.row.template ?: "" )
+			.setFeaturedImage( arguments.row.featured_image ?: "" )
+			.setInheritFeaturedImage( arguments.row.inherit_featured_image ? true : false )
 			.setMetaTitle( arguments.row.meta_title ?: "" )
 			.setMetaDescription( arguments.row.meta_description ?: "" )
 			.setMetaKeywords( arguments.row.meta_keywords ?: "" )

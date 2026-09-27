@@ -1,4 +1,15 @@
 <cfoutput>
+<!---
+	Resolved upstream: the page's own image, the nearest ancestor's, or none.
+	`alt=""` because the heading below already names the page — see the
+	willcreator view for the longer note.
+--->
+<cfif len( args.featuredImage ?: "" )>
+	<figure class="page-hero">
+		<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async">
+	</figure>
+</cfif>
+
 <cfif args.breadcrumb.len() gt 1>
 	<p class="crumbs">
 		<cfloop array="#args.breadcrumb#" index="crumb">

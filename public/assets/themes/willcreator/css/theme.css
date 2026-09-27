@@ -78,6 +78,26 @@
 	/* p  { max-width: 62ch; } */
 
 	.wrap { width: min(100% - 3rem, var(--wrap)); margin-inline: auto; }
+
+	/*
+	   The page's featured image.
+
+	   A fixed height with `object-fit: cover` rather than a free-flowing
+	   image, so it does not matter much what an author uploads: a tall photo
+	   and a wide one both come out as the same banner, cropped from the middle,
+	   and the page below never shifts depending on the file.
+
+	   `clamp` rather than a fixed pixel height so it scales on a phone without
+	   a media query, and never grows tall enough on a wide screen to push the
+	   heading below the fold.
+	*/
+	.page-hero { margin: 1.5rem 0 0; }
+	.page-hero img {
+	  display: block; width: 100%;
+	  height: clamp(160px, 26vw, 320px);
+	  object-fit: cover; object-position: center;
+	  border-radius: var(--radius);
+	}
 	.wrap--narrow { width: min(100% - 3rem, 760px); margin-inline: auto; }
 
 	/* Eyebrow / structural label ---------------------------------------------- */

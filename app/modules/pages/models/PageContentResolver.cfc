@@ -60,6 +60,11 @@ component singleton accessors="true" {
 			)
 		);
 
+		// Resolved from the breadcrumb below, which this resolver already loads
+		// for the trail — so inheritance costs no extra query.
+		var trail    = pageService.getBreadcrumb( page.getId() );
+		var featured = pageService.resolveFeaturedImage( page, trail );
+
 		return {
 			"view"            : "page",
 			// A template the author picked, or empty. Frontend checks the theme
@@ -68,7 +73,10 @@ component singleton accessors="true" {
 			"template"        : page.getTemplate() ?: "",
 			"args"            : {
 				"page"       : page,
-				"breadcrumb" : pageService.getBreadcrumb( page.getId() )
+				"breadcrumb" : trail,
+				// Handed to the theme resolved, so a view or template never has
+				// to know the inheritance rule to draw a banner.
+				"featuredImage" : featured.url
 			},
 			"title"           : page.getEffectiveMetaTitle(),
 			"metaDescription" : page.getMetaDescription() ?: "",
@@ -81,7 +89,11 @@ component singleton accessors="true" {
 			// defaults — so a page nobody has opened the SEO tab on behaves
 			// exactly as it did before these fields existed.
 			"robots"          : page.getRobotsDirective(),
-			"image"           : page.getOgImage() ?: "",
+			// `og_image` first, because a page that names its own share card
+			// means it. Then the featured image: a picture belonging to *this*
+			// page makes a better card than the site-wide default, which is the
+			// same one on every page. SeoService supplies that default last.
+			"image"           : len( page.getOgImage() ?: "" ) ? page.getOgImage() : featured.url,
 			"contentType"     : page.getOgType() ?: "website",
 			"twitterCard"     : page.getTwitterCard() ?: "",
 			"keywords"        : page.getMetaKeywords() ?: "",

@@ -1,5 +1,25 @@
 <cfoutput>
 <!---
+	The page's featured image, above everything else.
+
+	`args.featuredImage` arrives already resolved — the page's own, or the
+	nearest ancestor's, or empty. The view never needs to know the inheritance
+	rule; it only asks whether there is a picture.
+
+	`alt=""` on purpose. This is a decorative banner and the heading directly
+	below it says what the page is, so describing the image with the same words
+	would have a screen reader announce the title twice. An image that carries
+	meaning of its own belongs in the content, where it can be described.
+--->
+<cfif len( args.featuredImage ?: "" )>
+	<div class="wrap">
+		<figure class="page-hero">
+			<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async">
+		</figure>
+	</div>
+</cfif>
+
+<!---
 	Breadcrumbs sit outside the white card, as a quiet line above it. On a site
 	four levels deep they are not decoration: `/legal-services/wills/wills-blue-mountains/wills-katoomba`
 	is impossible to place without them.

@@ -42,6 +42,11 @@
 		nav ul ul { display:flex; gap:.75rem; margin-top:.2rem; }
 		nav ul ul a { font-size:.85rem; color:var(--muted); }
 		h1 { font-size:1.9rem; line-height:1.25; margin:0 0 .5rem; }
+		/* Fixed height plus object-fit, so any upload becomes the same banner
+		   and the page below does not shift with the file. */
+		.page-hero { margin:0 0 1.5rem; }
+		.page-hero img { display:block; width:100%; height:clamp(150px,24vw,280px);
+		                 object-fit:cover; border-radius:4px; }
 		.crumbs { font-size:.85rem; color:var(--muted); margin-bottom:1.5rem; }
 		.crumbs a { color:var(--muted); }
 		footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule);

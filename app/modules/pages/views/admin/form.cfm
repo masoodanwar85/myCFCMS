@@ -134,6 +134,57 @@
 				</div>
 			</div>
 
+			<!---
+				A picture shown ON this page — a banner, a thumbnail in a
+				listing. Not the same as the social card on the SEO tab, which
+				is what Facebook shows when the page is shared and which nobody
+				sees on the site.
+			--->
+			<label for="featuredImage">Featured image</label>
+			<div class="media-field">
+				<input type="text" id="featuredImage" name="featuredImage"
+				       value="#editing ? encodeForHTMLAttribute( p.getFeaturedImage() ?: '' ) : ''#"
+				       placeholder="/media/2026/09/hero.jpg">
+				<button type="button" class="ico" data-pick-media="featuredImage">Choose&hellip;</button>
+				<button type="button" class="ico" data-clear-media="featuredImage">Clear</button>
+			</div>
+
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="inheritFeaturedImage"
+					       <cfif !editing || p.getInheritFeaturedImage()>checked</cfif>>
+					Use the nearest parent page's image when this one has none
+				</label>
+			</div>
+
+			<cfif editing>
+				<cfif len( p.getFeaturedImage() ?: "" )>
+					<p class="muted" style="font-size:.8rem">
+						<img src="#encodeForHTMLAttribute( p.getFeaturedImage() )#"
+						     alt="Featured image for #encodeForHTML( p.getTitle() )#"
+						     style="max-height:4rem;max-width:12rem;vertical-align:middle;border-radius:4px">
+						This page has its own image, so the tick box above has no effect on it.
+					</p>
+				<cfelseif len( prc.featured.url )>
+					<p class="muted" style="font-size:.8rem">
+						<img src="#encodeForHTMLAttribute( prc.featured.url )#"
+						     alt="Image inherited from #encodeForHTML( prc.featured.source )#"
+						     style="max-height:4rem;max-width:12rem;vertical-align:middle;border-radius:4px">
+						Inherited from <strong>#encodeForHTML( prc.featured.source )#</strong>.
+						Choose an image above to override it, or untick the box for none.
+					</p>
+				<cfelse>
+					<p class="muted" style="font-size:.8rem">
+						No image, and none to inherit &mdash; no page above this one has one.
+					</p>
+				</cfif>
+			</cfif>
+
+			<p class="muted" style="font-size:.8rem">
+				Shown on the page itself by themes that use it. It is also used for the
+				social share card when the <strong>SEO</strong> tab leaves that blank.
+			</p>
+
 			<label for="content">Content</label>
 			<textarea id="content" name="content" data-editor>#editing ? encodeForHTML( p.getContent() ?: "" ) : ""#</textarea>
 

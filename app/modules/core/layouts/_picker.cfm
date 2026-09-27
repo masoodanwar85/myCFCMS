@@ -193,6 +193,54 @@ function pickFromLibrary() {
 }
 
 	window.cmsPickMedia = pickFromLibrary;
+
+	/*
+		Media fields, anywhere in the admin.
+
+		Delegated over `data-pick-media` / `data-clear-media` rather than bound
+		to one field, so a new media field is markup and no JavaScript:
+
+		    <input type="text" id="heroUrl" name="heroUrl">
+		    <button type="button" data-pick-media="heroUrl">Choose…</button>
+		    <button type="button" data-clear-media="heroUrl">Clear</button>
+
+		This lived in the Settings view until a second screen needed it. Without
+		the picker the text input still accepts a pasted URL, which is why the
+		field is never read-only.
+	*/
+	document.addEventListener( "click", function ( event ) {
+		var pick = event.target.closest( "[data-pick-media]" );
+
+		if ( pick && window.cmsPickMedia ) {
+			window.cmsPickMedia().then( function ( item ) {
+				if ( !item ) {
+					return;
+				}
+
+				var field = document.getElementById( pick.getAttribute( "data-pick-media" ) );
+
+				if ( field ) {
+					field.value = item.url;
+					// So anything watching the field — a preview, a dirty-form
+					// guard — hears about a value it did not see typed.
+					field.dispatchEvent( new Event( "change", { bubbles: true } ) );
+				}
+			} );
+
+			return;
+		}
+
+		var clear = event.target.closest( "[data-clear-media]" );
+
+		if ( clear ) {
+			var target = document.getElementById( clear.getAttribute( "data-clear-media" ) );
+
+			if ( target ) {
+				target.value = "";
+				target.dispatchEvent( new Event( "change", { bubbles: true } ) );
+			}
+		}
+	} );
 })();
 </script>
 </cfoutput>

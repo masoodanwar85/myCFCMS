@@ -196,6 +196,83 @@ Read with `structKeyExists`, never truthiness: `false` is the whole point of the
 field, and the elvis shortcut would make it impossible to turn off — the same
 trap that has caught `robotsIndex`, `sitemapInclude` and site settings before.
 
+## Featured image
+
+A picture shown **on** the page — a banner, a thumbnail in a listing. Stored as
+a URL, matching `og_image` in the same table and the branding logo, which keeps
+Pages from depending on the Media module while still using its picker.
+
+### It is not `og_image`
+
+`og_image` is the card a social network draws when the page is shared: seen on
+Facebook or LinkedIn, never on the site, usually a wide 1200x630 image. A
+featured image is content. Different purpose, often a different shape, so they
+are separate fields and setting one does not touch the other.
+
+They meet in one place and one direction. A page with no `og_image` used to fall
+back to the site-wide `seo.defaultImage` — the same picture on all 100 pages. A
+picture belonging to *this* page is a better guess, so the order is now:
+
+    og_image  →  featured image (resolved)  →  seo.defaultImage
+
+An `og_image` somebody set deliberately is never overridden.
+
+### Inheritance reaches past the parent
+
+A page with no image of its own falls back to the **nearest ancestor** that has
+one, not merely its parent. On a four-level branch —
+`Legal Services → Wills → Wills - Blue Mountains → Wills - Katoomba` — a
+parent-only rule leaves the deepest pages with nothing exactly when only the top
+of the branch carries an image, which is the usual case. One picture on
+"Legal Services" now covers everything beneath it.
+
+The walk stops at any ancestor with inheritance switched off: that page has said
+its branch takes no picture from above, and reaching over it would make the
+setting a lie for everything below.
+
+It costs no extra query. `PageContentResolver` already loads the breadcrumb for
+the trail, so the ancestors are in hand and are passed to
+`resolveFeaturedImage()` rather than fetched again.
+
+### Why the tick box defaults to on
+
+`inherit_featured_image` defaults to `1`, so every existing page inherits the
+moment an ancestor gets an image. The alternative — opt-in — would mean opening
+82 of Will Creator's 100 pages to tick a box for the behaviour nearly all of
+them want. The exceptions untick it, and there are two or three.
+
+The flag means nothing for a page that has its own image, and the editor says so
+rather than leaving a control that silently does nothing.
+
+### What the editor shows
+
+Editing a page displays the image it would actually use and where it came from —
+"Inherited from **Legal Services**" with a thumbnail — so the inheritance can be
+checked without publishing and looking. A page with neither says so plainly.
+
+### What the themes draw
+
+`args.featuredImage` reaches every page render already resolved, so a view or a
+template asks only "is there a picture?" — never how inheritance works.
+
+The default and willcreator themes draw it as a banner above the breadcrumbs,
+inside the content column rather than edge to edge, which keeps it from
+fighting a theme's own full-width sections.
+
+It is a **fixed height with `object-fit: cover`**, not a free-flowing image.
+A tall photo and a wide one both come out as the same banner, cropped from the
+centre, so it does not much matter what an author uploads and the page below
+never shifts depending on the file. `clamp()` scales it down on a phone without
+a media query and stops it pushing the heading off a wide screen.
+
+`alt=""`, deliberately. The banner is decorative and the heading directly below
+names the page; describing the image with the same words makes a screen reader
+announce the title twice. An image carrying meaning of its own belongs in the
+content, where it can be described properly.
+
+A page with no image — its own or inherited — renders no `<figure>` at all,
+rather than an empty box.
+
 ## 5. What is implemented
 
 - The `pages` table with hierarchy, materialised paths, SEO fields, publishing

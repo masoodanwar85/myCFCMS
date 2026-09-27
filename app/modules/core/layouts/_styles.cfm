@@ -114,6 +114,26 @@
 	.c{ text-align:center; }
 	.nowrap{ white-space:nowrap; }
 	.indent{ display:inline-block; }
+
+	/* ---- folding page tree -------------------------------------------- */
+	/*
+	   `.is-folded` is applied by the script on the Pages screen. A `tr` needs
+	   `display:none` explicitly — the `hidden` attribute loses to a stylesheet
+	   that gives rows a display value, which a table's own rules often do.
+	*/
+	tr.is-folded{ display:none; }
+	/* Sized for a finger as well as a mouse — it is the main control on this
+	   screen, and a 0.7rem caret is a hard thing to hit. The width is shared
+	   with `.tree-leaf` so titles stay aligned whether a row folds or not. */
+	.tree-toggle{ background:none; border:0; padding:.25rem .3rem .25rem 0; margin:0; cursor:pointer;
+	              color:var(--soft); font-size:.8rem; line-height:1; width:1.25rem; text-align:left; }
+	.tree-toggle::before{ content:"\25B8"; display:inline-block; transition:transform .12s ease; }
+	.tree-toggle[aria-expanded="true"]::before{ transform:rotate(90deg); }
+	.tree-toggle:hover{ color:var(--accent); }
+	.tree-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:2px; }
+	/* A leaf reserves the toggle's width so every title starts at the same x. */
+	.tree-leaf{ display:inline-block; width:1.25rem; }
+	.tree-count{ font-size:.72rem; }
 	form.inline{ display:inline; }
 
 	/* ---- forms ------------------------------------------------------ */
