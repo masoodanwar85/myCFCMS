@@ -98,29 +98,35 @@
 			
                 <p class="hero__lead">
 				<h3>
-    				Welcome to Cleverminds
+    				Welcome to Cleverminds Legal Centre
 				</h3>
                 <p>
                 &nbsp;
                 </p>
 				<p>
-    				Welcome to <strong>Cleverminds Law</strong>, your modern legal partner built around your schedule. We understand that life doesn’t stop between 9 and 5. 
-                    If you are balancing a busy career, family commitments, or a hectic lifestyle, finding time to see a lawyer can be a challenge. 
-                    That is why we have reimagined standard legal services to fit your life, operating <strong>primarily online and after hours and weekends</strong> 
-                    to provide premium legal support when it suits you best.
-				</p>
-                <p>
-                &nbsp;
-                </p>
-				<p>
-    				While we leverage seamless digital solutions to keep things simple, our roots are firmly local. We proudly serve individuals, families, 
-                    and businesses across greater Sydney and througout NSW and specifically:<br>
-    			<br>
-    				<strong>Greater Western Sydney, the Blue Mountains, the Central Coast, and Central West NSW</strong>.&nbsp;<br>
-    			<br>
-    				Wherever you are located across these regions, you can access reliable, expert legal advice right from the comfort of your home or office.
-                <br>
-    				We look forward to working with you on the legal issue whilst offering you an exceptional personal service.
+    				Modern legal services designed around you.<br>
+					<br>
+					At Cleverminds Legal Centre, we understand that finding time to see a lawyer during traditional business hours is not always easy.<br>
+                    <br>
+                    That is why we offer a modern and flexible approach to legal services, with online consultations and appointments available after hours and on weekends.<br>
+                    <br>
+                    Whether you are managing work, family or other commitments, our aim is to make obtaining professional legal advice simple, convenient and accessible.<br>
+					<br>
+					Professional advice. Personal service. Greater flexibility.<br>
+					<br>
+					Technology allows us to work efficiently with clients wherever they are, while still providing the personal attention and practical legal guidance you expect from your solicitor.<br>
+					<br>
+					You can meet with us online from the convenience of your home or office, without unnecessary travel or disruption to your day.<br>
+					<br>
+					Local knowledge — serving clients across NSW<br>
+					<br>
+					Cleverminds Legal Centre provides legal services to individuals, families and businesses throughout Sydney and New South Wales, with a particular focus on:<br>
+					<br>
+					Greater Western Sydney • Blue Mountains • Central Coast • Central West NSW
+					<br>
+					Wherever you are located, our goal is simple: to provide clear, practical legal advice and exceptional personal service when you need it.<br>
+					<br>
+					Legal advice that works around your life.<br>
 				</p>
 				</p>
                 
@@ -149,7 +155,7 @@
 					<div class="service-row__body">
 						<h3>Probate</h3>
 						<p>We have obtained Probate for hundreds of clients. We get the job done quickly and effectively, every time.</p>
-						<p><a class="service-row__more" href="/legal-services/probate">Find out more</a></p>
+						<p><a class="service-row__more" href="/probate-what-is-probate">Find out more</a></p>
 					</div>
 				</div>
                 
@@ -160,7 +166,7 @@
 					<div class="service-row__body">
 						<h3>Property Law</h3>
 						<p>Conveyancing, transmissions, purchases, sales and leasing &mdash; practical property advice for New South Wales families.</p>
-						<p><a class="service-row__more" href="/legal-services/property-law">Find out more</a></p>
+						<p><a class="service-row__more" href="/legal-services/property-law/what-is-property-law-and-conveyancing">Find out more</a></p>
 					</div>
 				</div>
 

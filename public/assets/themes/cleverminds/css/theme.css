@@ -1585,3 +1585,7 @@ main:has(.home) {
 		max-width: none;
 	}
 }
+
+.hero-slide__content h2, .hero-slide__content h3 {
+	color: white;
+}
