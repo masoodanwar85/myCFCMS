@@ -97,14 +97,16 @@
 		<div class="wrap">
 			
                 <p class="hero__lead">
-				<h3>
+				<h1 style="text-align: center;">
     				Welcome to Cleverminds Legal Centre
-				</h3>
+				</h1>
                 <p>
                 &nbsp;
                 </p>
+				<h3 style="text-align: center;">
+    				<em>Modern legal services designed around you.</em>
+				</h3>
 				<p>
-    				Modern legal services designed around you.<br>
 					<br>
 					At Cleverminds Legal Centre, we understand that finding time to see a lawyer during traditional business hours is not always easy.<br>
                     <br>
@@ -216,11 +218,12 @@
                 </div>   
 			</div>
 			<p class="home-services__foot">
-				<a class="btn btn--ghost" href="/legal-services">View all legal services</a>
-				<a class="btn btn--ghost" href="/locations/service-locations">Areas we serve</a>
+				<a class="btn btn--ghost" href="/contact">Contact us</a>
+				<a class="btn btn--ghost" href="/legal-services">View all services</a>
 			</p>
 		</div>
 	</section>
+	<br />
     </div>
  <!---  
 

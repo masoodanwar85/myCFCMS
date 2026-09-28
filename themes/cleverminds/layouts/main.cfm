@@ -190,31 +190,21 @@
 				</div>
 	
 				<div>
-					<h5>Documents</h5>
-					<a href="/create-documents/">Last Will &amp; Testament</a>
-					<a href="/create-documents/">Enduring Power of Attorney</a>
-					<a href="/create-documents/">Enduring Guardian</a>
-				</div>
-	
-				<div>
 					<h5>Firm</h5>
 					<a href="/about-us/">About Us</a>
-					
 					<a href="/solicitors/">Our solicitors</a>
-					<a href="/fees/">Fees</a>
 					<a href="/contact/">Contact</a>
 				</div>
 	
 				<div>
 					<h5>Support</h5>
-					<a href="/sign-in/">Sign in</a>
 					<a href="/faq/">FAQ</a>
 					<a href="/contact/">Book an appointment</a>
 				</div>
 			</div>
 	
 			<div class="site-foot__legal">
-				<p>&copy; 1994&ndash;#year(now())#  Pty Ltd. All rights reserved.</p>
+				<p>&copy; 1994&ndash;#year(now())#  Cleverminds Consulting. All rights reserved.</p>
 				<p>
 					<a href="/privacy/">Privacy</a> &nbsp;&middot;&nbsp;
 					<a href="/terms/">Terms of engagement</a> &nbsp;&middot;&nbsp;

@@ -1,4 +1,35 @@
 <cfoutput>
+	<!---
+	The page's featured image, above everything else.
+
+	`args.featuredImage` arrives already resolved — the page's own, or the
+	nearest ancestor's, or empty. The view never needs to know the inheritance
+	rule; it only asks whether there is a picture.
+
+	`alt=""` on purpose. This is a decorative banner and the heading directly
+	below it says what the page is, so describing the image with the same words
+	would have a screen reader announce the title twice. An image that carries
+	meaning of its own belongs in the content, where it can be described.
+--->
+<cfif len( args.featuredImage ?: "" )>
+	<!--- <cfset args.featuredImage = "https://placehold.co/1920x680"> --->
+	<!--- <div class="wrap"> --->
+		<figure class="page-hero">
+			<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async">
+		</figure>
+	<!--- </div> --->
+
+	<style type="text/css">
+		main {
+			padding: 0px !important;
+		}
+		figure.page-hero img {
+			width: 100%;
+			height: 680px;
+			object-fit: cover;
+		}
+	</style>
+</cfif>
 <article class="section">
 <cfif args.page.getShowHeading()>
 		<h1>#args.breadcrumb[1].getTitle()# - #encodeForHTML( args.page.getTitle() )#</h1>
@@ -8,6 +39,7 @@
     	#args.page.getContent()#
     </div>
 	<div class="right-col">
+		<h4><center>Contact Us</center></h4>
 		<form method="post" action="/contact">
 		<input type="hidden" name="csrfToken" value="e082d224f6acd480c5ec36fdba129560f565fd8aa106765bc3276becaaebb757">
 		<input type="hidden" name="form" value="contact-us">

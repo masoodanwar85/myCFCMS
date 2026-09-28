@@ -115,7 +115,7 @@
 	.btn:hover { background: var(--eucalypt-d); border-color: var(--eucalypt-d); transform: translateY(-2px); box-shadow: var(--shadow); }
 	.btn:focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
 	.btn--ghost { --_bg: transparent; --_fg: var(--ink); border-color: var(--sage); }
-	.btn--ghost:hover { --_bg: var(--sage-tint); border-color: var(--eucalypt); transform: translateY(-2px); }
+	.btn--ghost:hover { --_bg: var(--sage-tint); border-color: var(--eucalypt); transform: translateY(-2px); color: white;}
 	.btn--brass { --_bg: var(--brass); border-color: var(--brass); }
 	.btn--brass:hover { background: var(--brass-d); border-color: var(--brass-d); }
 	.btn--lg { padding: 1.1em 2.2em; font-size: var(--step-0); text-transform: none; letter-spacing: .01em; }
@@ -265,6 +265,9 @@
 	.site-foot__brand p { font-size: var(--step--1); line-height: 1.6; margin-top: 1rem; max-width: 34ch; }
 	.site-foot__legal { border-top: 1px solid rgba(245,241,232,.14); margin-top: 2.5rem; padding-top: 1.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; font-size: var(--step--1); }
 	.site-foot__legal p { max-width: none; }
+	.site-foot__legal p a {
+		display: inline;
+	}
 
 	/* ============================================================================
 	FORM WIZARD  (create-documents page)
@@ -1522,7 +1525,7 @@ main:has(.home) {
 	flex: none;
 }
 .home-block {
-	padding-block: clamp(3.5rem, 7vw, 6rem);
+	/* padding-block: clamp(3.5rem, 7vw, 6rem); */
 }
 .home-block--paper {
 	background: var(--paper-2);
