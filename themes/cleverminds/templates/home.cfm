@@ -103,33 +103,71 @@
                 <p>
                 &nbsp;
                 </p>
-				<h3 style="text-align: center;">
+				<div style="justify-content: space-between;display: flex;margin-top: 70px;">
+					<div class="left-col" style="width: 50%;">
+						<h3>
     				<em>Modern legal services designed around you.</em>
-				</h3>
-				<p>
-					<br>
-					At Cleverminds Legal Centre, we understand that finding time to see a lawyer during traditional business hours is not always easy.<br>
-                    <br>
-                    That is why we offer a modern and flexible approach to legal services, with online consultations and appointments available after hours and on weekends.<br>
-                    <br>
-                    Whether you are managing work, family or other commitments, our aim is to make obtaining professional legal advice simple, convenient and accessible.<br>
-					<br>
-					Professional advice. Personal service. Greater flexibility.<br>
-					<br>
-					Technology allows us to work efficiently with clients wherever they are, while still providing the personal attention and practical legal guidance you expect from your solicitor.<br>
-					<br>
-					You can meet with us online from the convenience of your home or office, without unnecessary travel or disruption to your day.<br>
-					<br>
-					Local knowledge — serving clients across NSW<br>
-					<br>
-					Cleverminds Legal Centre provides legal services to individuals, families and businesses throughout Sydney and New South Wales, with a particular focus on:<br>
-					<br>
-					Greater Western Sydney • Blue Mountains • Central Coast • Central West NSW
-					<br>
-					Wherever you are located, our goal is simple: to provide clear, practical legal advice and exceptional personal service when you need it.<br>
-					<br>
-					Legal advice that works around your life.<br>
-				</p>
+				</h3><br>
+						<ul>
+							<li>We understand that finding time to see a lawyer during traditional business hours is not always easy.</li>
+							<li>That is why we offer a modern and flexible approach to legal services, with online consultations and appointments 
+							available after hours and on weekends. Whether you are managing work, family or other commitments, our aim is to make obtaining professional legal advice simple, convenient and accessible.</li>
+						</ul>
+
+                        <br><br><h3><em>Professional advice - Exceptional personal service - Greater flexibility.</em></h3><br>
+
+                
+					</div>
+    				<div class="mid-col" style="width:10%;">&nbsp;</div>
+					<div class="right-col" style="width: 40%;">
+						<aside class="deed" aria-label="Estate portfolio">
+							<div class="deed__head">
+								<p class="deed__title">Cleverminds Legal Centre</p>
+							</div>
+							<ul class="deed__list">
+								<li>
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+									<div>
+										<b>Trusted</b>
+										<span>We have built a reputation as a trusted law firm</span>
+									</div>
+								</li>
+								<li>
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+									<div>
+										<b>Local</b>
+										<span>A proud local firm providing a friendly, courteous, prompt and professional service</span>
+									</div>
+								</li>
+								<li>
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+									<div>
+										<b>Progressive</b>
+										<span>A progressive law firm across several practice areas</span>
+									</div>
+								</li>
+							</ul>
+						</aside>
+					</div>
+				</div>
+				<div>
+					<ul>	
+						<li>Technology allows us to work efficiently with clients wherever they are, while still providing the personal attention and practical legal guidance you expect from your solicitor.
+						You can meet with us online from the convenience of your home or office, without unnecessary travel or disruption to your day.</li>
+						<li>That is why we offer a modern and flexible approach to legal services, with online consultations and appointments 
+						available after hours and on weekends. Whether you are managing work, family or other commitments, our aim is to make obtaining professional legal advice simple, convenient and accessible.</li>
+					</ul>
+					<br><br />
+					<h3><em>Local knowledge - serving clients across greater Sydney and NSW</em></h3><br><ul>
+						 <li>Providing legal services to individuals, families and businesses throughout Sydney and New South Wales</li>
+					 </ul>
+					 <br><br />
+					 <h3><em>Greater Western Sydney • Blue Mountains • Central Coast • Central West NSW
+	
+	</em></h3><br><ul>
+						 <li>Wherever you are located, our goal is simple: to provide clear, practical legal advice and exceptional personal service when you need it.</li>
+					 </ul><br>
+				</div>
 				</p>
                 
 	<section class="home-block" id="our-services">
