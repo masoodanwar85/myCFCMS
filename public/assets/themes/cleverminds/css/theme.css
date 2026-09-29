@@ -1525,7 +1525,7 @@ main:has(.home) {
 	flex: none;
 }
 .home-block {
-	/* padding-block: clamp(3.5rem, 7vw, 6rem); */
+	padding-block: clamp(3.5rem, 7vw, 6rem);
 }
 .home-block--paper {
 	background: var(--paper-2);

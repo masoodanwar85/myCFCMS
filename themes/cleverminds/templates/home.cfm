@@ -93,6 +93,21 @@
     
  --->   
 
+ <style type="text/css">
+	/* Mobile first: 1 column layout */
+	.column-container {
+		display: grid;
+		grid-template-columns: 1fr; /* 1 column per row */
+		gap: 20px;                 /* Spacing between columns */
+	}
+
+	/* Desktop screen (e.g., 768px and above) */
+	@media (min-width: 768px) {
+		.column-container {
+			grid-template-columns: repeat(2, 1fr); /* 2 equal columns per row */
+		}
+	}
+ </style>
 	
 		<div class="wrap">
 			
@@ -103,8 +118,9 @@
                 <p>
                 &nbsp;
                 </p>
-				<div style="justify-content: space-between;display: flex;margin-top: 70px;">
-					<div class="left-col" style="width: 50%;">
+				
+				<div class="column-container" style="margin-top: 70px;">
+					<div class="left-col">
 						<h3>
     				<em>A Modern, Flexible Approach to Legal Services</em>
 				</h3><br>
@@ -139,8 +155,7 @@
 
 						<br>
 					</div>
-    				<div class="mid-col" style="width:10%;">&nbsp;</div>
-					<div class="right-col" style="width: 40%;">
+					<div class="right-col">
 						<aside class="deed" aria-label="Estate portfolio">
 							<div class="deed__head">
 								<p class="deed__title">Cleverminds Legal Centre</p>
