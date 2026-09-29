@@ -207,7 +207,7 @@
 				<p>&copy; 1994&ndash;#year(now())#  Cleverminds Consulting. All rights reserved.</p>
 				<p>
 					<a href="/privacy/">Privacy</a> &nbsp;&middot;&nbsp;
-					<a href="/terms/">Terms of engagement</a> &nbsp;&middot;&nbsp;
+					<a href="/terms/">Terms and Conditions</a> &nbsp;&middot;&nbsp;
 					<a href="/disclaimer/">Disclaimer</a>
 				</p>
 			</div>
