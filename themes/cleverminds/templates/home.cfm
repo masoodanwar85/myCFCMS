@@ -210,9 +210,6 @@
 				<div class="service-showcase">
 				<h2 class="service-showcase__title">Our Services</h2>
                 <div>
-                <p>
-                &nbsp:
-                </p>
                 <div class="service-row">
 					<div class="service-row__media">
 						<img src="/media/2026/09/wills-379a4e46.jpg" alt="A solicitor meeting with clients about their will">
