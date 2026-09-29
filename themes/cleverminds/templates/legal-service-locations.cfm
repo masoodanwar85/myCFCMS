@@ -325,9 +325,9 @@
 							aria-labelledby="areas-tab-#encodeForHTMLAttribute( local.panel.slug )#"
 							data-areas-panel="#encodeForHTMLAttribute( local.panel.slug )#">
 							<p class="areas-serve__intro">
-								Will Creator serves families across New South Wales, including the locations below:
+								Cleverminds Legal Centre provides legal services to clients across Sydney and throughout Regional NSW
 							</p>
-							<p class="areas-serve__banner">Serving Sydney, Regional NSW &amp; the Central Coast</p>
+							<p class="areas-serve__banner">Serving Sydney, Greater Western Sydney, Blue Mountains, NSW Central Coast and Central West NSW</p>
 							<cfif arrayLen( local.panel.groups ?: [] )>
 								<cfloop array="#local.panel.groups#" item="local.group">
                                 	<section class="areas-serve__area">
