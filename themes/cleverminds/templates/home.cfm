@@ -131,7 +131,7 @@
 						</p><br />
 						<h3><em>Serving Clients Across NSW</em></h3><br>
 						<p>
-							Cleverminds Legal Centre provides legal services to clients throughout New South Wales, with a particular focus on Sydney, Greater Western Sydney, the Blue Mountains, the Central Coast and Central West NSW.
+							Cleverminds Legal Centre provides legal services to clients throughout New South Wales, with a particular focus on <strong>Sydney, Greater Western Sydney, the Blue Mountains, the Central Coast and Central West NSW.</strong>
 						</p><br />
 						<p>
 							Our flexible approach to delivering legal services enables us to assist clients across these regions, whether they prefer to meet with us personally or manage their matter remotely.
