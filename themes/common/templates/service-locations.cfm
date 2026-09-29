@@ -1,3 +1,5 @@
+<cfparam name="titleHeading" type="string" default="Will Creator serves families across New South Wales, including the locations below:" />
+<cfparam name="bannerHeading" type="string" default="Serving Sydney, Regional NSW & the Central Coast" />
 <cfscript>
 	// Tabs and town names come from `services` / `locations` /
 	// `services_locations`. The Legal Services menu is a different thing and
@@ -324,10 +326,8 @@
 							role="tabpanel"
 							aria-labelledby="areas-tab-#encodeForHTMLAttribute( local.panel.slug )#"
 							data-areas-panel="#encodeForHTMLAttribute( local.panel.slug )#">
-							<p class="areas-serve__intro">
-								Will Creator serves families across New South Wales, including the locations below:
-							</p>
-							<p class="areas-serve__banner">Serving Sydney, Regional NSW &amp; the Central Coast</p>
+							<p class="areas-serve__intro">#titleHeading#</p>
+							<p class="areas-serve__banner">#bannerHeading#</p>
 							<cfif arrayLen( local.panel.groups ?: [] )>
 								<cfloop array="#local.panel.groups#" item="local.group">
 									<section class="areas-serve__area">

@@ -1,1 +1,3 @@
+<cfset titleHeading = "Cleverminds Legal Centre provides legal services to clients throughout New South Wales, with a particular focus on Sydney, Greater Western Sydney, the Blue Mountains, NSW Central Coast and Central West NSW" />
+<cfset bannerHeading = "Sydney, Greater Western Sydney, Blue Mountains , NSW Central Coast and Central West NSW" />
 <cfinclude template="../../common/templates/service-locations.cfm" />
