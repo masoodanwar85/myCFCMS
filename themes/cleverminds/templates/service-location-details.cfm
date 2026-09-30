@@ -13,11 +13,11 @@
 --->
 <cfif len( args.featuredImage ?: "" )>
 	<!--- <cfset args.featuredImage = "https://placehold.co/1920x680"> --->
-	<!--- <div class="wrap"> --->
+	<div class="wrap">
 		<figure class="page-hero">
 			<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async">
 		</figure>
-	<!--- </div> --->
+	</div>
 
 	<style type="text/css">
 		main {
@@ -25,7 +25,7 @@
 		}
 		figure.page-hero img {
 			width: 100%;
-			height: 540px;
+			height: 390px;
 			object-fit: cover;
 		}
 	</style>
