@@ -25,7 +25,7 @@
 		}
 		figure.page-hero img {
 			width: 100%;
-			height: 680px;
+			height: 540px;
 			object-fit: cover;
 		}
 	</style>
