@@ -45,7 +45,7 @@
 		/* Position the H1 tag over the image */
 		.overlay-title {
 			position: absolute;
-			bottom: 20px;          /* Distance from the bottom edge (adjust as needed) */
+			top: 50%;          /* Distance from the bottom edge (adjust as needed) */
 			left: 50%;             /* Centers horizontally */
 			transform: translateX(-50%); /* Keeps text perfectly centered on its own axis */
 			
