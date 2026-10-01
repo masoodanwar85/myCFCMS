@@ -91,9 +91,9 @@
 	</style>
 </cfif>
 <article class="section">
-<cfif args.page.getShowHeading()>
+<!--- <cfif args.page.getShowHeading()>
 		<h1>#args.breadcrumb[1].getTitle()# - #encodeForHTML( args.page.getTitle() )#</h1>
-	</cfif>
+	</cfif> --->
 <div class="wrap container">
 	<div class="left-col" style="padding-right:30px;">
     	#args.page.getContent()#
