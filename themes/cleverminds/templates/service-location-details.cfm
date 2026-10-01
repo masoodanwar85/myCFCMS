@@ -14,19 +14,79 @@
 <cfif len( args.featuredImage ?: "" )>
 	<!--- <cfset args.featuredImage = "https://placehold.co/1920x680"> --->
 	<div class="wrap">
-		<figure class="page-hero">
+		<!--- <figure class="page-hero">
 			<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async">
-		</figure>
+		</figure> --->
+		<div class="featured-image-container">
+			<img src="#xmlFormat( args.featuredImage )#" alt="" loading="eager" decoding="async" class="featured-image" />
+			<h1 class="overlay-title">#encodeForHTML( args.page.getTitle() )#</h1>
+		</div>
 	</div>
 
 	<style type="text/css">
 		main {
 			padding: 0px !important;
 		}
-		figure.page-hero img {
+		/* Parent container acts as the anchor point */
+		.featured-image-container {
+			position: relative;
 			width: 100%;
-			height: 390px;
+			display: block;
+		}
+
+		/* Ensure the image scales properly within the container */
+		.featured-image {
+			width: 100%;
+			height: 340px;
+			display: block;
 			object-fit: cover;
+		}
+
+		/* Position the H1 tag over the image */
+		.overlay-title {
+			position: absolute;
+			bottom: 20px;          /* Distance from the bottom edge (adjust as needed) */
+			left: 50%;             /* Centers horizontally */
+			transform: translateX(-50%); /* Keeps text perfectly centered on its own axis */
+			
+			/* Text styling for maximum contrast */
+			color: ##ffffff;
+			font-size: 2.2rem;
+			font-weight: bold;
+			text-align: center;
+			margin: 0;
+			width: 90%;
+			z-index: 2;
+			
+			/* High contrast shadow to keep text legible above dark/light backgrounds */
+			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+		}
+		.featured-image-container::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.3); /* Slightly darkens image */
+			z-index: 1;
+		}
+		/* Container layout for desktop (side-by-side) */
+		.container {
+			display: flex;
+			flex-direction: row;
+		}
+
+		/* On mobile, change direction to stack elements */
+		@media (max-width: 768px) {
+			.container {
+				flex-direction: column;
+			}
+			
+			.left-col,
+			.right-col {
+				width: 100%; /* Ensures both take up the full width */
+			}
 		}
 	</style>
 </cfif>
@@ -34,8 +94,8 @@
 <cfif args.page.getShowHeading()>
 		<h1>#args.breadcrumb[1].getTitle()# - #encodeForHTML( args.page.getTitle() )#</h1>
 	</cfif>
-<div class="wrap" style="display:flex">
-	<div class="left-col" style="padding-right:25px;">
+<div class="wrap container">
+	<div class="left-col" style="padding-right:30px;">
     	#args.page.getContent()#
     </div>
 	<div class="right-col">
