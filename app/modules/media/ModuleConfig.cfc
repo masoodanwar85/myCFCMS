@@ -30,7 +30,15 @@ component {
 			"mediaRoot"      : "/storage/media",
 			// 10MB. Large enough for a photograph, small enough that a careless
 			// upload cannot fill a disk.
-			"maxUploadBytes" : 10485760
+			"maxImageBytes"    : 10485760,
+			// 25MB. A scanned contract or a design-heavy brochure routinely
+			// exceeds the image limit, and refusing one is not a kindness.
+			"maxDocumentBytes" : 26214400
+			// `maxUploadBytes` was the single limit these two replaced. It is
+			// deliberately not defaulted here: MediaService still reads it as
+			// the image limit, and declaring it with a default would shadow the
+			// value a deployment set in its own config — which is the only
+			// reason the fallback exists.
 		};
 
 		routes = [ { pattern : "/:action?/:id?", handler : "Admin" } ];
@@ -55,11 +63,21 @@ component {
 		wirebox
 			.getInstance( "ShortcodeRegistry@core" )
 			.register( tag = shortcode.TAG, id = "MediaShortcode@media", description = shortcode.DESCRIPTION );
+
+		// `[file id="12"]`, the same argument for documents: the label, type
+		// and size are read from the library at render time, so replacing a
+		// file corrects every page that links it.
+		var fileShortcode = wirebox.getInstance( "FileShortcode@media" );
+
+		wirebox
+			.getInstance( "ShortcodeRegistry@core" )
+			.register( tag = fileShortcode.TAG, id = "FileShortcode@media", description = fileShortcode.DESCRIPTION );
 	}
 
 	function onUnload(){
 		wirebox.getInstance( "AdminNavigationRegistry@core" ).unregister( "/admin/media" );
 		wirebox.getInstance( "ShortcodeRegistry@core" ).unregister( "image" );
+		wirebox.getInstance( "ShortcodeRegistry@core" ).unregister( "file" );
 	}
 
 }

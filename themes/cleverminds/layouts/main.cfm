@@ -192,7 +192,7 @@
 				<div>
 					<h5>Firm</h5>
 					<a href="/about-us/">About Us</a>
-					<a href="/solicitors/">Our solicitors</a>
+					<a href="/our-solicitor">Our Solicitor</a>
 					<a href="/contact/">Contact</a>
 				</div>
 	

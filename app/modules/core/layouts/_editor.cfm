@@ -27,6 +27,12 @@
 	Without the second, re-using one photograph across ten pages meant
 	uploading it ten times, leaving ten copies on disk.
 
+	A third button, "Insert file", links a document instead of showing an image.
+	It writes a `[file id="12"]` shortcode rather than an `<a href>`: the label,
+	type and size are then read from the library when the page renders, so
+	replacing a PDF next year corrects every page that links it instead of
+	leaving a hunt through content. See `FileShortcode.cfc`.
+
 	The picker dialog itself lives in `_picker.cfm` and is loaded on every admin
 	screen, because Settings needs it too for the site logo. This file only adds
 	the toolbar button that calls it.
@@ -93,6 +99,84 @@
 		}
 	}
 
+	/**
+	 * The text inside the current selection, if any.
+	 *
+	 * Used as the link's label, so selecting "our terms of engagement" and
+	 * pressing the button produces a link reading that — rather than making the
+	 * author retype it, or silently discarding what they had selected.
+	 */
+	function selectedText( editor ) {
+		var range = editor.model.document.selection.getFirstRange();
+
+		if ( !range ) {
+			return "";
+		}
+
+		var text = "";
+
+		Array.from( range.getItems() ).forEach( function ( item ) {
+			if ( item.is( "$text" ) || item.is( "$textProxy" ) ) {
+				text += item.data;
+			}
+		} );
+
+		return text.trim();
+	}
+
+	/**
+	 * Puts an "Insert file" button on the toolbar, for linking a document.
+	 *
+	 * Writes a `[file]` shortcode as plain text rather than building a link
+	 * widget. The shortcode is what makes the link a reference to a library
+	 * item instead of a copy of today's filename, and the editor has no
+	 * shortcode preview, so the author sees the code — the same as `[image]`.
+	 */
+	class FileLibrary extends C.Plugin {
+		static get pluginName() {
+			return "FileLibrary";
+		}
+
+		init() {
+			var editor = this.editor;
+
+			editor.ui.componentFactory.add( "insertFile", function ( locale ) {
+				var button = new C.ButtonView( locale );
+
+				button.set( {
+					label: "Insert file",
+					// Whichever of these the bundle exports; the label carries
+					// the meaning either way.
+					icon: C.IconBrowseFiles || C.IconLink || C.IconImage,
+					tooltip: true
+				} );
+
+				button.on( "execute", function () {
+					window.cmsPickMedia( { kind: "document" } ).then( function ( item ) {
+						if ( !item ) {
+							return;
+						}
+
+						var label = selectedText( editor );
+						var code  = label
+							? "[file id=\"" + item.id + "\"]" + label + "[/file]"
+							: "[file id=\"" + item.id + "\"]";
+
+						editor.model.change( function ( writer ) {
+							// Replaces the selection when there is one, which is
+							// what makes the label round-trip.
+							editor.model.insertContent( writer.createText( code ) );
+						} );
+
+						editor.editing.view.focus();
+					} );
+				} );
+
+				return button;
+			} );
+		}
+	}
+
 	// The session's CSRF token, so the upload is refused if it did not come
 	// from a page this session was served.
 	var token = document.querySelector( "input[name=csrfToken]" );
@@ -110,14 +194,14 @@
 				C.GeneralHtmlSupport,
 				C.Image, C.ImageToolbar, C.ImageCaption, C.ImageStyle,
 				C.ImageResize, C.ImageUpload, C.SimpleUploadAdapter,
-				MediaLibrary
+				MediaLibrary, FileLibrary
 			],
 			toolbar: [
 				"undo", "redo", "|",
 				"heading", "|",
 				"bold", "italic", "underline", "strikethrough", "|",
 				"link", "bulletedList", "numberedList", "blockQuote", "|",
-				"uploadImage", "mediaLibrary", "insertTable", "horizontalLine", "|",
+				"uploadImage", "mediaLibrary", "insertFile", "insertTable", "horizontalLine", "|",
 				"sourceEditing"
 			],
 			image: {
@@ -160,26 +244,64 @@
 			// href, not class, so a theme button (`<a class="btn">`) was wiped
 			// on the next open. That looked like the sanitiser eating it.
 			//
-			// The lists mirror `antisamy-cms.xml`. Letting the editor keep an
-			// attribute the sanitiser then strips is worse than not keeping it:
-			// the author sees it work, saves, and finds it gone. `id` and
-			// `style` are absent here because they are absent there — `style`
-			// is only granted to the few tags that name it.
+			// The lists mirror `antisamy-cms.xml`, and the rule for keeping them
+			// in step is one-directional: the editor may allow *less* than the
+			// sanitiser, never more. Letting the editor keep an attribute the
+			// sanitiser then strips is worse than not keeping it at all — the
+			// author sees it work, saves, and finds it gone.
 			htmlSupport: {
 				allow: [
+					/*
+						`class` on every tag the sanitiser will keep it on.
+
+						`class` is in `<global-tag-attributes>` in
+						`antisamy-cms.xml`, so the server already accepts it on
+						anything. This is the editor catching up: it used to
+						grant classes to `div`, `span`, `a` and `button` only,
+						so `<h2 class="lead">` or `<td class="num">` typed in
+						Source view vanished the next time the editor read the
+						content back.
+
+						Spelled out rather than a match-anything name pattern on
+						purpose — and note that writing one in a comment here
+						would end the comment early, since it contains the
+						closing delimiter. A match-everything rule also enables
+						elements CKEditor
+						has no feature for, including ones AntiSamy removes
+						(`<form>`, `<input>`, `<svg>`) — so the author would see
+						them survive in the editor and disappear on save, which
+						is the failure this whole block exists to avoid. Every
+						tag below is one the policy validates.
+
+						`br`, `col` and `hr` are deliberately absent: the policy
+						marks them `truncate`, which keeps the tag and drops
+						every attribute on it, so a class there would be lost.
+					*/
+					{
+						name: /^(a|abbr|article|b|blockquote|button|caption|cite|code|colgroup|dd|del|div|dl|dt|em|figcaption|figure|h[1-6]|i|img|ins|kbd|li|mark|ol|p|pre|q|s|samp|section|small|span|strike|strong|sub|sup|table|tbody|td|tfoot|th|thead|tr|tt|u|ul|var)$/,
+						classes: true
+					},
+
+					/*
+						Attributes beyond `class`, which are genuinely per-tag.
+						These also enable `div`, `span` and `button` as
+						elements, since CKEditor has no feature that produces
+						them.
+
+						`id` and `style` stay absent because they are absent
+						from the policy's global list — `style` is granted only
+						to the few tags that name it.
+					*/
 					{
 						name: /^(div|span)$/,
-						classes: true,
 						attributes: [ "lang", "title", "dir" ]
 					},
 					{
 						name: "a",
-						classes: true,
 						attributes: [ "href", "rel", "target", "lang", "title", "dir" ]
 					},
 					{
 						name: "button",
-						classes: true,
 						attributes: [ "type", "disabled", "lang", "title", "dir" ]
 					}
 				]

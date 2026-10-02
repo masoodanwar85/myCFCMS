@@ -28,8 +28,16 @@ component extends="core.models.security.SecuredHandler" {
 		prc.pageBase = "/admin/media";
 		prc.items    = mediaService.getForSite( siteId, prc.pagination.perPage, prc.pagination.offset );
 		prc.allowed  = mediaService.getAllowedExtensions();
-		prc.maxMB    = numberFormat( mediaService.maxBytes() / 1048576, "9.9" );
 		prc.usedMB   = numberFormat( mediaService.bytesUsedBySite( siteId ) / 1048576, "9.9" );
+
+		// Two limits now, and the form has to say both: an author told "up to
+		// 10MB" who is refused a 14MB PDF that the server would in fact have
+		// taken has been misled by the screen, not by the file.
+		prc.maxMB          = numberFormat( mediaService.maxBytes() / 1048576, "9.9" );
+		prc.maxImageMB     = numberFormat( mediaService.maxBytesFor( "image" ) / 1048576, "9.9" );
+		prc.maxDocumentMB  = numberFormat( mediaService.maxBytesFor( "document" ) / 1048576, "9.9" );
+		prc.allowedImages  = mediaService.getAllowedExtensionsFor( "image" );
+		prc.allowedDocs    = mediaService.getAllowedExtensionsFor( "document" );
 
 		prc.canUpload = authorization.can( prc.currentUser, "media.upload" );
 		prc.canUpdate = authorization.can( prc.currentUser, "media.update" );
@@ -44,6 +52,10 @@ component extends="core.models.security.SecuredHandler" {
 				siteId     = prc.currentSite.getId(),
 				fileField  = "file",
 				altText    = rc.altText ?: "",
+				// What a `[file]` link says when the author gives no label, so
+				// it is worth asking for at upload time rather than making
+				// somebody come back and set it.
+				title      = rc.title ?: "",
 				uploadedBy = prc.currentUser.getId()
 			);
 		} catch ( any e ) {
@@ -53,14 +65,25 @@ component extends="core.models.security.SecuredHandler" {
 		return done( "/admin/media", "File uploaded." );
 	}
 
+	/**
+	 * Only the fields actually posted are passed on.
+	 *
+	 * `updateDetails` leaves a field alone when its argument is null, and
+	 * `rc.altText ?: ""` is never null — it is an empty string, which means
+	 * "clear it". The library card now shows alt text for an image and a title
+	 * for a document, so a form that posts one would wipe the other.
+	 */
 	function update( event, rc, prc ){
+		var given = { "mediaId" : val( rc.id ?: 0 ), "siteId" : prc.currentSite.getId() };
+
+		for ( var field in [ "altText", "title" ] ) {
+			if ( structKeyExists( rc, field ) ) {
+				given[ field ] = rc[ field ];
+			}
+		}
+
 		try {
-			mediaService.updateDetails(
-				mediaId = val( rc.id ?: 0 ),
-				siteId  = prc.currentSite.getId(),
-				altText = rc.altText ?: "",
-				title   = rc.title ?: ""
-			);
+			mediaService.updateDetails( argumentCollection = given );
 		} catch ( any e ) {
 			return done( "/admin/media", e.message, "error" );
 		}
@@ -86,12 +109,20 @@ component extends="core.models.security.SecuredHandler" {
 	 * `prc.currentSite` like every other read here, so the picker cannot list
 	 * another tenant's files even if the id were guessed.
 	 */
+	/**
+	 * The library, as JSON, for the picker.
+	 *
+	 * `kind` defaults to `image` rather than to everything: every caller that
+	 * existed before documents did is inserting an `<img>` or filling an image
+	 * field, and a default of "all" would start offering them PDFs.
+	 */
 	function browse( event, rc, prc ){
 		event.noLayout();
 
 		var siteId = prc.currentSite.getId();
+		var kind   = len( trim( rc.kind ?: "" ) ) ? trim( rc.kind ) : "image";
 		var page   = paginator.paginate(
-			total   = mediaService.countImagesForSite( siteId ),
+			total   = mediaService.countByKindForSite( siteId, kind ),
 			page    = paginator.readPage( rc.page ?: 1 ),
 			perPage = 24
 		);
@@ -100,8 +131,9 @@ component extends="core.models.security.SecuredHandler" {
 			type = "json",
 			data = {
 				"items" : mediaService
-					.getImagesForSite( siteId, page.perPage, page.offset )
+					.getByKindForSite( siteId, kind, page.perPage, page.offset )
 					.map( ( item ) => item.getMemento() ),
+				"kind"       : kind,
 				"page"       : page.page,
 				"totalPages" : page.totalPages,
 				"total"      : page.total

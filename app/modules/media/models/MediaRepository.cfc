@@ -6,9 +6,13 @@ component singleton extends="core.models.persistence.BaseRepository" {
 	variables.TABLE   = "media";
 	variables.COLUMNS = [
 		"id", "site_id", "filename", "original_filename", "stored_path",
-		"extension", "mime_type", "byte_size", "width", "height",
+		"extension", "mime_type", "kind", "byte_size", "width", "height",
 		"alt_text", "title", "uploaded_by", "created_at", "updated_at"
 	];
+
+	// The only values `kind` may hold. A query asking for anything else is a
+	// bug, and gets an empty result rather than the whole library.
+	variables.KINDS = [ "image", "document" ];
 
 	media.models.MediaItem function create( required media.models.MediaItem item ){
 		var stamp = now();
@@ -22,6 +26,10 @@ component singleton extends="core.models.persistence.BaseRepository" {
 				"stored_path"       : arguments.item.getStoredPath(),
 				"extension"         : arguments.item.getExtension(),
 				"mime_type"         : arguments.item.getMimeType(),
+				// Asked of the item, not of the argument: `getKind()` derives
+				// it from the mime type when nothing set it, so a caller that
+				// predates this column still stores a correct value.
+				"kind"              : arguments.item.getKind(),
 				"byte_size"         : arguments.item.getByteSize(),
 				"width"             : nullableNumber( arguments.item.getWidth() ),
 				"height"            : nullableNumber( arguments.item.getHeight() ),
@@ -81,16 +89,19 @@ component singleton extends="core.models.persistence.BaseRepository" {
 	}
 
 	/**
-	 * Images only, for the editor's library picker. Filtering on `mime_type`
-	 * rather than on the extension list: the mime type is what the upload
-	 * actually verified, and an extension is only a claim about the bytes.
+	 * One kind of file, for the library picker.
+	 *
+	 * Filtering on `kind` rather than on `mime_type LIKE`: "every document" is
+	 * then a statement about documents, instead of "everything that is not an
+	 * image" — which would quietly include a video the day one can be uploaded.
 	 */
-	array function findImagesBySiteId(
+	array function findByKindForSite(
 		required numeric siteId,
+		required string kind,
 		numeric limit  = 24,
 		numeric offset = 0
 	){
-		return imageQuery( arguments.siteId )
+		return kindQuery( arguments.siteId, arguments.kind )
 			.select( variables.COLUMNS )
 			.orderBy( "created_at", "desc" )
 			.orderBy( "id", "desc" )
@@ -100,8 +111,20 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.map( ( row ) => toItem( row ) );
 	}
 
+	numeric function countByKindForSite( required numeric siteId, required string kind ){
+		return kindQuery( arguments.siteId, arguments.kind ).count();
+	}
+
+	array function findImagesBySiteId(
+		required numeric siteId,
+		numeric limit  = 24,
+		numeric offset = 0
+	){
+		return findByKindForSite( arguments.siteId, "image", arguments.limit, arguments.offset );
+	}
+
 	numeric function countImagesBySiteId( required numeric siteId ){
-		return imageQuery( arguments.siteId ).count();
+		return countByKindForSite( arguments.siteId, "image" );
 	}
 
 	numeric function countBySiteId( required numeric siteId ){
@@ -141,6 +164,7 @@ component singleton extends="core.models.persistence.BaseRepository" {
 			.setStoredPath( arguments.row.stored_path )
 			.setExtension( arguments.row.extension )
 			.setMimeType( arguments.row.mime_type )
+			.setKind( arguments.row.kind ?: "" )
 			.setByteSize( arguments.row.byte_size )
 			.setAltText( arguments.row.alt_text ?: "" )
 			.setTitle( arguments.row.title ?: "" )
@@ -164,11 +188,20 @@ component singleton extends="core.models.persistence.BaseRepository" {
 		return variables.query.from( variables.TABLE ).select( variables.COLUMNS );
 	}
 
-	private function imageQuery( required numeric siteId ){
+	/**
+	 * An unknown kind matches nothing.
+	 *
+	 * `kind` reaches this from a query string, and the alternative to refusing
+	 * an unrecognised one is a `WHERE` clause that drops away and returns the
+	 * entire library to a picker that asked for one slice of it.
+	 */
+	private function kindQuery( required numeric siteId, required string kind ){
+		var wanted = lCase( trim( arguments.kind ) );
+
 		return variables.query
 			.from( variables.TABLE )
 			.where( "site_id", arguments.siteId )
-			.where( "mime_type", "like", "image/%" );
+			.where( "kind", variables.KINDS.findNoCase( wanted ) ? wanted : "__none__" );
 	}
 
 	private function toItemOrNull( required struct row ){

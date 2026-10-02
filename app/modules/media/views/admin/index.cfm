@@ -14,13 +14,20 @@
 				<input type="file" id="file" name="file" required
 				       accept="#encodeForHTMLAttribute( '.' & arrayToList( prc.allowed, ',.' ) )#">
 				<p class="muted" style="font-size:.8rem">
-					#encodeForHTML( arrayToList( prc.allowed, ", " ) )# &middot; up to #prc.maxMB#MB
+					Images: #encodeForHTML( arrayToList( prc.allowedImages, ", " ) )# &middot; up to #prc.maxImageMB#MB<br>
+					Documents: #encodeForHTML( arrayToList( prc.allowedDocs, ", " ) )# &middot; up to #prc.maxDocumentMB#MB
 				</p>
 			</div>
 			<div>
 				<label for="altText">Alt text</label>
 				<input type="text" id="altText" name="altText" placeholder="What the image shows">
-				<p class="muted" style="font-size:.8rem">Leave blank for decorative images.</p>
+				<p class="muted" style="font-size:.8rem">For images. Leave blank for decorative ones.</p>
+
+				<label for="title">Title</label>
+				<input type="text" id="title" name="title" placeholder="Terms of engagement">
+				<p class="muted" style="font-size:.8rem">
+					For documents: what a <code>[file]</code> link says when no label is given.
+				</p>
 			</div>
 		</div>
 		<div class="actions-bar"><button type="submit">Upload</button></div>
@@ -39,7 +46,8 @@
 					<img src="#xmlFormat( item.getUrl() )#" alt="#xmlFormat( item.getEffectiveAlt() )#" loading="lazy">
 				</a>
 			<cfelse>
-				<a class="media-file" href="#xmlFormat( item.getUrl() )#" target="_blank" rel="noopener">
+				<a class="media-file" href="#xmlFormat( item.getUrl() )#" target="_blank" rel="noopener"
+				   title="#encodeForHTMLAttribute( item.getTypeLabel() )#">
 					#encodeForHTML( uCase( item.getExtension() ) )#
 				</a>
 			</cfif>
@@ -51,14 +59,30 @@
 				<div class="muted">
 					#encodeForHTML( item.getHumanSize() )#<cfif !isNull( item.getWidth() )> &middot; #item.getWidth()#&times;#item.getHeight()#</cfif>
 				</div>
-				<code style="font-size:.7rem">#encodeForHTML( item.getUrl() )#</code>
+				<!--- A document's useful thing to copy is the shortcode, not
+				      the URL: pasting the URL into a page makes a link that
+				      breaks the day the file is replaced. --->
+				<cfif item.isDocument()>
+					<code style="font-size:.7rem">[file id="#item.getId()#"]</code>
+				<cfelse>
+					<code style="font-size:.7rem">#encodeForHTML( item.getUrl() )#</code>
+				</cfif>
 			</div>
 
 			<cfif prc.canUpdate>
 				<form id="alt-#item.getId()#" method="post" action="/admin/media/update/#item.getId()#">
 					<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
-					<input type="text" name="altText" placeholder="Alt text"
-					       value="#xmlFormat( item.getAltText() ?: '' )#">
+					<!--- Each kind gets the field that means something for it.
+					      Alt text on a PDF describes a picture that is not
+					      there; a title on a photograph is not what any screen
+					      reads out. --->
+					<cfif item.isDocument()>
+						<input type="text" name="title" placeholder="Title, e.g. Terms of engagement"
+						       value="#xmlFormat( item.getTitle() ?: '' )#">
+					<cfelse>
+						<input type="text" name="altText" placeholder="Alt text"
+						       value="#xmlFormat( item.getAltText() ?: '' )#">
+					</cfif>
 				</form>
 			</cfif>
 

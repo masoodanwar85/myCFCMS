@@ -101,6 +101,7 @@ failed.
 | --- | --- |
 | `[year]`, `[site-name]`, `[site-url]` | Core |
 | `[image id="12" align="right"]Caption[/image]` | Media |
+| `[file id="12"]Optional label[/file]` | Media |
 | `[recent-posts count="3"]` | Blog |
 
 Two modules claiming one tag throws at registration rather than

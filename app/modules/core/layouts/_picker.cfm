@@ -10,10 +10,17 @@
 	Exposes one function:
 
 	    window.cmsPickMedia().then( function ( item ) { ... } )
+	    window.cmsPickMedia( { kind: "document" } ).then( ... )
 
 	resolving with the chosen media item, or with `null` if the author backs
 	out. The item is whatever `/admin/media/browse` returned — `url`, `filename`
-	and `altText` are the fields callers use.
+	and `altText` are the fields callers use, plus `label`, `typeLabel` and
+	`humanSize` for a document.
+
+	`kind` defaults to `"image"`, which is what every caller written before
+	documents existed is for: the CKEditor image button, the logo field, the
+	featured image field, the slide background. A default of "everything" would
+	start offering those a PDF.
 
 	Loaded on every admin screen. It is a few kilobytes and defines one
 	function; gating it behind a flag would mean every future consumer having to
@@ -31,16 +38,18 @@
  *
  * Resolves with the chosen item, or with null if the author backs out.
  */
-function pickFromLibrary() {
+function pickFromLibrary( options ) {
 	return new Promise( function ( resolve ) {
 		var page = 1;
+		var kind = ( options && options.kind ) === "document" ? "document" : "image";
+		var what = kind === "document" ? "Documents" : "Images";
 
 		var overlay = document.createElement( "div" );
 		overlay.className = "picker-overlay";
 		overlay.innerHTML =
 			'<div class="picker" role="dialog" aria-modal="true" aria-label="Media library">' +
 				'<div class="picker-head">' +
-					'<strong>Media library</strong>' +
+					'<strong>Media library &mdash; ' + what + '</strong>' +
 					'<button type="button" class="ico picker-close">Close</button>' +
 				'</div>' +
 				'<div class="picker-body"><p class="muted">Loading&hellip;</p></div>' +
@@ -69,7 +78,7 @@ function pickFromLibrary() {
 			// Same origin, so the session cookie rides along; `credentials`
 			// is explicit because a refused request must look like a
 			// refusal and not like an empty library.
-			fetch( "/admin/media/browse?page=" + page, {
+			fetch( "/admin/media/browse?kind=" + kind + "&page=" + page, {
 				credentials: "same-origin",
 				headers: { "Accept": "application/json" }
 			} )
@@ -108,7 +117,9 @@ function pickFromLibrary() {
 				empty.className = "muted";
 				empty.textContent = page > 1
 					? "Nothing on this page."
-					: "No images in the library yet. Upload one from the Media screen, or use the upload button in the toolbar.";
+					: kind === "document"
+						? "No documents in the library yet. Upload one from the Media screen."
+						: "No images in the library yet. Upload one from the Media screen, or use the upload button in the toolbar.";
 				body.appendChild( empty );
 			} else {
 				var grid = document.createElement( "div" );
@@ -120,24 +131,44 @@ function pickFromLibrary() {
 					cell.className = "picker-item";
 					cell.title = item.filename;
 
-					var img = document.createElement( "img" );
-					img.src = item.url;
-					// Decorative in the picker: the filename beneath it is
-					// the label, so announcing the alt text as well would
-					// read the same image twice.
-					img.alt = "";
-					img.loading = "lazy";
+					if ( item.kind === "document" ) {
+						// No thumbnail to show, so the extension stands in for
+						// one — it is what tells a reader at a glance whether
+						// they are about to link a PDF or a spreadsheet.
+						cell.classList.add( "is-document" );
+
+						var badge = document.createElement( "span" );
+						badge.className = "picker-ext";
+						badge.textContent = item.typeLabel;
+
+						cell.appendChild( badge );
+					} else {
+						var img = document.createElement( "img" );
+						img.src = item.url;
+						// Decorative in the picker: the filename beneath it is
+						// the label, so announcing the alt text as well would
+						// read the same image twice.
+						img.alt = "";
+						img.loading = "lazy";
+
+						cell.appendChild( img );
+					}
 
 					var name = document.createElement( "span" );
 					name.textContent = item.filename;
 
 					var meta = document.createElement( "span" );
 					meta.className = "muted";
-					meta.textContent = item.altText
-						? item.altText
-						: "No alt text";
 
-					cell.appendChild( img );
+					// A document's useful second line is its size — what the
+					// reader will spend. An image's is its alt text, which is
+					// the thing most likely to be missing and worth fixing.
+					if ( item.kind === "document" ) {
+						meta.textContent = item.humanSize;
+					} else {
+						meta.textContent = item.altText ? item.altText : "No alt text";
+					}
+
 					cell.appendChild( name );
 					cell.appendChild( meta );
 					cell.addEventListener( "click", function () {
@@ -204,6 +235,10 @@ function pickFromLibrary() {
 		    <button type="button" data-pick-media="heroUrl">Choose…</button>
 		    <button type="button" data-clear-media="heroUrl">Clear</button>
 
+		Add `data-pick-kind="document"` to browse documents instead of images.
+		Omitted, it picks an image, because that is what every field using this
+		before documents existed is for.
+
 		This lived in the Settings view until a second screen needed it. Without
 		the picker the text input still accepts a pasted URL, which is why the
 		field is never read-only.
@@ -212,7 +247,7 @@ function pickFromLibrary() {
 		var pick = event.target.closest( "[data-pick-media]" );
 
 		if ( pick && window.cmsPickMedia ) {
-			window.cmsPickMedia().then( function ( item ) {
+			window.cmsPickMedia( { kind: pick.getAttribute( "data-pick-kind" ) } ).then( function ( item ) {
 				if ( !item ) {
 					return;
 				}

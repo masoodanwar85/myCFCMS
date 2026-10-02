@@ -312,6 +312,15 @@
 	                  display:block; background:var(--bg); margin-bottom:.35rem; }
 	.picker-item span{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
+	/* A document has no thumbnail, so the type takes the space one would have
+	   occupied - at the same height, so a grid of mixed kinds does not jump.
+	   Scoped under `.picker-item` so it outweighs the `.picker-item span` rule
+	   above, which would otherwise keep it on one ellipsised line. */
+	.picker-item .picker-ext{ display:grid; place-items:center; height:6.5rem;
+	                          border-radius:5px; background:var(--bg); color:var(--soft);
+	                          font-weight:600; margin-bottom:.35rem; text-align:center;
+	                          padding:0 .3rem; white-space:normal; }
+
 		/* ---- pager ------------------------------------------------------ */
 	.pager{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin:1.25rem 0; font-size:.9rem; }
 	.pager .muted{ margin-right:.5rem; }

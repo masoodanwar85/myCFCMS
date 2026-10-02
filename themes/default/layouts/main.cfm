@@ -47,6 +47,10 @@
 		.page-hero { margin:0 0 1.5rem; }
 		.page-hero img { display:block; width:100%; height:clamp(150px,24vw,280px);
 		                 object-fit:cover; border-radius:4px; }
+		/* `[file]` links. The size is part of the link text rather than a
+		   tooltip, so it is quieter than the label but still read out. */
+		.file-link { display:inline-block; }
+		.file-meta { color:var(--muted); font-size:.85rem; white-space:nowrap; }
 		.crumbs { font-size:.85rem; color:var(--muted); margin-bottom:1.5rem; }
 		.crumbs a { color:var(--muted); }
 		footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule);

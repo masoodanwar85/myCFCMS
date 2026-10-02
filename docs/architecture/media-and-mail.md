@@ -43,21 +43,119 @@ server, so every part of what arrives is distrusted:
 | Stored MIME type comes from our table | A browser obeys `Content-Type`; letting an uploader pick it is letting them pick how the file is interpreted |
 | `X-Content-Type-Options: nosniff` | A browser second-guessing the type and running it as script |
 | Non-images sent as `attachment` | A PDF opened inline can host script in some readers |
-| Size cap (10MB) | An upload filling the disk |
+| Size cap, per kind | An upload filling the disk |
 
 Verified against real files:
 
 ```
 photo.png    accepted           120×80 recorded
 evil.png     PHP wearing a .png -> "not a readable image, whatever it is named"
+evil.pdf     HTML wearing a .pdf -> "not a PDF, whatever it is named"
+rates.xlsx   accepted           PK\x03\x04 confirmed
 script.svg   rejected           -> "Files of type [svg] are not accepted"
-big.png      11MB               -> "larger than the 10.0MB limit"
+big.png      11MB               -> "larger than the 10.0MB limit for images"
 ```
 
 **SVG is deliberately excluded** even though it is an image. It is XML that can
 carry script, and serving one from the site's own origin hands an uploader
 cross-site scripting. That is a real loss — SVG is the right format for logos —
 and the right way to allow it later is to sanitise it, not to add the extension.
+
+### Documents, and the `kind` column
+
+The library holds two kinds of thing, and the difference runs through every
+screen that touches it: `kind` is `image` or `document`.
+
+It is a stored column rather than a `mime_type LIKE 'image/%'` test, because
+"document" expressed as *not an image* starts quietly including a video the day
+one can be uploaded. Each query is now a positive statement about what it wants,
+and a third kind is a new value instead of a rewrite.
+
+`kind` decides what a **picker lists** and how a **cell is drawn**. It does not
+decide how a file is **served** — `isImage()`, reading the verified `mime_type`,
+is still what `Media.cfc` asks before sending something inline. A row whose kind
+somehow disagreed with its mime type would appear in the wrong tab; it would not
+be served as the wrong type.
+
+#### What is accepted, and what is not
+
+| Kind | Extensions | Cap |
+| --- | --- | --- |
+| Image | `jpg` `jpeg` `png` `gif` `webp` | `maxImageBytes`, 10MB |
+| Document | `pdf` `docx` `xlsx` `pptx` `csv` `txt` | `maxDocumentBytes`, 25MB |
+
+Two caps because the two are not comparable: 10MB is generous for a photograph
+and tight for a scanned forty-page contract.
+
+Three things are deliberately absent:
+
+- **`zip`** — a container for arbitrary files. Accepting one turns the client's
+  own domain into somewhere a payload can be published and linked to, and no
+  check on the archive says what a reader will do with its contents.
+- **`doc`, `xls`, `ppt`** — macro-capable, and all three share the OLE2
+  signature `D0CF11E0A1B11AE1`, so a `.xls` full of a macro-laden Word document
+  passes any check the allow-list could make.
+- **`svg`** — unchanged from Group 8: XML that can carry script.
+
+#### How much verification is actually possible
+
+Three tiers, and the docs should be honest about the third:
+
+1. **An image must decode.** Not a prefix check — the file is handed to the
+   image reader, so a `.png` full of PHP fails because it is not a picture.
+2. **A signed document must start with its signature.** This catches the
+   mislabelled file. It does *not* identify the format: `docx`, `xlsx` and
+   `pptx` are all ZIP archives sharing one signature, so this proves "a ZIP
+   container" and the extension decides which of the three it is served as.
+   Proving more means opening the archive to look for `word/document.xml`,
+   which needs ColdFusion's `zip` package — present on a full install, absent
+   on the minimal one this is developed against, so it would turn a verified
+   upload into an environment-dependent one.
+3. **Plain text cannot be checked at all.** `csv` and `txt` have no signature;
+   any bytes are a valid text file. What makes that acceptable is not the upload
+   check but the serving policy — every non-image goes out as
+   `Content-Disposition: attachment` with `nosniff`, so a `.txt` full of HTML is
+   downloaded as text, never rendered as a page on the site's own origin.
+
+Signatures are compared as **binary**. The original PDF check read the file
+through a UTF-8 decoder and worked only because `%PDF` is ASCII; a ZIP's
+`PK\x03\x04` carries control bytes that character decoding can substitute, and
+the comparison would then fail on a perfectly good file.
+
+### Linking a document: `[file]`
+
+```
+[file id="12"]Our terms of engagement[/file]
+[file id="12"]
+```
+
+Renders a link carrying the label, the type and the size:
+
+```html
+<a class="file-link" href="/media/2026/10/terms-a1b2c3d4.pdf" data-ext="pdf">
+    Our terms of engagement <span class="file-meta">PDF, 240.5 KB</span>
+</a>
+```
+
+An author could write the `<a href>` by hand instead. The reason not to is next
+year: the terms are reissued, the new file gets a new generated name, and every
+page that linked the old one now points at a file that is gone — or still points
+at last year's terms. Stored as an id, the label, type and size are read from
+the library at render time, so replacing the file corrects every page that
+links it.
+
+With no label the link uses the item's **title**, falling back to the uploaded
+filename — never the generated one, because nobody means to publish a link
+reading `terms-a1b2c3d4.pdf`. Title is therefore the field the library card
+offers for a document, where an image gets alt text.
+
+The size sits in the link text rather than a `title` attribute on purpose: it
+tells somebody on a metered connection what they are about to spend, and a
+tooltip is invisible on a touchscreen.
+
+`[file]` refuses an image — `[image]` renders those — and refuses an id
+belonging to another site. Expansion happens *after* the sanitiser, so every
+value it writes is escaped at the point it is written.
 
 ### Deleting
 
@@ -67,15 +165,16 @@ never cleaned up.
 
 ---
 
-## 2. The two image buttons
+## 2. The editor's media buttons
 
-The toolbar carries two, because an author is answering one of two different
-questions:
+The toolbar carries three, because an author is answering one of three
+different questions:
 
 | Button | For |
 | --- | --- |
 | **Upload image** | A file on this machine, not yet in the library |
-| **Media library** | Something already uploaded, chosen from a grid |
+| **Media library** | An image already uploaded, chosen from a grid |
+| **Insert file** | A document to link, chosen the same way |
 
 ### Upload
 
@@ -97,11 +196,25 @@ post without it gets `419` and stores nothing.
 Without a picker, re-using one photograph across ten pages meant uploading it
 ten times, leaving ten copies on disk and ten separate alt texts to maintain.
 
-`GET /admin/media/browse` returns this site's images as JSON. It is an ordinary
-`SecuredHandler` action behind `media.view` and scoped to `prc.currentSite`, so
-it is subject to exactly the same tenant rules as the Media screen itself —
-there is no second, looser path to the same rows. Documents are filtered out on
-`mime_type`, because a PDF inserted as an `<img>` is a broken image.
+`GET /admin/media/browse?kind=image` returns this site's files of one kind as
+JSON. It is an ordinary `SecuredHandler` action behind `media.view` and scoped to
+`prc.currentSite`, so it is subject to exactly the same tenant rules as the Media
+screen itself — there is no second, looser path to the same rows.
+
+`kind` defaults to `image` rather than to everything, because every caller that
+existed before documents did is inserting an `<img>` or filling an image field —
+the editor's image button, the site logo, a page's featured image, a slide
+background — and a PDF in any of those is a broken image. An unrecognised kind
+matches nothing rather than falling through to the whole library: the value
+arrives from a query string, and a `WHERE` clause that quietly drops away would
+hand a picker every row it did not ask for.
+
+`window.cmsPickMedia( { kind: "document" } )` opens the same dialog in document
+mode, and any admin field can do the same with
+`data-pick-media="fieldId" data-pick-kind="document"`. A document cell has no
+thumbnail, so the type label fills that space at the same height — a grid of
+mixed kinds does not jump — and the second line shows the size rather than the
+alt text.
 
 The picker itself is plain DOM styled by the admin stylesheet rather than a
 CKEditor UI view, so it looks like the rest of the admin and does not have to
@@ -226,6 +339,9 @@ config file.
 - Core `/media/...` handler with tenant scoping, immutable caching and `nosniff`.
 - Four media permissions, upload separated from delete.
 - CKEditor image upload, with CSRF over a header.
+- Documents: `kind` column, per-kind allow-lists and caps, binary signature
+  checks, a document mode for the picker, an "Insert file" toolbar button and
+  the `[file]` shortcode.
 - `mail_messages`, `MailService`, three modes, view templates.
 - Contact notifications wired to the mail layer.
 - 491 passing specs across Groups 1-8.
@@ -238,7 +354,9 @@ config file.
 | Reverse proxy / CDN for `/media/` | A deployment change. The handler already sends the caching headers that make it worthwhile. |
 | Image resizing and thumbnails | Full-size images are served to every context, including a 7rem grid tile. The first thing to add when bandwidth matters. |
 | SVG support | Needs an SVG-specific sanitiser, not an extra line in the allow-list. |
-| Media picker in the editor | The image button uploads; it cannot yet browse what is already in the library. |
+| Office format identification | A `docx` check confirms a ZIP container, not that it is a Word document. Needs the `zip` package to go further; see the verification tiers above. |
+| Documents in the sitemap or search | A PDF is reachable by link only. Nothing lists the library publicly. |
+| "Replace this file" | Replacing a document means uploading a new one and repointing the `[file]` id. The shortcode makes that one edit instead of many, but there is no in-place replace. |
 | "Where is this used?" | Deleting a file gives no warning that a page still points at it. |
 | Storage quotas per site | Usage is shown; nothing enforces a limit. |
 | Retrying failed mail | Failures are recorded but never retried; there is no queue runner. |

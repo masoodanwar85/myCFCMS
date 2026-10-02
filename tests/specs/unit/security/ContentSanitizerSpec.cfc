@@ -148,6 +148,60 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 						.toInclude( '<span class="lead">' );
 				} );
 
+				/**
+				 * The editor now grants `class` on every tag the policy
+				 * validates, rather than on `div`, `span`, `a` and `button`
+				 * only. These are the server half of that claim: if any of
+				 * them fails, the editor is allowing more than the sanitiser
+				 * keeps, and an author will watch a class vanish on save.
+				 */
+				it( "keeps a class on ordinary content tags", function(){
+					var tags = [
+						"p", "h1", "h2", "h3", "blockquote", "ul", "ol", "li",
+						"strong", "em", "code", "pre", "section", "article",
+						"figure", "figcaption", "mark", "small", "sub", "sup"
+					];
+
+					for ( var tag in tags ) {
+						var clean = sanitizer.sanitize( "<#tag# class=""x-#tag#"">t</#tag#>" );
+
+						expect( clean ).toInclude( "x-" & tag, "class lost on <" & tag & ">" );
+					}
+				} );
+
+				it( "keeps a class on table parts", function(){
+					var clean = sanitizer.sanitize(
+						'<table class="data"><thead><tr><th class="num">1</th></tr></thead>'
+						& '<tbody><tr class="row"><td class="cell">2</td></tr></tbody></table>'
+					);
+
+					for ( var expected in [ "data", "num", "row", "cell" ] ) {
+						expect( clean ).toInclude( expected, "class lost: " & expected );
+					}
+				} );
+
+				it( "drops a class on the tags the policy truncates", function(){
+					// `br`, `col` and `hr` are `truncate`: the tag is kept and
+					// every attribute on it is dropped. The editor leaves them
+					// out of its class rule for exactly this reason, and this
+					// is what would catch the policy changing underneath it.
+					for ( var tag in [ "br", "hr" ] ) {
+						var clean = sanitizer.sanitize( "<p>a<#tag# class=""gone"">b</p>" );
+
+						expect( clean ).toInclude( "<" & tag );
+						expect( clean ).notToInclude( "gone" );
+					}
+				} );
+
+				it( "still validates the class value itself", function(){
+					// `class` is global, but its value goes through the
+					// `cssClass` regexp - letters, digits, hyphen, underscore
+					// and whitespace. A quote-breaking value is not a class.
+					var clean = sanitizer.sanitize( '<p class="a&quot; onclick=&quot;alert(1)">x</p>' );
+
+					expect( clean ).notToInclude( "onclick" );
+				} );
+
 				it( "keeps a class on a link, which the editor also keeps", function(){
 					var clean = sanitizer.sanitize( '<p><a class="btn" href="/will">Start</a></p>' );
 

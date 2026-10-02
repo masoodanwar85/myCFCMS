@@ -30,19 +30,66 @@ component singleton accessors="true" {
 	property name="log"             inject="logbox:logger:{this}";
 
 	/**
-	 * Extension -> the MIME type we will serve it as.
+	 * Extension -> what we will serve it as, what sort of thing it is, and how
+	 * its bytes are checked.
 	 *
 	 * The stored type comes from this table, not from the upload: a browser
 	 * obeys the `Content-Type` we send, so letting an uploader choose it is
 	 * letting them choose how their file is interpreted.
+	 *
+	 * `signatures` are hex prefixes, any one of which the file may start with.
+	 * An empty array means **the format has no signature to check** — see
+	 * `verifyContent` for what stands in for it. An `image` kind is not checked
+	 * against bytes here at all; it has to decode as an image, which is a far
+	 * stronger test than a prefix.
+	 *
+	 * ## What is deliberately absent, and why
+	 *
+	 * `svg` — XML that can carry script, served from the site's own origin.
+	 *
+	 * `zip` — a container for arbitrary files. Accepting one turns the client's
+	 * domain into somewhere a payload can be published and linked to, and no
+	 * check on the archive can say what a reader will do with its contents.
+	 *
+	 * `doc`, `xls`, `ppt` — the pre-2007 OLE2 formats. Two reasons, and the
+	 * second is the deciding one: they are macro-capable, and all three share
+	 * the signature `D0CF11E0A1B11AE1`, so a `.xls` full of a Word document
+	 * with macros passes any check this table could make. The modern XML
+	 * formats below are the supported route. If a client genuinely needs to
+	 * publish legacy Office files, adding the extension here is a one-line
+	 * change — made in the knowledge that the signature proves nothing beyond
+	 * "an OLE2 container".
 	 */
 	variables.ALLOWED = {
-		"jpg"  : "image/jpeg",
-		"jpeg" : "image/jpeg",
-		"png"  : "image/png",
-		"gif"  : "image/gif",
-		"webp" : "image/webp",
-		"pdf"  : "application/pdf"
+		"jpg"  : { "mime" : "image/jpeg",  "kind" : "image", "signatures" : [] },
+		"jpeg" : { "mime" : "image/jpeg",  "kind" : "image", "signatures" : [] },
+		"png"  : { "mime" : "image/png",   "kind" : "image", "signatures" : [] },
+		"gif"  : { "mime" : "image/gif",   "kind" : "image", "signatures" : [] },
+		"webp" : { "mime" : "image/webp",  "kind" : "image", "signatures" : [] },
+
+		"pdf"  : { "mime" : "application/pdf", "kind" : "document", "signatures" : [ "25504446" ] },
+
+		// All three are ZIP containers, so the signature confirms the
+		// container and not the format. See `verifyContent`.
+		"docx" : {
+			"mime"       : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			"kind"       : "document",
+			"signatures" : [ "504B0304", "504B0506", "504B0708" ]
+		},
+		"xlsx" : {
+			"mime"       : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			"kind"       : "document",
+			"signatures" : [ "504B0304", "504B0506", "504B0708" ]
+		},
+		"pptx" : {
+			"mime"       : "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+			"kind"       : "document",
+			"signatures" : [ "504B0304", "504B0506", "504B0708" ]
+		},
+
+		// Plain text has no signature in existence to check against.
+		"csv"  : { "mime" : "text/csv",   "kind" : "document", "signatures" : [] },
+		"txt"  : { "mime" : "text/plain", "kind" : "document", "signatures" : [] }
 	};
 
 	/**
@@ -96,12 +143,16 @@ component singleton accessors="true" {
 				);
 			}
 
+			var spec = variables.ALLOWED[ extension ];
+			var cap  = maxBytesFor( spec.kind );
 			var size = getFileInfo( staged ).size;
 
-			if ( size > maxBytes() ) {
+			// Documents get their own, larger allowance: a scanned contract is
+			// routinely bigger than any photograph on the site.
+			if ( size > cap ) {
 				throw(
 					type    = "Media.TooLarge",
-					message = "That file is larger than the #numberFormat( maxBytes() / 1048576, '9.9' )#MB limit."
+					message = "That #spec.kind# is larger than the #numberFormat( cap / 1048576, '9.9' )#MB limit for #spec.kind#s."
 				);
 			}
 
@@ -117,7 +168,8 @@ component singleton accessors="true" {
 				.setOriginalFilename( left( upload.clientFile ?: "upload", 255 ) )
 				.setStoredPath( stored.path )
 				.setExtension( extension )
-				.setMimeType( variables.ALLOWED[ extension ] )
+				.setMimeType( spec.mime )
+				.setKind( spec.kind )
 				.setByteSize( size )
 				.setAltText( left( trim( arguments.altText ), 255 ) )
 				.setTitle( left( trim( arguments.title ), 255 ) );
@@ -207,15 +259,45 @@ component singleton accessors="true" {
 	}
 
 	/**
-	 * What the editor's library picker shows. Images only: the picker inserts
-	 * an `<img>`, and offering a PDF there would produce a broken one.
+	 * One kind of file, for whichever picker asked.
+	 *
+	 * The picker is opened for a purpose — an `<img>` to insert, a logo field
+	 * to fill, a link to place — and each wants one kind. Offering a PDF where
+	 * an `<img>` is going produces a broken image; offering a photograph where
+	 * a download link is going produces a link nobody wanted.
 	 */
+	array function getByKindForSite(
+		required numeric siteId,
+		required string kind,
+		numeric limit  = 24,
+		numeric offset = 0
+	){
+		return mediaRepository.findByKindForSite(
+			arguments.siteId,
+			arguments.kind,
+			arguments.limit,
+			arguments.offset
+		);
+	}
+
+	numeric function countByKindForSite( required numeric siteId, required string kind ){
+		return mediaRepository.countByKindForSite( arguments.siteId, arguments.kind );
+	}
+
 	array function getImagesForSite( required numeric siteId, numeric limit = 24, numeric offset = 0 ){
-		return mediaRepository.findImagesBySiteId( arguments.siteId, arguments.limit, arguments.offset );
+		return getByKindForSite( arguments.siteId, "image", arguments.limit, arguments.offset );
 	}
 
 	numeric function countImagesForSite( required numeric siteId ){
-		return mediaRepository.countImagesBySiteId( arguments.siteId );
+		return countByKindForSite( arguments.siteId, "image" );
+	}
+
+	array function getDocumentsForSite( required numeric siteId, numeric limit = 24, numeric offset = 0 ){
+		return getByKindForSite( arguments.siteId, "document", arguments.limit, arguments.offset );
+	}
+
+	numeric function countDocumentsForSite( required numeric siteId ){
+		return countByKindForSite( arguments.siteId, "document" );
 	}
 
 	numeric function countForSite( required numeric siteId ){
@@ -237,47 +319,143 @@ component singleton accessors="true" {
 		return structKeyArray( variables.ALLOWED ).sort( "textnocase" );
 	}
 
+	/**
+	 * The extensions of one kind, for an upload field's `accept` attribute and
+	 * for telling an author what will be taken.
+	 */
+	array function getAllowedExtensionsFor( required string kind ){
+		var wanted = lCase( trim( arguments.kind ) );
+
+		return structKeyArray( variables.ALLOWED )
+			.filter( ( ext ) => variables.ALLOWED[ ext ].kind == wanted )
+			.sort( "textnocase" );
+	}
+
+	/**
+	 * The size limit for a kind.
+	 *
+	 * Two limits rather than one because the two are not comparable: 10MB is
+	 * generous for a photograph and tight for a scanned forty-page contract. An
+	 * unrecognised kind gets the smaller of the two, so a mistake is restrictive
+	 * rather than permissive.
+	 */
+	numeric function maxBytesFor( required string kind ){
+		var images    = val( settings.maxImageBytes ?: settings.maxUploadBytes ?: 10485760 );
+		var documents = val( settings.maxDocumentBytes ?: 26214400 );
+
+		if ( lCase( trim( arguments.kind ) ) == "document" ) {
+			return documents;
+		}
+
+		if ( lCase( trim( arguments.kind ) ) == "image" ) {
+			return images;
+		}
+
+		return min( images, documents );
+	}
+
+	/**
+	 * The image limit. Kept because it is the one every caller before this
+	 * group meant, and because `maxBytesFor()` is the honest name for the
+	 * question now that there are two answers.
+	 */
 	numeric function maxBytes(){
-		return val( settings.maxUploadBytes ?: 10485760 );
+		return maxBytesFor( "image" );
 	}
 
 	/* -------------------------------------------------------------- internals */
 
 	/**
-	 * Confirm the bytes are what the extension claims.
+	 * Confirm the bytes are what the extension claims — as far as the format
+	 * allows anyone to confirm it.
+	 *
+	 * Three cases, in descending order of how much they prove:
+	 *
+	 *  1. **An image must decode.** Not a prefix check: the file is handed to
+	 *     the image reader, and a `.png` full of PHP fails because it is not a
+	 *     picture.
+	 *
+	 *  2. **A signed document must start with its signature.** This catches the
+	 *     mislabelled file, which is the realistic case. It does *not* identify
+	 *     the format: `docx`, `xlsx` and `pptx` are all ZIP archives and share
+	 *     one signature, so this proves "a ZIP container", and the extension
+	 *     decides which of the three it is served as. Proving more would mean
+	 *     opening the archive and looking for `word/document.xml`, which needs
+	 *     ColdFusion's `zip` package — present on a full install, absent on the
+	 *     minimal one this is developed against, so it would turn a verified
+	 *     upload into an environment-dependent one.
+	 *
+	 *  3. **Plain text cannot be checked at all.** `csv` and `txt` have no
+	 *     signature; any bytes are a valid text file. What makes that
+	 *     acceptable is not this function but the serving policy: `Media.cfc`
+	 *     sends every non-image as `Content-Disposition: attachment` with
+	 *     `X-Content-Type-Options: nosniff`, so a `.txt` full of HTML is
+	 *     downloaded as a text file rather than rendered as a page on the
+	 *     site's own origin.
 	 */
 	private function verifyContent( required string path, required string extension ){
-		if ( arguments.extension == "pdf" ) {
-			var head = "";
+		var spec = variables.ALLOWED[ arguments.extension ];
 
-			try {
-				head = left( fileRead( arguments.path, "utf-8" ), 5 );
-			} catch ( any e ) {
-				head = "";
-			}
-
-			if ( left( head, 4 ) != "%PDF" ) {
+		if ( spec.kind == "image" ) {
+			if ( !isImageFile( arguments.path ) ) {
 				throw(
 					type    = "Media.ContentMismatch",
-					message = "That file is not a PDF, whatever it is named."
+					message = "That file is not a readable image, whatever it is named."
 				);
 			}
 
 			return this;
 		}
 
-		if ( !isImageFile( arguments.path ) ) {
-			throw(
-				type    = "Media.ContentMismatch",
-				message = "That file is not a readable image, whatever it is named."
-			);
+		if ( !arrayLen( spec.signatures ) ) {
+			return this;
 		}
 
-		return this;
+		var head = readHeadHex( arguments.path, 8 );
+
+		for ( var signature in spec.signatures ) {
+			if ( left( head, len( signature ) ) == signature ) {
+				return this;
+			}
+		}
+
+		throw(
+			type    = "Media.ContentMismatch",
+			message = "That file is not a #uCase( arguments.extension )#, whatever it is named."
+		);
+	}
+
+	/**
+	 * The first bytes of a file, as uppercase hex.
+	 *
+	 * Read as binary rather than through `fileRead( path, "utf-8" )`. The old
+	 * PDF check used the text form and worked only because `%PDF` happens to be
+	 * ASCII; a ZIP's `PK\x03\x04` contains control bytes that character
+	 * decoding can substitute or drop, and the comparison would then fail on a
+	 * perfectly good file.
+	 */
+	private string function readHeadHex( required string path, required numeric bytes ){
+		try {
+			var stream = fileOpen( arguments.path, "readbinary" );
+
+			try {
+				var head = fileRead( stream, arguments.bytes );
+
+				return uCase( binaryEncode( head, "hex" ) );
+			} finally {
+				fileClose( stream );
+			}
+		} catch ( any e ) {
+			// An unreadable file is not a verified file.
+			return "";
+		}
 	}
 
 	private struct function readDimensions( required string path, required string extension ){
-		if ( arguments.extension == "pdf" ) {
+		// Only an image has dimensions. Keyed off the kind rather than a list
+		// of extensions that do not, so a new document type does not have to
+		// remember to exclude itself here.
+		if ( variables.ALLOWED[ arguments.extension ].kind != "image" ) {
 			return {};
 		}
 

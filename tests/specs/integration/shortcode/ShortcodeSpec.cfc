@@ -108,6 +108,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					expect( tags ).toInclude( "year" );
 					expect( tags ).toInclude( "recent-posts" );
 					expect( tags ).toInclude( "image" );
+					expect( tags ).toInclude( "file" );
 				} );
 
 			} );
@@ -165,6 +166,67 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			} );
 
+			describe( "the file shortcode", function(){
+
+				it( "links the document, with its type and size", function(){
+					var out = expand( '[file id="' & doc.getId() & '"]' );
+
+					expect( out ).toInclude( 'class="file-link"' );
+					expect( out ).toInclude( doc.getStoredPath() );
+					expect( out ).toInclude( "PDF" );
+
+					// The size belongs in the link text, not a title: it tells
+					// somebody on a metered connection what they are about to
+					// spend, and a title is invisible on a touchscreen.
+					expect( out ).toInclude( "file-meta" );
+				} );
+
+				it( "uses the author's label when they wrote one", function(){
+					var out = expand( '[file id="' & doc.getId() & '"]Our terms[/file]' );
+
+					expect( out ).toInclude( "Our terms" );
+					expect( out ).notToInclude( "Terms of engagement" );
+				} );
+
+				it( "falls back to the library's title", function(){
+					var out = expand( '[file id="' & doc.getId() & '"]' );
+
+					expect( out ).toInclude( "Terms of engagement" );
+				} );
+
+				it( "escapes a label an author wrote", function(){
+					// Expansion happens after the sanitiser, so this handler is
+					// the only thing standing between content and the page.
+					var out = expand( '[file id="' & doc.getId() & '"]<script>alert(1)</script>[/file]' );
+
+					expect( out ).notToInclude( "<script>" );
+					expect( out ).toInclude( "&lt;script&gt;" );
+				} );
+
+				it( "escapes a title coming from the library", function(){
+					var out = expand( '[file id="' & hostileDoc.getId() & '"]' );
+
+					expect( out ).notToInclude( "<script>" );
+					expect( out ).toInclude( "&lt;script&gt;" );
+				} );
+
+				it( "refuses an image, which has its own shortcode", function(){
+					// Accepting one would quietly produce a download link to a
+					// photograph, which is never what [file] was reached for.
+					expect( expand( '[file id="' & image.getId() & '"]' ) ).toBe( "" );
+				} );
+
+				it( "will not reach another site's document", function(){
+					expect( expand( '[file id="' & foreignDoc.getId() & '"]' ) ).toBe( "" );
+				} );
+
+				it( "renders nothing for a document that does not exist", function(){
+					expect( expand( '[file id="987654321"]' ) ).toBe( "" );
+					expect( expand( "[file]" ) ).toBe( "" );
+				} );
+
+			} );
+
 			describe( "tenant scoping", function(){
 
 				it( "will not render another site's image", function(){
@@ -208,6 +270,22 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		);
 	}
 
+	private function storeDoc( required numeric siteId, required string title ){
+		return getInstance( "MediaRepository@media" ).create(
+			getInstance( "MediaItem@media" )
+				.setSiteId( arguments.siteId )
+				.setFilename( "t.pdf" )
+				.setOriginalFilename( "terms.pdf" )
+				.setStoredPath( "2026/10/" & createUUID() & ".pdf" )
+				.setExtension( "pdf" )
+				.setMimeType( "application/pdf" )
+				.setKind( "document" )
+				.setByteSize( 246000 )
+				.setAltText( "" )
+				.setTitle( arguments.title )
+		);
+	}
+
 	private function seed(){
 		variables.site  = sites.createSite( name = "Shortcode One", slug = PREFIX & "one" );
 		variables.other = sites.createSite( name = "Shortcode Two", slug = PREFIX & "two" );
@@ -217,6 +295,10 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		variables.image        = storeImage( site.getId(), "A bench" );
 		variables.hostile      = storeImage( site.getId(), '"><script>alert(1)</script>' );
 		variables.foreignImage = storeImage( other.getId(), "Theirs" );
+
+		variables.doc        = storeDoc( site.getId(), "Terms of engagement" );
+		variables.hostileDoc = storeDoc( site.getId(), '"><script>alert(1)</script>' );
+		variables.foreignDoc = storeDoc( other.getId(), "Theirs" );
 
 		for ( var i = 1; i <= 3; i++ ) {
 			var post = blog.createPost( siteId = site.getId(), title = "Post #i#", content = "<p>x</p>" );
