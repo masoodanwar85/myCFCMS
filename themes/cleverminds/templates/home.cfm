@@ -228,7 +228,7 @@
 					<div class="service-row__body">
 						<h3>Probate</h3>
 						<p>We have obtained Probate for hundreds of clients. We get the job done quickly and effectively, every time.</p>
-						<p><a class="service-row__more" href="/probate-what-is-probate">Find out more</a></p>
+						<p><a class="service-row__more" href="/probate">Find out more</a></p>
 					</div>
 				</div>
                 
