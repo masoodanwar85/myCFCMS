@@ -132,13 +132,45 @@ would make `mailto:` indistinguishable from `/`.
 
 ## 4. Fetching
 
-`cfhttp` to the **loopback address on the port serving the current request**,
-carrying the site's own primary domain as the `Host` header — which is how
-`TenantResolver` identifies a site. That reaches the right tenant without the
-domain resolving in DNS, which it does not on a developer's machine.
+`cfhttp` **through the hostname the admin request already arrived on**, when
+that hostname is one of the site's own. It is reachable by proof — the request
+got here through it — the scheme is known for the same reason, and no `Host`
+header has to be overridden.
 
-`fetchBaseUrl` overrides the derived address where the server cannot reach
-itself that way.
+### The version that shipped first, and why it failed
+
+It derived `http://127.0.0.1:<cgi.server_port>` and overrode `Host` with the
+site's primary domain. That is correct on a developer's machine and wrong on
+every TLS site: `cgi.server_port` is 443, so the run spoke plain HTTP to an
+SSL-enabled port, and Apache answered **400 Bad Request** to all 173 URLs of
+the first real site it was pointed at. The audit was never reaching the site at
+all.
+
+Worth recording what was *not* the cause, since it looked likelier: adding a
+`Host` header via `cfhttpparam` does **not** produce a duplicate header.
+ColdFusion replaces it — confirmed by capturing the bytes on a socket — so a
+request with multiple `Host` fields, which a server must reject with 400, was
+never being sent.
+
+### The fallback, and when it applies
+
+Loopback with a `Host` override remains for the case it was really written for:
+a developer's machine, where `something.test` does not resolve in DNS and the
+admin is reached on `127.0.0.1`. Choosing between them is a question with a
+factual answer — is the request's host one of this site's domains? — rather
+than a guess about the deployment.
+
+`fetchBaseUrl` overrides both, for a server that can reach itself at neither
+address.
+
+### Saying so when it cannot reach the site
+
+One identical error per URL is a report that says nothing. When at least 90% of
+a run's URLs fail — on a crawl of three or more — it adds a single
+`site.unreachable` error naming the address tried, the status codes that came
+back, and the fact that a 400 on everything usually means HTTP against an HTTPS
+port. The threshold is high on purpose: a site where a quarter of pages 404 has
+a real problem worth reporting page by page.
 
 No cookies ride along, so every page is fetched as an anonymous visitor. That is
 deliberate: an audit should see what the public sees, not a draft visible to

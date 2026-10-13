@@ -81,11 +81,14 @@ component singleton accessors="true" {
 			? createRun( arguments.siteId )
 			: createRun( arguments.siteId, arguments.runBy );
 
+		var target = fetcher.resolveTarget( arguments.siteId );
+
 		var work = {
-			"auditId" : audit.getId(),
-			"siteId"  : arguments.siteId,
-			"siteName": arguments.siteName,
-			"baseUrl" : fetcher.resolveBaseUrl()
+			"auditId"    : audit.getId(),
+			"siteId"     : arguments.siteId,
+			"siteName"   : arguments.siteName,
+			"baseUrl"    : target.baseUrl,
+			"hostHeader" : target.hostHeader
 		};
 
 		// `attributes` rather than closure capture: a thread does not share the
@@ -101,10 +104,11 @@ component singleton accessors="true" {
 			var service = application.cbController.getWireBox().getInstance( "SeoAuditService@seoaudit" );
 
 			service.execute(
-				auditId  = attributes.work.auditId,
-				siteId   = attributes.work.siteId,
-				siteName = attributes.work.siteName,
-				baseUrl  = attributes.work.baseUrl
+				auditId    = attributes.work.auditId,
+				siteId     = attributes.work.siteId,
+				siteName   = attributes.work.siteName,
+				baseUrl    = attributes.work.baseUrl,
+				hostHeader = attributes.work.hostHeader
 			);
 		}
 
@@ -141,8 +145,9 @@ component singleton accessors="true" {
 	seoaudit.models.SeoAudit function execute(
 		required numeric auditId,
 		required numeric siteId,
-		string siteName = "",
-		string baseUrl  = ""
+		string siteName   = "",
+		string baseUrl    = "",
+		string hostHeader = ""
 	){
 		var audit = repository.findAuditById( arguments.auditId, arguments.siteId );
 
@@ -183,7 +188,7 @@ component singleton accessors="true" {
 				seen[ path ] = true;
 				fetched++;
 
-				var result = fetcher.fetch( arguments.siteId, path, arguments.baseUrl );
+				var result = fetcher.fetch( arguments.siteId, path, arguments.baseUrl, arguments.hostHeader );
 				var doc    = wirebox.getInstance( "HtmlDocument@seoaudit" ).loadHtml( result.body );
 
 				var context = {
@@ -264,6 +269,7 @@ component singleton accessors="true" {
 				true
 			);
 
+			findings.append( unreachableFinding( crawled, arguments.baseUrl ), true );
 			findings.append( siteLevelFindings( arguments.siteId ), true );
 
 			repository.addIssues( arguments.auditId, arguments.siteId, findings );
@@ -347,6 +353,51 @@ component singleton accessors="true" {
 	}
 
 	/* ---------------------------------------------------------- internals */
+
+	/**
+	 * One finding explaining a run where almost nothing answered.
+	 *
+	 * A site the server cannot fetch produces one identical error per URL — a
+	 * report of 173 "this URL answers with an error" tells you the audit is
+	 * broken and nothing about the site. This says it once, in front, with the
+	 * address that was tried and the status that came back, so the next step is
+	 * obvious instead of a guess.
+	 *
+	 * The threshold is deliberately high. A site where a quarter of the pages
+	 * 404 has a real problem worth reporting page by page; a site where nearly
+	 * every page fails with the same status has a fetching problem.
+	 */
+	private array function unreachableFinding( required array crawled, required string baseUrl ){
+		if ( arrayLen( arguments.crawled ) < 3 ) {
+			return [];
+		}
+
+		var failed = arguments.crawled.filter( ( page ) => page.statusCode != 200 );
+
+		if ( arrayLen( failed ) / arrayLen( arguments.crawled ) < 0.9 ) {
+			return [];
+		}
+
+		var codes = {};
+
+		for ( var page in failed ) {
+			codes[ page.statusCode ] = true;
+		}
+
+		var shown = structKeyArray( codes ).toList( ", " );
+
+		return [ {
+			"path"     : "",
+			"checkId"  : "site.unreachable",
+			"severity" : "error",
+			"message"  : "The audit could not fetch this site: #arrayLen( failed )# of #arrayLen( arguments.crawled )# URLs failed. "
+				& "This is almost certainly how the server reaches itself, not a problem with the pages.",
+			"detail"   : "Tried #len( arguments.baseUrl ) ? arguments.baseUrl : "a derived address"#"
+				& " — HTTP #shown#."
+				& " A 400 on every URL usually means plain HTTP was sent to an HTTPS port."
+				& " Set the SEO audit's fetchBaseUrl to the address this server can reach itself on."
+		} ];
+	}
 
 	/**
 	 * Findings about the site rather than about a page.

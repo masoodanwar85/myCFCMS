@@ -225,12 +225,14 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		// background thread, and a spec that raced it would be the flakiest
 		// thing in the suite. The thread calls exactly this method.
 		var created = audits.createRun( siteId = site.getId() );
+		var target  = getInstance( "PageFetcher@seoaudit" ).resolveTarget( site.getId() );
 
 		variables.cachedAudit = audits.execute(
-			auditId  = created.getId(),
-			siteId   = site.getId(),
-			siteName = site.getName(),
-			baseUrl  = getInstance( "PageFetcher@seoaudit" ).resolveBaseUrl()
+			auditId    = created.getId(),
+			siteId     = site.getId(),
+			siteName   = site.getName(),
+			baseUrl    = target.baseUrl,
+			hostHeader = target.hostHeader
 		);
 
 		return variables.cachedAudit;
