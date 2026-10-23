@@ -1604,3 +1604,17 @@ main:has(.home) {
 		max-width: none;
 	}
 }
+
+figure.table > table {
+  width: 100%;                  /* Optional: Makes the table full-width */
+  border-collapse: collapse;    /* Merges cell borders into a single clean line */
+}
+
+figure.table > table, figure.table table > th, figure.table table td {
+  border: 1px solid #333333;    /* Thickness, style (solid, dashed, etc.), and color */
+}
+
+figure.table table > th, figure.table table td {
+  padding: 10px;                /* Optional: Adds space between text and borders */
+  text-align: left;             /* Optional: Aligns text inside cells */
+}
