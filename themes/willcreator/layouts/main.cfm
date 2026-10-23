@@ -153,13 +153,9 @@
 
 						if (!linkPath || linkPath === '##') return;
 
-						// Match whole path segments. A plain `includes` lit up
-						// /legal-services/probate/probate while you were on
-						// /legal-services/probate/probate-costs-... .
-						const target = strip(linkPath);
-						const isMatch = target === '/'
-						? currentPath === '/'
-						: currentPath === target || currentPath.startsWith(target + '/');
+						// Only the page you are actually on. Matching ancestors too
+						// lit up "Probate" while you were on a child of it.
+						const isMatch = currentPath === strip(linkPath);
 
 						if (isMatch) {
 						link.classList.add('active');
