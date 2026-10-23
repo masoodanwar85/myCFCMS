@@ -143,7 +143,9 @@
 			</nav>
 			<script>
 				document.addEventListener('DOMContentLoaded', () => {
-					const currentPath = window.location.pathname;
+					// Compared without a trailing slash so /terms/ matches /terms.
+					const strip = p => p.length > 1 ? p.replace(/\/+$/, '') : p;
+					const currentPath = strip(window.location.pathname);
 					const navLinks = document.querySelectorAll('nav a, .menu a');
 
 					navLinks.forEach(link => {
@@ -151,10 +153,13 @@
 
 						if (!linkPath || linkPath === '##') return;
 
-						// Handle home path matching explicitly vs other paths
-						const isMatch = linkPath === '/' 
-						? currentPath === '/' 
-						: currentPath.includes(linkPath);
+						// Match whole path segments. A plain `includes` lit up
+						// /legal-services/probate/probate while you were on
+						// /legal-services/probate/probate-costs-... .
+						const target = strip(linkPath);
+						const isMatch = target === '/'
+						? currentPath === '/'
+						: currentPath === target || currentPath.startsWith(target + '/');
 
 						if (isMatch) {
 						link.classList.add('active');
