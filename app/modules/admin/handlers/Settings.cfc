@@ -73,6 +73,11 @@ component extends="core.models.security.SecuredHandler" {
 
 		prc.branding = brandingService.brandingFor( siteId );
 
+		// The stored value, not the effective one: the field must keep showing
+		// the chosen image while the toggle is off.
+		prc.defaultFeaturedImage   = brandingService.defaultFeaturedImageSetting( siteId );
+		prc.defaultFeaturedImageOn = brandingService.isDefaultFeaturedImageEnabled( siteId );
+
 		prc.analyticsTagId = analyticsService.tagIdFor( siteId );
 		prc.analyticsIsGtm = len( prc.analyticsTagId ) && analyticsService.isGtm( prc.analyticsTagId );
 
@@ -188,7 +193,11 @@ component extends="core.models.security.SecuredHandler" {
 				colorPrimary = rc.colorPrimary ?: "",
 				colorAccent  = rc.colorAccent ?: "",
 				fontHeading  = rc.fontHeading ?: "",
-				fontBody     = rc.fontBody ?: ""
+				fontBody     = rc.fontBody ?: "",
+				defaultFeaturedImage = rc.defaultFeaturedImage ?: "",
+				// An unticked checkbox posts nothing at all, so absence is a
+				// deliberate false here rather than "leave it alone".
+				defaultFeaturedImageEnabled = ( rc.defaultFeaturedImageEnabled ?: "" ) == "on"
 			);
 		} catch ( any e ) {
 			return done( "/admin/settings", e.message, "error" );

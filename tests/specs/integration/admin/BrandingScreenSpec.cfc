@@ -55,6 +55,31 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				expect( render( "/admin/settings" ) ).toInclude( "No logo set" );
 			} );
 
+			it( "offers the default featured image, with its own toggle", function(){
+				var html = render( "/admin/settings" );
+
+				expect( html ).toInclude( 'name="defaultFeaturedImage"' );
+				expect( html ).toInclude( 'name="defaultFeaturedImageEnabled"' );
+				expect( html ).toInclude( 'data-pick-media="defaultFeaturedImage"' );
+			} );
+
+			it( "keeps showing a default that is switched off", function(){
+				// Unticking the box must not blank the field, or the image has
+				// to be chosen again every time it is turned back on.
+				branding.save(
+					siteId = variables.site.getId(),
+					defaultFeaturedImage = "/media/2026/10/default-hero.jpg",
+					defaultFeaturedImageEnabled = false
+				);
+
+				var html = render( "/admin/settings" );
+
+				expect( html ).toInclude( encodeForHTMLAttribute( "/media/2026/10/default-hero.jpg" ) );
+				expect( html ).toInclude( "switched off" );
+
+				branding.save( siteId = variables.site.getId() );
+			} );
+
 			describe( "saving", function(){
 
 				afterEach( function(){

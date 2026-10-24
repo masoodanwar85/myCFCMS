@@ -39,6 +39,13 @@ component singleton accessors="true" {
 	this.KEY_FONT_HEAD  = "branding.fontHeading";
 	this.KEY_FONT_BODY  = "branding.fontBody";
 
+	// The picture a page falls back to when it has none of its own and none to
+	// inherit. Two keys rather than one, because "no default" and "a default
+	// that is temporarily off" are different states: turning it off must not
+	// make the site forget which image was chosen.
+	this.KEY_FEATURED    = "branding.defaultFeaturedImage";
+	this.KEY_FEATURED_ON = "branding.defaultFeaturedImageEnabled";
+
 	/**
 	 * A CSS colour we are willing to interpolate: a hex literal, nothing else.
 	 * Named colours and `rgb()` are excluded not because they are dangerous but
@@ -90,6 +97,38 @@ component singleton accessors="true" {
 	}
 
 	/**
+	 * The site's default featured image, or an empty string.
+	 *
+	 * Empty when the toggle is off, whatever is stored — which is what lets an
+	 * editor turn the default off without losing the image they picked.
+	 *
+	 * Deliberately **not** part of `brandingFor`: that struct is handed to
+	 * every layout render, and this is read once per page by the code that
+	 * works out which picture a page shows.
+	 */
+	string function defaultFeaturedImageFor( required numeric siteId ){
+		if ( !isDefaultFeaturedImageEnabled( arguments.siteId ) ) {
+			return "";
+		}
+
+		var stored = raw( arguments.siteId, this.KEY_FEATURED );
+
+		return isUsableUrl( stored ) ? stored : "";
+	}
+
+	boolean function isDefaultFeaturedImageEnabled( required numeric siteId ){
+		return raw( arguments.siteId, this.KEY_FEATURED_ON ) == "true";
+	}
+
+	/**
+	 * What the settings form shows: the stored image even when the toggle is
+	 * off, so the field is not blanked the moment somebody unticks the box.
+	 */
+	string function defaultFeaturedImageSetting( required numeric siteId ){
+		return raw( arguments.siteId, this.KEY_FEATURED );
+	}
+
+	/**
 	 * The `<style>` body for a site, or an empty string when nothing is set.
 	 *
 	 * Returned without the surrounding tag: the layout decides where it goes,
@@ -114,7 +153,9 @@ component singleton accessors="true" {
 		string colorPrimary = "",
 		string colorAccent  = "",
 		string fontHeading  = "",
-		string fontBody     = ""
+		string fontBody     = "",
+		string defaultFeaturedImage = "",
+		boolean defaultFeaturedImageEnabled = false
 	){
 		var logo = trim( arguments.logoUrl );
 
@@ -126,6 +167,22 @@ component singleton accessors="true" {
 		}
 
 		siteSettingsRepo.put( arguments.siteId, this.KEY_LOGO_URL, logo );
+
+		var featured = trim( arguments.defaultFeaturedImage );
+
+		if ( len( featured ) && !isUsableUrl( featured ) ) {
+			throw(
+				type    = "Branding.InvalidUrl",
+				message = "The default featured image must start with / or with http:// or https://."
+			);
+		}
+
+		siteSettingsRepo.put( arguments.siteId, this.KEY_FEATURED, featured );
+		siteSettingsRepo.put(
+			arguments.siteId,
+			this.KEY_FEATURED_ON,
+			arguments.defaultFeaturedImageEnabled ? "true" : "false"
+		);
 
 		putColor( arguments.siteId, this.KEY_PRIMARY, arguments.colorPrimary, "primary colour" );
 		putColor( arguments.siteId, this.KEY_ACCENT,  arguments.colorAccent,  "accent colour" );

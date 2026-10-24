@@ -153,7 +153,7 @@
 				<label>
 					<input type="checkbox" name="inheritFeaturedImage"
 					       <cfif !editing || p.getInheritFeaturedImage()>checked</cfif>>
-					Use the nearest parent page's image when this one has none
+					Use the nearest parent page's image, or the site default, when this one has none
 				</label>
 			</div>
 
@@ -168,21 +168,34 @@
 				<cfelseif len( prc.featured.url )>
 					<p class="muted" style="font-size:.8rem">
 						<img src="#encodeForHTMLAttribute( prc.featured.url )#"
-						     alt="Image inherited from #encodeForHTML( prc.featured.source )#"
+						     alt="The image this page will show"
 						     style="max-height:4rem;max-width:12rem;vertical-align:middle;border-radius:4px">
-						Inherited from <strong>#encodeForHTML( prc.featured.source )#</strong>.
+						<cfif prc.featured.source eq "the site default">
+							Using the <strong>site default</strong>, set under
+							<strong>Settings &rarr; Branding</strong>.
+						<cfelse>
+							Taken from <strong>#encodeForHTML( prc.featured.source )#</strong>.
+						</cfif>
 						Choose an image above to override it, or untick the box for none.
+					</p>
+				<cfelseif !p.getInheritFeaturedImage()>
+					<p class="muted" style="font-size:.8rem">
+						No image. The tick box above is off, so this page takes none from
+						a parent or from the site default either.
 					</p>
 				<cfelse>
 					<p class="muted" style="font-size:.8rem">
-						No image, and none to inherit &mdash; no page above this one has one.
+						No image, and none to take &mdash; no page above this one has one,
+						and no site default is switched on.
 					</p>
 				</cfif>
 			</cfif>
 
 			<p class="muted" style="font-size:.8rem">
-				Shown on the page itself by themes that use it. It is also used for the
-				social share card when the <strong>SEO</strong> tab leaves that blank.
+				Shown on the page itself by themes that use it. A page takes the first
+				of: its own image, the nearest parent's, then the site default from
+				<strong>Settings &rarr; Branding</strong>. It is also used for the social
+				share card when the <strong>SEO</strong> tab leaves that blank.
 			</p>
 
 			<label for="content">Content</label>

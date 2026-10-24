@@ -28,6 +28,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		variables.pages  = getInstance( "PageService@pages" );
 		variables.sites  = getInstance( "SiteService@core" );
 		variables.themes = getInstance( "ThemeService@core" );
+		variables.branding = getInstance( "SiteBrandingService@core" );
 		cleanup();
 		seed();
 	}
@@ -132,6 +133,85 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 				it( "finds nothing when no page in the branch has one", function(){
 					pages.updatePage( pageId = services.getId(), seo = { featuredImage : "" } );
+
+					expect( resolve( katoomba.getId() ).url ).toBe( "" );
+				} );
+
+			} );
+
+			/**
+			 * The site-wide default, the last thing tried.
+			 *
+			 * Every spec above assumes it is off, which it is until a site
+			 * turns it on — so these switch it on and off around themselves
+			 * rather than leaving it set for the rest of the file.
+			 */
+			describe( "the site default", function(){
+
+				var SITE_DEFAULT = "/media/2026/10/site-default.jpg";
+
+				afterEach( function(){
+					branding.save( siteId = site.getId() );
+				} );
+
+				it( "is used when the page has none and no ancestor has one", function(){
+					pages.updatePage( pageId = services.getId(), seo = { featuredImage : "" } );
+					enableDefault( SITE_DEFAULT );
+
+					var found = resolve( katoomba.getId() );
+
+					expect( found.url ).toBe( SITE_DEFAULT );
+					expect( found.source ).toBe( "the site default" );
+				} );
+
+				it( "loses to the page's own image", function(){
+					pages.updatePage( pageId = katoomba.getId(), seo = { featuredImage : OWN } );
+					enableDefault( SITE_DEFAULT );
+
+					expect( resolve( katoomba.getId() ).url ).toBe( OWN );
+				} );
+
+				it( "loses to an ancestor's image", function(){
+					enableDefault( SITE_DEFAULT );
+
+					// `services` still carries HERO from the seed.
+					expect( resolve( katoomba.getId() ).url ).toBe( HERO );
+				} );
+
+				it( "is ignored while the toggle is off", function(){
+					pages.updatePage( pageId = services.getId(), seo = { featuredImage : "" } );
+
+					// Stored, but switched off.
+					branding.save(
+						siteId = site.getId(),
+						defaultFeaturedImage = SITE_DEFAULT,
+						defaultFeaturedImageEnabled = false
+					);
+
+					expect( resolve( katoomba.getId() ).url ).toBe( "" );
+
+					// And the image is still remembered, so unticking the box
+					// does not throw away what somebody chose.
+					expect( branding.defaultFeaturedImageSetting( site.getId() ) ).toBe( SITE_DEFAULT );
+				} );
+
+				it( "is ignored when the page opts out of inheriting", function(){
+					// Unticking that box means this page takes no picture from
+					// anywhere else. A default that overrode it would leave no
+					// way to have a page with no image at all.
+					pages.updatePage( pageId = services.getId(), seo = { featuredImage : "" } );
+					pages.updatePage( pageId = katoomba.getId(), seo = { inheritFeaturedImage : false } );
+					enableDefault( SITE_DEFAULT );
+
+					expect( resolve( katoomba.getId() ).url ).toBe( "" );
+				} );
+
+				it( "refuses a stored address that could break out of the attribute", function(){
+					pages.updatePage( pageId = services.getId(), seo = { featuredImage : "" } );
+
+					expect( function(){
+						enableDefault( "javascript:alert(1)" );
+					} ).toThrow( type = "Branding.InvalidUrl" );
 
 					expect( resolve( katoomba.getId() ).url ).toBe( "" );
 				} );
@@ -331,6 +411,16 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		pages.publishPage( page.getId() );
 
 		return page;
+	}
+
+	private function enableDefault( required string url ){
+		branding.save(
+			siteId = site.getId(),
+			defaultFeaturedImage = arguments.url,
+			defaultFeaturedImageEnabled = true
+		);
+
+		return this;
 	}
 
 	private function cleanup(){
