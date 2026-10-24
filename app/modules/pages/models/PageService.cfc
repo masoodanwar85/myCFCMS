@@ -19,6 +19,7 @@ component singleton accessors="true" {
 	property name="interceptorService" inject="coldbox:interceptorService";
 	property name="sanitizer"        inject="ContentSanitizer@core";
 	property name="redirects"        inject="RedirectService@core";
+	property name="branding"         inject="SiteBrandingService@core";
 	property name="wirebox"          inject="wirebox";
 
 	/* ---------------------------------------------------------------------
@@ -723,6 +724,18 @@ component singleton accessors="true" {
 			if ( !ancestor.getInheritFeaturedImage() ) {
 				break;
 			}
+		}
+
+		// Last resort: the site's own default, when one is set and switched on.
+		//
+		// Reached only from here, not from the `!inheritFeaturedImage` exit
+		// above. Unticking that box means "this page takes no picture from
+		// anywhere else", and a site default that ignored it would leave no way
+		// to have a page with no image at all.
+		var fallback = branding.defaultFeaturedImageFor( arguments.page.getSiteId() );
+
+		if ( len( fallback ) ) {
+			return { "url" : fallback, "inherited" : true, "source" : "the site default" };
 		}
 
 		return { "url" : "", "inherited" : false, "source" : "" };

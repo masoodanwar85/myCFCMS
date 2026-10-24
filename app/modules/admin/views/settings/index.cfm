@@ -117,6 +117,46 @@
 				</cfif>
 			</p>
 
+			<label for="defaultFeaturedImage">Default featured image</label>
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="defaultFeaturedImageEnabled"
+					       <cfif prc.defaultFeaturedImageOn>checked</cfif>
+					       #prc.canSettings ? '' : 'disabled'#>
+					Use a default featured image on pages that have none
+				</label>
+			</div>
+			<div class="media-field">
+				<input type="text" id="defaultFeaturedImage" name="defaultFeaturedImage"
+				       value="#encodeForHTMLAttribute( prc.defaultFeaturedImage )#"
+				       placeholder="/media/2026/10/default-hero.jpg"
+				       #prc.canSettings ? '' : 'disabled'#>
+				<cfif prc.canSettings>
+					<button type="button" class="ico" data-pick-media="defaultFeaturedImage">Choose&hellip;</button>
+					<button type="button" class="ico" data-clear-media="defaultFeaturedImage">Clear</button>
+				</cfif>
+			</div>
+			<p class="muted">
+				<cfif prc.defaultFeaturedImageOn && len( prc.defaultFeaturedImage )>
+					<img src="#encodeForHTMLAttribute( prc.defaultFeaturedImage )#"
+					     alt="Default featured image for #encodeForHTML( prc.currentSite.getName() )#"
+					     style="max-height:3rem;max-width:16rem;vertical-align:middle;border-radius:4px">
+					Used by a page that has no image of its own and none to take from a
+					parent. A page can still opt out: untick its own
+					<em>featured image</em> box and it shows nothing.
+				<cfelseif len( prc.defaultFeaturedImage )>
+					Saved, but switched off &mdash; no page is using it.
+				<cfelse>
+					With this off, a page that has no image of its own and none to take
+					from a parent shows none.
+				</cfif>
+			</p>
+			<p class="muted">
+				This is the picture shown <em>on</em> a page by themes that use it &mdash;
+				not the social share card, which is
+				<strong>Search engines &rarr; Default social image</strong>.
+			</p>
+
 			<div class="grid-2">
 				<div>
 					<label for="colorPrimary">Primary colour</label>

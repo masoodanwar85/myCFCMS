@@ -3,8 +3,8 @@
 	The page's featured image, above everything else.
 
 	`args.featuredImage` arrives already resolved — the page's own, or the
-	nearest ancestor's, or empty. The view never needs to know the inheritance
-	rule; it only asks whether there is a picture.
+	nearest ancestor's, or the site default, or empty. The view never needs to
+	know that chain; it only asks whether there is a picture.
 
 	`alt=""` on purpose. This is a decorative banner and the heading directly
 	below it says what the page is, so describing the image with the same words
