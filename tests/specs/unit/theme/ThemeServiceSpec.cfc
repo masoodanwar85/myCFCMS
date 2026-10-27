@@ -111,6 +111,30 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			} );
 
+			describe( "showing breadcrumbs", function(){
+
+				it( "is on for a site that has never set it", function(){
+					// Every site predates this setting, and all of them were
+					// showing the trail before it existed.
+					expect( themes.showsBreadcrumbs( 1 ) ).toBeTrue();
+				} );
+
+				it( "is off only when explicitly turned off", function(){
+					settingsRepo.$( "getValue", "false" );
+
+					expect( themes.showsBreadcrumbs( 1 ) ).toBeFalse();
+				} );
+
+				it( "stores the choice as a string the setting store can hold", function(){
+					themes.setShowBreadcrumbs( 7, false );
+
+					var call = settingsRepo.$callLog().put[ 1 ];
+					expect( call[ 2 ] ).toBe( "theme.showBreadcrumbs" );
+					expect( call[ 3 ] ).toBe( "false" );
+				} );
+
+			} );
+
 			describe( "template paths", function(){
 
 				it( "knows which views and layouts a theme provides", function(){

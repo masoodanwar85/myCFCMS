@@ -93,6 +93,10 @@ component extends="coldbox.system.EventHandler" {
 		// Views get the theme too, not just layouts: a view that needs an icon
 		// or a background image should build its URL the same way a layout does.
 		viewArgs.theme = theme;
+		// Whether to draw the ancestor trail. Decided here, once, rather than
+		// in each view: it is the site's choice and applies to whichever
+		// module answered this URL.
+		viewArgs.showBreadcrumbs = themeService.showsBreadcrumbs( site.getId() );
 
 		var body = renderBody( theme, resolution, viewArgs );
 

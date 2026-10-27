@@ -1,10 +1,12 @@
 <cfoutput>
 	<div class="wrap">
-		<p class="crumbs">
-			<a href="/#xmlFormat( args.basePath )#">Blog</a>
-			<span aria-hidden="true">&rsaquo;</span>
-			<span aria-current="page">#encodeForHTML( args.post.getTitle() )#</span>
-		</p>
+		<cfif args.showBreadcrumbs>
+			<p class="crumbs">
+				<a href="/#xmlFormat( args.basePath )#">Blog</a>
+				<span aria-hidden="true">&rsaquo;</span>
+				<span aria-current="page">#encodeForHTML( args.post.getTitle() )#</span>
+			</p>
+		</cfif>
 
 		<article class="section">
 			<cfif args.post.getShowHeading()>

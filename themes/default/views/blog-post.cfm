@@ -1,6 +1,8 @@
 <cfoutput>
 <article>
-	<p class="crumbs"><a href="/#xmlFormat( args.basePath )#">Blog</a></p>
+	<cfif args.showBreadcrumbs>
+		<p class="crumbs"><a href="/#xmlFormat( args.basePath )#">Blog</a></p>
+	</cfif>
 
 	<cfif args.post.getShowHeading()>
 		<h1>#encodeForHTML( args.post.getTitle() )#</h1>

@@ -10,7 +10,7 @@
 	</figure>
 </cfif>
 
-<cfif args.breadcrumb.len() gt 1>
+<cfif args.showBreadcrumbs and args.breadcrumb.len() gt 1>
 	<p class="crumbs">
 		<cfloop array="#args.breadcrumb#" index="crumb">
 			<cfif crumb.getId() neq args.page.getId()>

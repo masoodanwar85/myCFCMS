@@ -157,7 +157,7 @@ themes/
     default/
         theme.json          name, version, description
         layouts/main.cfm    receives args.body plus site, title, navigation
-        views/page.cfm      receives args.page, args.breadcrumb, args.site
+        views/page.cfm      receives args.page, args.breadcrumb, args.showBreadcrumbs, args.site
         views/404.cfm       receives args.path, args.site
     starter/
         ...
@@ -228,7 +228,7 @@ whatever `.cfm` files are in that directory, so a developer adds a template by
 deploying a file; there is nothing to register.
 
 A template receives the same `args` a view does — `args.page`, `args.breadcrumb`,
-`args.site`, `args.theme` — and is ordinary CFML, so it can reach any service
+`args.showBreadcrumbs`, `args.site`, `args.theme` — and is ordinary CFML, so it can reach any service
 through WireBox. The page's title, slug, SEO settings, menu position and publish
 window are untouched: a template changes how the body is drawn and nothing else.
 

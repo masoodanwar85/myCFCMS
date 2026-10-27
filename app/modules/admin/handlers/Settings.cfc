@@ -44,6 +44,7 @@ component extends="core.models.security.SecuredHandler" {
 		prc.domains   = siteService.getDomains( siteId );
 		prc.themes    = themeService.getInstalledThemes();
 		prc.theme     = themeService.getThemeForSite( siteId );
+		prc.showBreadcrumbs = themeService.showsBreadcrumbs( siteId );
 		prc.settings  = siteSettingsRepo.getAllForSite( siteId );
 
 		prc.canUpdate  = authorization.can( prc.currentUser, "site.update" );
@@ -121,14 +122,24 @@ component extends="core.models.security.SecuredHandler" {
 		return done( "/admin/settings", "Site settings saved." );
 	}
 
+	/**
+	 * The active theme, and the display choices that go with it.
+	 */
 	function theme( event, rc, prc ){
 		try {
 			themeService.setThemeForSite( prc.currentSite.getId(), rc.theme ?: "" );
+
+			// An unticked checkbox posts nothing at all, so absence is a
+			// deliberate false here rather than "leave it alone".
+			themeService.setShowBreadcrumbs(
+				prc.currentSite.getId(),
+				( rc.showBreadcrumbs ?: "" ) == "on"
+			);
 		} catch ( any e ) {
 			return done( "/admin/settings", e.message, "error" );
 		}
 
-		return done( "/admin/settings", "Theme changed." );
+		return done( "/admin/settings", "Theme settings saved." );
 	}
 
 	/**
