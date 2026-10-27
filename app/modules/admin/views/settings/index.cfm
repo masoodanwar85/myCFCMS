@@ -215,8 +215,22 @@
 					</option>
 				</cfloop>
 			</select>
+
+			<div class="checks">
+				<label>
+					<input type="checkbox" name="showBreadcrumbs"<cfif prc.showBreadcrumbs> checked</cfif>
+					       #prc.canSettings ? '' : 'disabled'#>
+					Show the breadcrumb trail above a page
+				</label>
+			</div>
+
+			<p class="muted" style="font-size:.85rem">
+				The trail only ever appears on a page that has a parent, so the
+				site&rsquo;s top-level pages look the same either way.
+			</p>
+
 			<cfif prc.canSettings>
-				<div class="actions-bar"><button type="submit">Change theme</button></div>
+				<div class="actions-bar"><button type="submit">Save theme settings</button></div>
 			</cfif>
 		</form>
 		</section>

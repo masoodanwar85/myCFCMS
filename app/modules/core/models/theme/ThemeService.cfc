@@ -20,6 +20,10 @@ component singleton accessors="true" {
 
 	variables.THEMES_MAPPING = "/themes";
 
+	// Whether the themes draw the ancestor trail above a page. A presentation
+	// choice, so it sits with the theme selection rather than with content.
+	this.KEY_BREADCRUMBS = "theme.showBreadcrumbs";
+
 	/**
 	 * The theme a site renders through.
 	 *
@@ -58,6 +62,26 @@ component singleton accessors="true" {
 		}
 
 		siteSettingsRepo.put( arguments.siteId, themeSettingKey(), slug );
+
+		return this;
+	}
+
+	/**
+	 * Whether this site's pages show a breadcrumb trail.
+	 *
+	 * Defaults to on, so every site that predates the setting keeps the trail
+	 * it already had. Only an explicit "false" turns it off.
+	 */
+	boolean function showsBreadcrumbs( required numeric siteId ){
+		return siteSettingsRepo.getValue( arguments.siteId, this.KEY_BREADCRUMBS, "true" ) != "false";
+	}
+
+	function setShowBreadcrumbs( required numeric siteId, required boolean show ){
+		siteSettingsRepo.put(
+			arguments.siteId,
+			this.KEY_BREADCRUMBS,
+			arguments.show ? "true" : "false"
+		);
 
 		return this;
 	}

@@ -272,7 +272,7 @@
 	}
 </style>
 <cfoutput>
-<cfif args.breadcrumb.len() gt 1>
+<cfif args.showBreadcrumbs and args.breadcrumb.len() gt 1>
 	<div class="wrap">
 		<p class="crumbs">
 			<cfloop array="#args.breadcrumb#" index="crumb">

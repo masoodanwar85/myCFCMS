@@ -70,7 +70,24 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				it( "renders a breadcrumb for a nested page", function(){
 					var html = render( "/about/team", "#PREFIX#one.test" );
 
-					expect( html ).toInclude( "crumbs" );
+					// The markup, not the word: the layout's own stylesheet
+					// carries a `.crumbs` rule, so "crumbs" alone matched a
+					// page with no trail on it at all.
+					expect( html ).toInclude( '<p class="crumbs">' );
+				} );
+
+				it( "leaves the breadcrumb out when the site has turned it off", function(){
+					themes.setShowBreadcrumbs( siteOne.getId(), false );
+
+					try {
+						var html = render( "/about/team", "#PREFIX#one.test" );
+
+						// The page itself still renders; only the trail is gone.
+						expect( html ).toInclude( "Our people" );
+						expect( html ).notToInclude( '<p class="crumbs">' );
+					} finally {
+						themes.setShowBreadcrumbs( siteOne.getId(), true );
+					}
 				} );
 
 				it( "uses the page's meta description", function(){

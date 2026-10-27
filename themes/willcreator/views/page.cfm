@@ -24,7 +24,7 @@
 	four levels deep they are not decoration: `/legal-services/wills/wills-blue-mountains/wills-katoomba`
 	is impossible to place without them.
 --->
-<cfif args.breadcrumb.len() gt 1>
+<cfif args.showBreadcrumbs and args.breadcrumb.len() gt 1>
 	<div class="wrap">
 	<p class="crumbs">
 		<cfloop array="#args.breadcrumb#" index="crumb">
