@@ -90,6 +90,13 @@ component {
 	 * resolvers, navigation, sitemaps and link targets.
 	 */
 	function onLoad(){
+		// Core's own read-only resource. Registered through the same registry a
+		// feature module uses, rather than straight into the router, so there
+		// is one set of conventions for what a collection URL looks like.
+		wirebox
+			.getInstance( "ApiRouteRegistry@core" )
+			.resource( name = "themes", module = "core", handler = "ThemesApi", only = "index,show" );
+
 		var shortcodes = wirebox.getInstance( "ShortcodeRegistry@core" );
 		var handler    = wirebox.getInstance( "SiteShortcodes@core" );
 

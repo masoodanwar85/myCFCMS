@@ -305,6 +305,157 @@ component singleton accessors="true" {
 	}
 
 	/**
+	 * Audit **one** URL, now, and return the findings without storing anything.
+	 *
+	 * A different shape from `start()` on purpose, and worth being clear about
+	 * why there are two:
+	 *
+	 *   - A **run** crawls the whole site, takes long enough to need a thread
+	 *     and a progress row, and is a record somebody comes back to.
+	 *   - This is one fetch and a handful of checks. It is fast enough to hold
+	 *     a request open, so it does, and it writes no `seo_audits` row —
+	 *     because an editor checking the page they just saved, six times in a
+	 *     row, should not leave six runs in a report nobody will read, and must
+	 *     not trip `SeoAudit.AlreadyRunning` for the real nightly crawl.
+	 *
+	 * Every registered per-page check runs, so a check added for the admin
+	 * report appears here with no further wiring.
+	 *
+	 * @checkLinks Also probe the page's own internal links and report the ones
+	 *             that are broken or redirected. Costs one fetch per link, up
+	 *             to `pageLinkBudget`, which is why it can be switched off.
+	 *
+	 * @return { path, url, statusCode, elapsedMs, error, checkedLinks, findings }
+	 */
+	struct function auditOne(
+		required numeric siteId,
+		required string path,
+		string siteName      = "",
+		boolean checkLinks   = true
+	){
+		var clean  = discovery.normalisePath( arguments.path );
+		var target = fetcher.resolveTarget( arguments.siteId );
+		var result = fetcher.fetch( arguments.siteId, clean, target.baseUrl, target.hostHeader );
+		var doc    = wirebox.getInstance( "HtmlDocument@seoaudit" ).loadHtml( result.body );
+
+		var context = {
+			"siteId"      : arguments.siteId,
+			"siteName"    : arguments.siteName,
+			"path"        : clean,
+			"absoluteUrl" : fetcher.publicUrl( arguments.siteId, clean ),
+			"statusCode"  : result.statusCode,
+			"location"    : result.location,
+			"fetchError"  : result.error,
+			"elapsedMs"   : result.elapsedMs
+		};
+
+		var rendered = result.statusCode == 200 && doc.isParsed();
+		var findings = rendered ? checks.inspect( doc, context ) : statusOnly( doc, context );
+		var probed   = 0;
+
+		if ( rendered && arguments.checkLinks ) {
+			// Read first, so a deployment that sets the budget to zero skips the
+			// extraction too rather than slicing an array to no length.
+			var budget = max( 0, val( settings.pageLinkBudget ?: 25 ) );
+			var links  = budget ? internalLinks( doc, discovery.domainsFor( arguments.siteId ) ) : [];
+
+			if ( links.len() > budget ) {
+				links = links.slice( 1, budget );
+			}
+
+			probed = links.len();
+
+			findings.append( linkFindings( arguments.siteId, clean, links, doc, target ), true );
+		}
+
+		return {
+			"path"         : clean,
+			"url"          : context.absoluteUrl,
+			"statusCode"   : result.statusCode,
+			"elapsedMs"    : result.elapsedMs,
+			"error"        : result.error,
+			"checkedLinks" : probed,
+			"findings"     : findings
+		};
+	}
+
+	/**
+	 * Broken and redirecting links on one page, from the real crawl check.
+	 *
+	 * `BrokenLinkCheck` answers about a *set* of crawled pages: it builds a
+	 * path-to-status map from them and judges each page's links against it. So
+	 * a one-page audit gives it exactly that set — the page itself, plus a
+	 * stand-in entry per link target carrying nothing but the status its fetch
+	 * came back with. Reusing the check this way means there is one
+	 * implementation of "this link is broken", and the single-page answer cannot
+	 * drift from the nightly report's.
+	 *
+	 * Resolved by id rather than through `crawlChecks`, because the other two
+	 * crawl checks would be wrong on this set by construction: every stand-in
+	 * has an empty title and was never in a sitemap, so duplicate-content and
+	 * reconciliation would report findings about fixtures this method invented.
+	 */
+	private array function linkFindings(
+		required numeric siteId,
+		required string path,
+		required array links,
+		required any document,
+		required struct target
+	){
+		if ( !arguments.links.len() ) {
+			return [];
+		}
+
+		var pages = [ {
+			"path"        : arguments.path,
+			"statusCode"  : 200,
+			"title"       : arguments.document.title(),
+			"description" : arguments.document.metaByName( "description" ),
+			"canonical"   : arguments.document.linkByRel( "canonical" ),
+			"links"       : arguments.links,
+			"seeded"      : false
+		} ];
+
+		for ( var link in arguments.links ) {
+			var probe = fetcher.fetch( arguments.siteId, link, arguments.target.baseUrl, arguments.target.hostHeader );
+
+			pages.append( {
+				"path"        : link,
+				"statusCode"  : probe.statusCode,
+				"title"       : "",
+				"description" : "",
+				"canonical"   : "",
+				"links"       : [],
+				"seeded"      : false
+			} );
+		}
+
+		var found = [];
+
+		try {
+			var check = wirebox.getInstance( "BrokenLinkCheck@seoaudit" );
+
+			// The check carries a `path` on each finding, which a per-page
+			// response does not need — it is all one page — so it is dropped to
+			// match the shape of everything else in `findings`.
+			for ( var finding in check.inspect( pages, { "siteId" : arguments.siteId } ) ) {
+				found.append( {
+					"checkId"  : finding.checkId,
+					"severity" : finding.severity,
+					"message"  : finding.message,
+					"detail"   : finding.detail
+				} );
+			}
+		} catch ( any e ) {
+			// One failing check must not cost the other nine their findings —
+			// the same rule the registries apply.
+			log.warn( "Single-page link check failed on [#arguments.path#]: #e.message#" );
+		}
+
+		return found;
+	}
+
+	/**
 	 * Mark as failed any run that stopped without saying so.
 	 *
 	 * A thread killed by a restart, a deployment or an out-of-memory cannot

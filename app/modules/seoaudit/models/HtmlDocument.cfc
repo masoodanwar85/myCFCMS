@@ -115,6 +115,29 @@ component accessors="true" {
 		return firstAttribute( "//link[translate(@rel,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='#xpathLiteralSafe( lCase( arguments.rel ) )#']", "href" );
 	}
 
+	/**
+	 * The raw text of every `<script type="application/ld+json">`, in document
+	 * order.
+	 *
+	 * Raw, and not parsed here: whether the block *is* valid JSON is itself the
+	 * finding, so a parser in this layer would have to throw away the one
+	 * answer the check wants. `bodyText()` excludes scripts for good reasons,
+	 * which is exactly why this needs its own accessor.
+	 *
+	 * A page may legitimately carry several — a `WebSite` block in the layout
+	 * and an `Article` block on the page — so this is a list rather than one
+	 * value.
+	 */
+	array function jsonLdBlocks(){
+		var found = [];
+
+		for ( var node in search( "//script[translate(@type,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='application/ld+json']" ) ) {
+			found.append( trim( node.xmlText ?: "" ) );
+		}
+
+		return found;
+	}
+
 	/* ------------------------------------------------------------- the body */
 
 	/**

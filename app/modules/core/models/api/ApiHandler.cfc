@@ -35,6 +35,14 @@
  * not change the shape of the response:
  *
  *     { "data" : ..., "meta" : { ... } }
+ *
+ * ## Every write is logged
+ *
+ * A handler that changes something calls `recordChange()` with a before and an
+ * after snapshot, and the entry lands in `api_change_log`. That is the other
+ * half of letting a token write content: the `agent` role exists so an
+ * automated client can, and this is how anybody finds out afterwards what it
+ * did. See `ChangeLogService` for what is deliberately not recorded.
  */
 component extends="coldbox.system.EventHandler" {
 
@@ -42,6 +50,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="authorization" inject="AuthorizationService@core";
 	property name="tenantContext" inject="TenantContext@core";
 	property name="paginator"     inject="Paginator@core";
+	property name="changeLog"     inject="ChangeLogService@core";
 	property name="log"           inject="logbox:logger:{this}";
 
 	// Actions reachable without a token.
@@ -211,6 +220,47 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	/**
+	 * Record a change in the API change log.
+	 *
+	 * Here rather than in each handler so the site, the user and the token are
+	 * read from `prc` once: a handler that had to assemble those itself would
+	 * eventually get one of them wrong, and an audit entry attributed to the
+	 * wrong token is worse than none.
+	 *
+	 *     recordChange( prc, "update", "page", page.getId(), was, toStruct( page, true ) );
+	 *
+	 * Called **after** the change has succeeded, and it never throws — by then
+	 * the page exists, and refusing the response would tell the client the
+	 * change did not happen when it did.
+	 *
+	 * @before The resource as it was. Empty for a create.
+	 * @after  The resource as it now is. Empty for a delete.
+	 */
+	function recordChange(
+		required struct prc,
+		required string action,
+		required string resourceType,
+		numeric resourceId = 0,
+		struct before      = {},
+		struct after       = {}
+	){
+		changeLog.record(
+			siteId       = arguments.prc.currentSite.getId(),
+			action       = arguments.action,
+			resourceType = arguments.resourceType,
+			resourceId   = arguments.resourceId,
+			// `structKeyExists`, not `isNull`: on Adobe, `isNull` of a missing
+			// struct key raises rather than answering true.
+			userId       = structKeyExists( arguments.prc, "currentUser" ) ? arguments.prc.currentUser.getId() : 0,
+			tokenId      = structKeyExists( arguments.prc, "currentToken" ) ? arguments.prc.currentToken.getId() : 0,
+			before       = arguments.before,
+			after        = arguments.after
+		);
+
+		return this;
+	}
+
+	/**
 	 * Read pagination from the query string, capped by Paginator.
 	 */
 	struct function readPage( rc, required numeric total, numeric perPage = 25 ){
@@ -248,7 +298,19 @@ component extends="coldbox.system.EventHandler" {
 	 * @return false when the body claimed to be JSON and was not.
 	 */
 	private boolean function readBody( event, rc ){
-		var body = trim( arguments.event.getHTTPContent() ?: "" );
+		var raw = arguments.event.getHTTPContent() ?: "";
+
+		// A multipart upload's body arrives as a **byte array** on Adobe
+		// ColdFusion, and `trim()` on one throws — so before this guard every
+		// `multipart/form-data` request to the API died at the boundary,
+		// whatever endpoint it was aimed at. Nothing below wants the bytes
+		// either: ColdFusion has already unpacked the parts into FORM, and the
+		// file itself is read by `fileUpload()`.
+		if ( !isSimpleValue( raw ) ) {
+			return true;
+		}
+
+		var body = trim( raw );
 
 		if ( !len( body ) ) {
 			return true;

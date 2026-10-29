@@ -14,6 +14,34 @@ component extends="core.models.api.ApiHandler" {
 
 	property name="pageService" inject="PageService@pages";
 
+	/**
+	 * The extra page fields that travel in the service's `seo` struct.
+	 *
+	 * One flat list, and the values are passed through **verbatim**. The
+	 * service converts and validates every one of them — `asBoolean` for the
+	 * switches, `val` and a clamp for the sitemap priority, `fromList` for
+	 * `ogType` and `twitterCard`, `safeUrl` for the addresses — so a handler
+	 * that coerced them first would be a second opinion on the same question,
+	 * and the two would eventually disagree.
+	 *
+	 * The admin's equivalent in `Admin.cfc:seoFrom()` needs `seoTabPresent` and
+	 * `contentTabPresent` markers because an unticked HTML checkbox posts
+	 * nothing at all, so absence there cannot be told from "off". JSON has no
+	 * such problem: `false` arrives as `false`, and a key that is missing is
+	 * genuinely missing. That is what makes this a PATCH.
+	 */
+	variables.SEO_FIELDS = "metaKeywords,canonicalUrl,robotsIndex,robotsFollow,"
+		& "ogTitle,ogDescription,ogImage,ogType,twitterCard,"
+		& "sitemapInclude,sitemapPriority,sitemapChangefreq,"
+		& "showHeading,template,featuredImage,inheritFeaturedImage,"
+		& "publishFrom,publishUntil";
+
+	// Raw markup is HTML that bypasses the sanitiser, so it is only read from
+	// the request when the token's user may write it. The service refuses it
+	// too; this is the outer of the two gates, so a crafted request cannot
+	// reach the service with values it will silently drop.
+	variables.RAW_FIELDS = "headMarkup,bodyMarkup,jsonLd";
+
 	variables.permissions = {
 		"index"   : "pages.view",
 		"show"    : "pages.view",
@@ -72,7 +100,12 @@ component extends="core.models.api.ApiHandler" {
 			authorId        : prc.currentUser.getId(),
 			// The same permission gate the admin applies. An API that
 			// sanitised differently would be a way round the policy.
-			allowUnfilteredHtml : authorization.can( prc.currentUser, "content.unfiltered", prc.currentSite.getId() )
+			allowUnfilteredHtml : authorization.can( prc.currentUser, "content.unfiltered", prc.currentSite.getId() ),
+			// Canonical, robots, the social tags, the sitemap hints, the
+			// template, the featured image and the schedule. The same struct
+			// the admin builds, so there is one implementation of "apply the
+			// SEO fields" and the API cannot drift from the screen.
+			seo                 : seoFrom( rc, prc )
 		};
 
 		// Only when one was actually asked for. `parentId` is optional on the
@@ -92,11 +125,15 @@ component extends="core.models.api.ApiHandler" {
 			return failFromException( event, e );
 		}
 
+		var created = toStruct( page, true );
+
+		recordChange( prc, "create", "page", page.getId(), {}, created );
+
 		// 201 with a Location header: the two things a client needs to know
 		// where the thing it just made now lives.
 		event.setHTTPHeader( name = "Location", value = "/api/v1/pages/" & page.getId() );
 
-		return respond( event = event, data = toStruct( page, true ), statusCode = 201 );
+		return respond( event = event, data = created, statusCode = 201 );
 	}
 
 	/**
@@ -114,6 +151,12 @@ component extends="core.models.api.ApiHandler" {
 			return fail( event, 404, "not_found", "No page with that id." );
 		}
 
+		// Taken before anything is written, because this is the only moment the
+		// previous state still exists. The projection rather than the entity:
+		// entities are mutable and `updatePage` is handed the same instance, so
+		// a reference kept here would quietly become the *new* state.
+		var was = toStruct( page, true );
+
 		var changes = {
 			pageId              : page.getId(),
 			editorId            : prc.currentUser.getId(),
@@ -130,13 +173,74 @@ component extends="core.models.api.ApiHandler" {
 			changes.sortOrder = val( rc.sortOrder );
 		}
 
+		changes.seo = seoFrom( rc, prc );
+
 		try {
 			var updated = pageService.updatePage( argumentCollection = changes );
+
+			// Moving is a separate call, because it rewrites the path of every
+			// descendant and leaves redirects behind. Only done when the
+			// request said anything about the parent at all — on a PATCH an
+			// absent `parentId` means "leave the page where it is", not "move
+			// it to the top level".
+			if ( structKeyExists( rc, "parentId" ) ) {
+				updated = reparent( updated, val( rc.parentId ) );
+			}
 		} catch ( any e ) {
 			return failFromException( event, e );
 		}
 
-		return respond( event = event, data = toStruct( updated, true ) );
+		var now = toStruct( updated, true );
+
+		recordChange( prc, "update", "page", page.getId(), was, now );
+
+		return respond( event = event, data = now );
+	}
+
+	/**
+	 * Move a page under a new parent, or to the top level when given 0.
+	 *
+	 * Returns the page untouched when it is already there, so a client that
+	 * sends the whole object back on every PATCH does not rewrite its subtree's
+	 * paths — and fill the redirect table — for nothing.
+	 */
+	private function reparent( required any page, required numeric wantedParent ){
+		var currentParent = arguments.page.isRoot() ? 0 : arguments.page.getParentId();
+
+		if ( arguments.wantedParent == currentParent ) {
+			return arguments.page;
+		}
+
+		return arguments.wantedParent
+			? pageService.movePage( arguments.page.getId(), arguments.wantedParent )
+			: pageService.movePage( arguments.page.getId() );
+	}
+
+	/**
+	 * The `seo` struct for a request: the fields that are present, untouched.
+	 *
+	 * See `variables.SEO_FIELDS` for why nothing is coerced here.
+	 */
+	private struct function seoFrom( required struct rc, required struct prc ){
+		var given = {};
+
+		for ( var field in listToArray( variables.SEO_FIELDS ) ) {
+			if ( structKeyExists( arguments.rc, field ) ) {
+				given[ field ] = arguments.rc[ field ];
+			}
+		}
+
+		if ( !authorization.can( arguments.prc.currentUser, "content.unfiltered", arguments.prc.currentSite.getId() ) ) {
+			return given;
+		}
+
+		for ( var field in listToArray( variables.RAW_FIELDS ) ) {
+			if ( structKeyExists( arguments.rc, field ) ) {
+				given[ field ] = arguments.rc[ field ];
+			}
+		}
+
+		return given;
 	}
 
 	/**
@@ -164,6 +268,8 @@ component extends="core.models.api.ApiHandler" {
 			return fail( arguments.event, 404, "not_found", "No page with that id." );
 		}
 
+		var was = toStruct( page, true );
+
 		try {
 			var result = arguments.published
 				? pageService.publishPage( page.getId(), arguments.prc.currentUser.getId() )
@@ -172,7 +278,21 @@ component extends="core.models.api.ApiHandler" {
 			return failFromException( arguments.event, e );
 		}
 
-		return respond( event = arguments.event, data = toStruct( result, true ) );
+		var now = toStruct( result, true );
+
+		// Its own action rather than an `update`, because "who published this"
+		// is the question somebody asks of the log most often, and answering it
+		// should not mean reading two snapshots to spot a `status` field.
+		recordChange(
+			arguments.prc,
+			arguments.published ? "publish" : "unpublish",
+			"page",
+			page.getId(),
+			was,
+			now
+		);
+
+		return respond( event = arguments.event, data = now );
 	}
 
 	/**
@@ -185,6 +305,8 @@ component extends="core.models.api.ApiHandler" {
 			return fail( event, 404, "not_found", "No page with that id." );
 		}
 
+		var was = toStruct( page, true );
+
 		try {
 			// A subtree is only deleted when asked for outright, the same rule
 			// the admin enforces — an API must not be the lenient way in.
@@ -192,6 +314,10 @@ component extends="core.models.api.ApiHandler" {
 		} catch ( any e ) {
 			return failFromException( event, e );
 		}
+
+		// The most important entry in the log: it is the only record left of
+		// what the page said. The row is gone, so `before` is all there is.
+		recordChange( prc, "delete", "page", page.getId(), was, {} );
 
 		return respond( event = event, data = { "deleted" : true, "id" : page.getId() } );
 	}
@@ -224,11 +350,58 @@ component extends="core.models.api.ApiHandler" {
 			"updatedAt"       : isNull( arguments.page.getUpdatedAt() ) ? "" : dateTimeFormat( arguments.page.getUpdatedAt(), "iso" )
 		};
 
-		if ( arguments.withContent ) {
-			out[ "content" ] = arguments.page.getContent() ?: "";
+		if ( !arguments.withContent ) {
+			return out;
 		}
 
+		out[ "content" ] = arguments.page.getContent() ?: "";
+
+		// The rest of the editable surface, on the single-page view only. A
+		// client that has just PATCHed a canonical URL has to be able to read
+		// back what was stored — the sanitiser and the service's own validators
+		// may well have changed it — and a tree of fifty pages carrying all of
+		// this is a response nobody asked for.
+		out[ "template" ]             = arguments.page.getTemplate() ?: "";
+		out[ "featuredImage" ]        = arguments.page.getFeaturedImage() ?: "";
+		out[ "inheritFeaturedImage" ] = arguments.page.getInheritFeaturedImage();
+		out[ "showHeading" ]          = arguments.page.getShowHeading();
+
+		out[ "metaKeywords" ]  = arguments.page.getMetaKeywords() ?: "";
+		out[ "canonicalUrl" ]  = arguments.page.getCanonicalUrl() ?: "";
+		out[ "robotsIndex" ]   = arguments.page.getRobotsIndex();
+		out[ "robotsFollow" ]  = arguments.page.getRobotsFollow();
+
+		out[ "ogTitle" ]       = arguments.page.getOgTitle() ?: "";
+		out[ "ogDescription" ] = arguments.page.getOgDescription() ?: "";
+		out[ "ogImage" ]       = arguments.page.getOgImage() ?: "";
+		out[ "ogType" ]        = arguments.page.getOgType() ?: "";
+		out[ "twitterCard" ]   = arguments.page.getTwitterCard() ?: "";
+
+		out[ "sitemapInclude" ]    = arguments.page.getSitemapInclude();
+		out[ "sitemapPriority" ]   = arguments.page.getSitemapPriority();
+		out[ "sitemapChangefreq" ] = arguments.page.getSitemapChangefreq() ?: "";
+
+		out[ "publishFrom" ]  = isoOrEmpty( arguments.page.getPublishFrom() );
+		out[ "publishUntil" ] = isoOrEmpty( arguments.page.getPublishUntil() );
+
+		// Reported whatever the token's permissions are. Reading these is
+		// `pages.view`, the same as reading `content`; it is *writing* them
+		// that needs `content.unfiltered`.
+		out[ "headMarkup" ] = arguments.page.getHeadMarkup() ?: "";
+		out[ "bodyMarkup" ] = arguments.page.getBodyMarkup() ?: "";
+		out[ "jsonLd" ]     = arguments.page.getJsonLd() ?: "";
+
 		return out;
+	}
+
+	/**
+	 * A date as ISO 8601, or an empty string when it is not set.
+	 *
+	 * `?:` will not do here: the elvis operator in ColdFusion falls through on
+	 * any falsy value, and these are dates — so the test has to be `isNull`.
+	 */
+	private string function isoOrEmpty( any value ){
+		return isNull( arguments.value ) ? "" : dateTimeFormat( arguments.value, "iso" );
 	}
 
 }

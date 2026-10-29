@@ -31,6 +31,14 @@
  * have the framework invoke it — including inherited ones — which turns a
  * routing convenience into a way to reach code nobody meant to expose.
  *
+ * And **collection actions**, for the things that act on the resource rather
+ * than on one of its members, which become `POST /api/v1/<name>/<action>`:
+ *
+ *     .resource( name = "seo-audits", module = "seoaudit", collectionActions = "page" )
+ *
+ * Declared above `/:id` for the same reason member actions are: otherwise
+ * `/seo-audits/page` is read as a run whose id is "page".
+ *
  * The conventions are Core's so that two modules cannot disagree about what a
  * collection URL looks like, which is the sort of inconsistency an API is
  * judged on and can never fix afterwards.
@@ -56,9 +64,10 @@ component singleton accessors="true" {
 	function resource(
 		required string name,
 		required string module,
-		string handler       = "Api",
-		string only          = "",
-		string memberActions = ""
+		string handler           = "Api",
+		string only              = "",
+		string memberActions     = "",
+		string collectionActions = ""
 	){
 		var segment = lCase( trim( arguments.name ) );
 
@@ -72,11 +81,12 @@ component singleton accessors="true" {
 		}
 
 		variables.resources.append( {
-			"name"          : segment,
-			"module"        : arguments.module,
-			"handler"       : arguments.handler,
-			"only"          : arguments.only,
-			"memberActions" : arguments.memberActions
+			"name"              : segment,
+			"module"            : arguments.module,
+			"handler"           : arguments.handler,
+			"only"              : arguments.only,
+			"memberActions"     : arguments.memberActions,
+			"collectionActions" : arguments.collectionActions
 		} );
 
 		return this;
@@ -129,6 +139,20 @@ component singleton accessors="true" {
 					module  : res.module,
 					handler : res.handler,
 					actions : { "POST" : name }
+				} );
+			}
+
+			// And collection actions, which must also sit above `/:id` — or
+			// `/seo-audits/page` matches it, and the handler is asked for a run
+			// whose id is "page".
+			for ( var collectionAction in listToArray( res.collectionActions ?: "" ) ) {
+				var actionName = trim( collectionAction );
+
+				routes.append( {
+					pattern : base & "/" & actionName,
+					module  : res.module,
+					handler : res.handler,
+					actions : { "POST" : actionName }
 				} );
 			}
 

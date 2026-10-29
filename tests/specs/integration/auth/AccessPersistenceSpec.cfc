@@ -174,13 +174,15 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 			describe( "seeding default roles", function(){
 
-				it( "gives a new site an owner and an editor", function(){
+				it( "gives a new site one role per definition", function(){
 					var site  = newSite( "Ten" );
 					var seeded = roles.seedDefaultRolesForSite( site.getId() );
 
 					var slugs = seeded.map( ( r ) => r.getSlug() );
-					expect( slugs ).toInclude( "owner" );
-					expect( slugs ).toInclude( "editor" );
+
+					for ( var definition in roles.getDefaultRoleDefinitions() ) {
+						expect( slugs ).toInclude( definition.slug );
+					}
 				} );
 
 				it( "grants the owner every core permission", function(){
@@ -213,7 +215,10 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					roles.seedDefaultRolesForSite( site.getId() );
 					var second = roles.seedDefaultRolesForSite( site.getId() );
 
-					expect( second.len() ).toBe( 2 );
+					// One role per definition, not two sets of them. Counted
+					// from the definitions rather than hard-coded, so adding a
+					// default role is not a failing spec about idempotency.
+					expect( second.len() ).toBe( roles.getDefaultRoleDefinitions().len() );
 				} );
 
 			} );
