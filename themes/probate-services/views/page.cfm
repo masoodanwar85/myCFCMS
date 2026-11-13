@@ -7,9 +7,8 @@
 	know that chain; it only asks whether there is a picture.
 
 	`alt=""` on purpose. This is a decorative banner and the heading directly
-	below it says what the page is, so describing the image with the same words
-	would have a screen reader announce the title twice. An image that carries
-	meaning of its own belongs in the content, where it can be described.
+	below says what the page is, so describing it with the same words would
+	have a screen reader announce the title twice.
 --->
 <cfif len( args.featuredImage ?: "" )>
 	<div class="wrap">
@@ -20,23 +19,30 @@
 </cfif>
 
 <!---
-	Breadcrumbs sit outside the white card, as a quiet line above it. On a site
-	four levels deep they are not decoration: `/legal-services/wills/wills-blue-mountains/wills-katoomba`
-	is impossible to place without them.
+	Breadcrumbs sit above the heading as a quiet line. On a site several levels
+	deep they are not decoration: a path like
+	/services/probate/probate-nsw/probate-sydney is impossible to place without
+	them.
 --->
 <cfif args.showBreadcrumbs and args.breadcrumb.len() gt 1>
 	<div class="wrap">
-	<p class="crumbs">
-		<cfloop array="#args.breadcrumb#" index="crumb">
-			<cfif crumb.getId() neq args.page.getId()>
-				<a href="/#xmlFormat( crumb.getPath() )#">#encodeForHTML( crumb.getTitle() )#</a>
-				<span aria-hidden="true">&rsaquo;</span>
-			<cfelse>
-				<span aria-current="page">#encodeForHTML( crumb.getTitle() )#</span>
-			</cfif>
-		</cfloop>
-	</p>
-</div>
+		<p class="crumbs">
+			<cfloop array="#args.breadcrumb#" index="crumb">
+				<cfif crumb.getId() neq args.page.getId()>
+					<a href="/#xmlFormat( crumb.getPath() )#">#encodeForHTML( crumb.getTitle() )#</a>
+					<span aria-hidden="true">&rsaquo;</span>
+				<cfelse>
+					<span aria-current="page">#encodeForHTML( crumb.getTitle() )#</span>
+				</cfif>
+			</cfloop>
+		</p>
+	</div>
+</cfif>
+
+<cfif args.page.getShowHeading()>
+	<div class="wrap page-head">
+		<h1>#encodeForHTML( args.page.getTitle() )#</h1>
+	</div>
 </cfif>
 
 <section class="section">
@@ -44,12 +50,10 @@
 		<!---
 			Some pages carry their own headline in the content — a hero, or a
 			styled title block — and printing the page title above it says the
-			same thing twice. Off by choice, per page.
+			same thing twice. Off by choice, per page, which is why the heading
+			above is conditional rather than part of this section.
 		--->
-		<cfif args.page.getShowHeading()>
-			<h1>#encodeForHTML( args.page.getTitle() )#</h1>
-		</cfif>
-		#args.page.getContent()#
+		<div class="prose">#args.page.getContent()#</div>
 	</div>
 </section>
 </cfoutput>

@@ -9,6 +9,7 @@ they are three different things.
 | Logo, brand images, PDFs | one **site** | `storage/media/<siteId>/` | ColdFusion, at `/media/...` |
 | CSS, JS, fonts, theme images | one **theme** | `public/assets/themes/<slug>/` | the web server, directly |
 | Colours and font stacks | one **site** | `site_settings` | inlined into the page |
+| Phone, address, hours, ABN | one **site** | `site_settings` | printed by the theme |
 
 ## 1. Uploads belong to a site
 
@@ -107,6 +108,46 @@ would not pass validation today is dropped rather than rendered.
 The logo address is checked the same way: site-relative or explicit `http(s)`,
 with the *whole* string constrained rather than just the prefix — anchoring only
 the start would accept `https://x" onerror="alert(1)`.
+
+## 4. The practice's own details belong to a site too
+
+A phone number, an office address, the opening hours, the ABN, how fees are
+charged. **Settings → Firm details** stores them and every theme reads them from
+`args.firm`:
+
+```cfml
+<cfif len( trim( args.firm.phone ?: "" ) )>
+    <a href="tel:#encodeForHTMLAttribute( reReplace( args.firm.phone, "[^0-9+]", "", "all" ) )#">
+        #encodeForHTML( args.firm.phone )#
+    </a>
+</cfif>
+```
+
+### Why not page content
+
+Because each of them appears in four or five places at once. The phone number in
+the probate theme is in the top bar, the hero, the contact block, the closing
+call to action and the footer. As page content that is five copies that drift
+apart, and changing an address means finding all of them.
+
+### Every field is optional, and a theme must act like it
+
+`firmFor()` returns every key as a string, so `args.firm.phone` is always safe to
+read — but it is an empty string until somebody fills it in. A theme **drops the
+element** rather than printing an empty label: a site that has configured nothing
+has to render a working header, not a row of blank rows. The probate theme omits
+its entire top bar when the trust line, hours and phone are all unset.
+
+### Two of them are not just text
+
+`phone` and `email` end up inside `tel:` and `mailto:` hrefs, where a
+`javascript:` value would be a link that runs. Both are validated on the way in
+*and* re-checked on the way out, for the same reason the branding values are: a
+row can reach `site_settings` from a migration, a seed or a direct `UPDATE`, and
+the read path does not get to assume otherwise. A stored value that would be
+refused today is returned as an empty string, and the settings form shows it
+with a note saying it is not in use — blanking the field is how somebody loses a
+value without being told.
 
 ## Adding a theme
 

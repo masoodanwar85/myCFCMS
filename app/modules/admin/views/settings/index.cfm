@@ -30,6 +30,9 @@
 	<input type="radio" name="settingsTab" id="tab-theme">
 	<label for="tab-theme">Theme</label>
 
+	<input type="radio" name="settingsTab" id="tab-firm">
+	<label for="tab-firm">Firm details</label>
+
 	<input type="radio" name="settingsTab" id="tab-seo">
 	<label for="tab-seo">Search engines</label>
 
@@ -233,6 +236,58 @@
 				<div class="actions-bar"><button type="submit">Save theme settings</button></div>
 			</cfif>
 		</form>
+		</section>
+
+		<!---
+			Firm details. Fourth, matching its radio above: the CSS pairs the
+			nth radio with the nth panel, so a panel inserted anywhere but the
+			matching position shows up under the wrong tab.
+
+			The fields are rendered from `FirmDetailsService`'s own list rather
+			than written out here, so adding one is a single entry in that
+			service and nothing in this view.
+		--->
+		<section class="tab-panel" data-for="tab-firm">
+		<cfif prc.canSettings>
+		<form method="post" action="/admin/settings/firm">
+			<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
+
+			<p class="muted" style="font-size:.8rem">
+				The practice's own details, as a theme prints them. A phone number appears
+				in the top bar, the hero, the contact block and the footer of one page &mdash;
+				set here once rather than in four places that drift apart.
+				Every field is optional, and a theme leaves out what is not set.
+			</p>
+
+			<cfloop array="#prc.firmFields#" index="field">
+				<label for="firm-#encodeForHTMLAttribute( field.key )#">#encodeForHTML( field.label )#</label>
+
+				<cfif field.kind eq "lines">
+					<textarea id="firm-#encodeForHTMLAttribute( field.key )#"
+					          name="#encodeForHTMLAttribute( field.key )#"
+					          rows="3">#encodeForHTML( field.value )#</textarea>
+				<cfelse>
+					<input type="<cfif field.kind eq 'email'>email<cfelseif field.kind eq 'phone'>tel<cfelse>text</cfif>"
+					       id="firm-#encodeForHTMLAttribute( field.key )#"
+					       name="#encodeForHTMLAttribute( field.key )#"
+					       value="#encodeForHTMLAttribute( field.value )#"
+					       autocomplete="off" style="max-width:30rem">
+				</cfif>
+
+				<p class="muted" style="font-size:.8rem">
+					#encodeForHTML( field.hint )#
+					<cfif !field.valid>
+						<br><strong>This value is not being used</strong> &mdash; it no longer passes
+						validation, so the theme leaves it out. Correct it or clear it.
+					</cfif>
+				</p>
+			</cfloop>
+
+			<div class="actions-bar"><button type="submit">Save firm details</button></div>
+		</form>
+		<cfelse>
+			<p class="muted">You do not have permission to change these.</p>
+		</cfif>
 		</section>
 
 		<section class="tab-panel" data-for="tab-seo">

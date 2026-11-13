@@ -1,7 +1,10 @@
 <cfoutput>
-<article data-view="will-sent" class="section">
-	<h1>Thank you</h1>
-	<p>We have received your will questionnaire. A solicitor will review it and be in touch.</p>
-	<p><a href="/">Back to the home page</a></p>
-</article>
+<section class="section">
+	<div class="wrap stack">
+		<span class="eyebrow">Thank you</span>
+		<h1>We have your answers</h1>
+		<p class="lead">A lawyer will review what you have sent and come back to you.</p>
+		<div class="btn-row"><a class="btn" href="/">Back to the home page</a></div>
+	</div>
+</section>
 </cfoutput>

@@ -253,7 +253,8 @@
 	.tabs > input[type=radio]:nth-of-type(5):checked ~ section.tab-panel:nth-of-type(5),
 	.tabs > input[type=radio]:nth-of-type(6):checked ~ section.tab-panel:nth-of-type(6),
 	.tabs > input[type=radio]:nth-of-type(7):checked ~ section.tab-panel:nth-of-type(7),
-	.tabs > input[type=radio]:nth-of-type(8):checked ~ section.tab-panel:nth-of-type(8){ display:block; }
+	.tabs > input[type=radio]:nth-of-type(8):checked ~ section.tab-panel:nth-of-type(8),
+	.tabs > input[type=radio]:nth-of-type(9):checked ~ section.tab-panel:nth-of-type(9){ display:block; }
 	.tabs h2{ margin-top:1.6rem; font-size:.8rem; text-transform:uppercase;
 	          letter-spacing:.05em; color:var(--soft); }
 	.tabs h2:first-child{ margin-top:0; }

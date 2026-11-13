@@ -24,6 +24,7 @@ component extends="coldbox.system.EventHandler" {
 	property name="branding"      inject="SiteBrandingService@core";
 	property name="analytics"     inject="AnalyticsService@core";
 	property name="noticeService" inject="SiteNoticeService@core";
+	property name="firmDetails"   inject="FirmDetailsService@core";
 	property name="settings"      inject="coldbox:moduleSettings:core";
 	property name="log"           inject="logbox:logger:{this}";
 
@@ -97,6 +98,12 @@ component extends="coldbox.system.EventHandler" {
 		// in each view: it is the site's choice and applies to whichever
 		// module answered this URL.
 		viewArgs.showBreadcrumbs = themeService.showsBreadcrumbs( site.getId() );
+		// The practice's details reach views and templates too, not only the
+		// layout. A designed home page prints the phone number in its hero and
+		// its closing call to action, and those are a template — passing this
+		// to the layout alone left them silently blank while the header a few
+		// lines above showed the number perfectly well.
+		viewArgs.firm = firmDetails.firmFor( site.getId() );
 
 		var body = renderBody( theme, resolution, viewArgs );
 
@@ -130,7 +137,12 @@ component extends="coldbox.system.EventHandler" {
 				// as analytics: a theme rendered outside this handler must not
 				// 500 for want of a service, and the copy is a setting, not
 				// a design decision.
-				notice          : noticeService.noticeFor( site.getId() )
+				notice          : noticeService.noticeFor( site.getId() ),
+				// The practice's own phone, address, hours and the rest. Built
+				// here for the same reason as analytics and the notice: a theme
+				// prints these in five places on one page, and must not 500 for
+				// want of a service when it is rendered outside this handler.
+				firm            : firmDetails.firmFor( site.getId() )
 			}
 		);
 	}
@@ -204,7 +216,8 @@ component extends="coldbox.system.EventHandler" {
 				// A 404 is still this client's site, so it keeps their logo.
 				branding        : branding.brandingFor( arguments.site.getId() ),
 				analytics       : analytics.analyticsFor( arguments.site.getId() ),
-				notice          : noticeService.noticeFor( arguments.site.getId() )
+				notice          : noticeService.noticeFor( arguments.site.getId() ),
+				firm            : firmDetails.firmFor( arguments.site.getId() )
 			}
 		);
 	}

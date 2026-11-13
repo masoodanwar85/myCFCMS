@@ -1,1 +1,0 @@
-<cfinclude template="../../common/templates/service-locations.cfm" />

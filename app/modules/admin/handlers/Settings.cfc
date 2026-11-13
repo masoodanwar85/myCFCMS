@@ -18,6 +18,10 @@ component extends="core.models.security.SecuredHandler" {
 	property name="brandingService"  inject="SiteBrandingService@core";
 	property name="analyticsService" inject="AnalyticsService@core";
 	property name="noticeService"    inject="SiteNoticeService@core";
+	// Named `firmService`, not `firm`: the action below is `firm()`, and a
+	// component's methods and its injected properties share one `variables`
+	// scope — the same collision the reCAPTCHA note above records.
+	property name="firmService"      inject="FirmDetailsService@core";
 
 	variables.permissions = {
 		"index"         : "site.view",
@@ -34,6 +38,10 @@ component extends="core.models.security.SecuredHandler" {
 		// the outside world sees of this site, and neither is a content job.
 		"analytics"     : "seo.manage",
 		"notice"        : "site.settings.manage",
+		// Contact details are configuration, not content: an editor who may
+		// write pages should not be able to change the firm's phone number on
+		// every page of the site at once.
+		"firm"          : "site.settings.manage",
 		"$every"        : "site.view"
 	};
 
@@ -71,6 +79,10 @@ component extends="core.models.security.SecuredHandler" {
 		prc.seoBaseUrlSetting    = siteSettingsRepo.getValue( siteId, seoService.KEY_BASE_URL, "" );
 		prc.seoDefaultImage      = siteSettingsRepo.getValue( siteId, seoService.KEY_IMAGE, "" );
 		prc.seoDefaultDescription = siteSettingsRepo.getValue( siteId, seoService.KEY_DESCRIPTION, "" );
+
+		// Field definitions with their stored values, so the view renders the
+		// form from the service's own list rather than repeating it.
+		prc.firmFields = firmService.settingsFor( siteId );
 
 		prc.branding = brandingService.brandingFor( siteId );
 
@@ -194,6 +206,23 @@ component extends="core.models.security.SecuredHandler" {
 		}
 
 		return done( "/admin/settings", "Notice saved." );
+	}
+
+	/**
+	 * The practice's own details: phone, address, hours, fees.
+	 *
+	 * Every field is optional and the service decides what is valid, so this
+	 * passes the whole `rc` through rather than naming eleven arguments —
+	 * adding a field becomes one entry in `FIELDS` and nothing here.
+	 */
+	function firm( event, rc, prc ){
+		try {
+			firmService.save( prc.currentSite.getId(), rc );
+		} catch ( any e ) {
+			return done( "/admin/settings", e.message, "error" );
+		}
+
+		return done( "/admin/settings", "Firm details saved." );
 	}
 
 	function branding( event, rc, prc ){

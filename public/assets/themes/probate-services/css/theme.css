@@ -1,0 +1,515 @@
+/*
+ * Probate Services theme.
+ *
+ * Built from the "Theme C – Homepage" design mockup. The mockup carried its
+ * values as inline styles on an artboard; they are reproduced here as tokens
+ * and classes so the same decisions apply to the pages the mockup never drew —
+ * a blog post, a 404, a contact form.
+ *
+ * Static assets live under `public/` rather than beside the templates: a layout
+ * is a .cfm, and a themes directory exposed to the web server would make
+ * `layouts/main.cfm` directly requestable — and, behind mod_jk, executable.
+ *
+ * Four tokens defer to the site's branding settings. `--brand-primary`,
+ * `--brand-accent` and the two font stacks are emitted by SiteBrandingService
+ * as a `:root` block *after* this file loads, so a site that has set nothing
+ * keeps the design's own colours and a second client on this theme does not
+ * have to look identical to the first.
+ */
+
+:root {
+	/* Colour -------------------------------------------------------------- *
+	 * Named for what they are in the design, not for where they are used:
+	 * `--navy` appears in the top bar and the footer, and a token called
+	 * `--footer-bg` would be wrong the first time it moved.                  */
+	--navy:        #0E2F52;  /* deepest blue: top bar, footer                */
+	--blue:        var(--brand-primary, #1A5FA8);
+	--blue-weave:  #2A6DB3;  /* the hero's diagonal weave, light stripe      */
+	--blue-weave2: #2467AD;  /* and its dark stripe                          */
+	--rust:        var(--brand-accent, #CC4410);
+	--rust-ink:    #B93C0C;  /* the same accent as text on a light ground    */
+	--peach:       #FFD2B3;  /* eyebrow text on blue                         */
+	--peach-icon:  #FFB58A;  /* icon strokes on blue                         */
+
+	--ink:         #1F2933;  /* body text                                    */
+	--ink-soft:    #4F5B69;  /* secondary text                               */
+	--ink-softer:  #45505D;
+
+	--tint:        #EAF1F9;  /* pale blue panel / card                       */
+	--tint-2:      #F7FAFD;  /* barely-there panel                           */
+	--line:        #D5DDE7;  /* hairline on white                            */
+	--pale:        #D6E4F3;  /* body text on blue                            */
+
+	--foot-text:   #B8C7D9;
+	--foot-dim:    #B5C2D1;
+	--foot-head:   #CFD9E5;
+	--foot-line:   rgba(255,255,255,0.25);
+	--on-blue-line: rgba(255,255,255,0.45);
+
+	/* Type ---------------------------------------------------------------- */
+	--display: var(--brand-font-heading, "Cormorant Garamond", Georgia, "Times New Roman", serif);
+	--body:    var(--brand-font-body, "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif);
+
+	/* The mockup's clamp()ed headings, kept as clamps: the artboard was drawn
+	 * at 1440px and these are what it specified at the top of that range.     */
+	--h1:  clamp(48px, 6vw, 92px);
+	--h2:  clamp(36px, 4vw, 56px);
+	--h3:  28px;
+	--lead: 20px;
+
+	/* Measure ------------------------------------------------------------- */
+	--wrap:    1240px;
+	--gutter:  32px;
+	--section: 120px;
+
+	--radius:    10px;  /* cards                                             */
+	--radius-sm: 8px;   /* buttons                                           */
+	--radius-xs: 6px;   /* the small top-bar button                          */
+}
+
+/* Reset --------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+	font-family: var(--body);
+	font-size: 17px;
+	line-height: 1.65;
+	color: var(--ink);
+	background: #FFFFFF;
+	-webkit-font-smoothing: antialiased;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--rust); }
+
+h1, h2, h3, h4, h5 { font-family: var(--display); font-weight: 500; line-height: 1.08; letter-spacing: -0.015em; }
+h3, h4, h5 { font-weight: 600; line-height: 1.15; letter-spacing: 0; }
+
+/* A visible focus ring everywhere. The design did not specify one, and a theme
+ * that removes it without replacing it is not finished.                       */
+:focus-visible { outline: 3px solid var(--rust); outline-offset: 2px; }
+
+.visually-hidden {
+	position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+	overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Layout -------------------------------------------------------------------- */
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
+
+.section { padding: var(--section) 0; }
+.section--tight { padding: 112px 0; }
+.section--tint  { background: var(--tint); }
+.section--blue  { background: var(--blue); color: #FFFFFF; }
+.section--blue h1, .section--blue h2, .section--blue h3 { color: #FFFFFF; }
+.section--blue p { color: var(--pale); }
+
+.stack      { display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
+.stack--mid { align-items: center; text-align: center; }
+
+.eyebrow {
+	font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase;
+	font-weight: 600; color: var(--rust-ink);
+}
+.section--blue .eyebrow, .eyebrow--on-blue { color: var(--peach); }
+
+.lead { font-size: var(--lead); line-height: 1.65; color: var(--ink-soft); max-width: 60ch; }
+.section--blue .lead { color: var(--pale); }
+
+.muted { color: var(--ink-soft); }
+
+/* Buttons ------------------------------------------------------------------- */
+.btn {
+	display: inline-block; padding: 18px 32px; border-radius: var(--radius-sm);
+	background: var(--rust); color: #FFFFFF; font-weight: 600; font-size: 16px;
+	border: 1px solid transparent; cursor: pointer; font-family: inherit;
+	transition: background .15s ease, color .15s ease;
+}
+.btn:hover { background: var(--rust-ink); color: #FFFFFF; }
+
+.btn--sm  { padding: 15px 26px; font-size: 15px; }
+.btn--xs  { padding: 9px 18px;  font-size: 15px; border-radius: var(--radius-xs); }
+
+.btn--blue { background: var(--blue); }
+.btn--blue:hover { background: var(--navy); color: #FFFFFF; }
+
+/* Outline on a light ground, and on a dark one. Two classes rather than one
+ * that inverts on a parent, because a button has to be legible in isolation. */
+.btn--line {
+	background: transparent; color: var(--blue); border-color: var(--blue);
+	padding: 14px 26px; font-size: 15px;
+}
+.btn--line:hover { background: var(--blue); color: #FFFFFF; }
+
+.btn--ghost {
+	background: transparent; color: #FFFFFF; border-color: var(--on-blue-line);
+	padding: 17px 30px;
+}
+.btn--ghost:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 8px; }
+.btn-row--tight { gap: 12px; }
+
+/* Top bar ------------------------------------------------------------------- */
+.topbar { background: var(--navy); color: var(--pale); font-size: 13px; }
+.topbar__inner {
+	max-width: var(--wrap); margin: 0 auto; padding: 8px var(--gutter);
+	display: flex; flex-wrap: wrap; gap: 8px 28px;
+	justify-content: space-between; align-items: center;
+}
+.topbar__trust { letter-spacing: 0.04em; }
+.topbar__side  { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: center; }
+.topbar__item  { display: flex; gap: 8px; align-items: center; }
+.topbar__phone { color: #FFFFFF; font-weight: 600; padding: 6px 0; }
+.topbar__phone:hover { color: var(--peach); }
+.topbar svg { flex: none; }
+
+/* Header and navigation ------------------------------------------------------ */
+.site-head { background: #FFFFFF; border-bottom: 1px solid var(--line); }
+.site-head__bar {
+	max-width: var(--wrap); margin: 0 auto; padding: 20px var(--gutter);
+	display: flex; flex-wrap: wrap; gap: 16px 32px;
+	justify-content: space-between; align-items: center;
+}
+
+.brand { display: flex; align-items: center; gap: 14px; color: var(--ink); }
+.brand:hover { color: var(--ink); }
+.brand img { max-height: 52px; width: auto; }
+.brand__text { display: flex; flex-direction: column; gap: 3px; }
+.brand__name {
+	font-family: var(--display); font-weight: 600; font-size: 24px;
+	letter-spacing: 0.18em; line-height: 1; text-transform: uppercase;
+}
+.brand__tag { font-size: 10px; letter-spacing: 0.34em; color: var(--rust-ink); font-weight: 500; }
+
+.brand-logo { display: flex; align-items: center; gap: 14px; }
+
+/* The hamburger. Hidden until the nav needs to collapse. */
+.nav-toggle {
+	display: none; background: none; border: 0; padding: 8px; cursor: pointer;
+	color: var(--ink); line-height: 0;
+}
+
+/*
+ * The menu markup comes from Core's `_nav.cfm`, which a theme does not get to
+ * change: `ul#navPrimary.nav-level-1 > li.nav-item > a.nav-link`, with nested
+ * `ul.dropdown-menu` for children. These rules dress that, rather than
+ * expecting markup of their own.
+ */
+.nav { font-size: 15px; font-weight: 500; }
+.nav ul { list-style: none; margin: 0; padding: 0; }
+.nav .nav-level-1 { display: flex; flex-wrap: wrap; gap: 8px 32px; align-items: center; }
+.nav .nav-item { position: relative; }
+
+.nav .nav-link { display: block; padding: 10px 0; color: var(--ink); }
+.nav .nav-link:hover { color: var(--rust-ink); }
+.nav .nav-link.active,
+.nav .nav-item.active > .nav-link { color: var(--rust-ink); border-bottom: 2px solid var(--rust); }
+
+/* The caret on a parent, drawn rather than shipped as an icon per item. */
+.nav .dropdown > .dropdown-toggle::after {
+	content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 7px;
+	border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+	transform: translateY(-2px) rotate(45deg);
+}
+
+.nav .dropdown-menu {
+	position: absolute; top: 100%; left: 0; z-index: 40; min-width: 240px;
+	background: #FFFFFF; border: 1px solid var(--line); border-radius: var(--radius-sm);
+	box-shadow: 0 18px 40px -22px rgba(14,47,82,0.45);
+	padding: 8px 0; display: none;
+}
+.nav .dropdown:hover > .dropdown-menu,
+.nav .dropdown:focus-within > .dropdown-menu { display: block; }
+.nav .dropdown-menu .nav-link { padding: 9px 18px; }
+.nav .dropdown-menu .nav-link:hover { background: var(--tint); }
+/* A third level opens beside its parent, not on top of it. */
+.nav .dropdown-menu .dropdown-menu { top: -9px; left: 100%; }
+
+@media (max-width: 991px) {
+	.nav-toggle { display: block; }
+	.site-head__bar { flex-wrap: nowrap; }
+	.brand-logo { flex: 1 1 auto; justify-content: space-between; width: 100%; }
+
+	.nav { flex: 1 1 100%; display: none; }
+	.nav.is-open { display: block; }
+	.nav .nav-level-1 { flex-direction: column; align-items: stretch; gap: 0; }
+	.nav .nav-item { border-top: 1px solid var(--line); }
+	.nav .nav-link { padding: 14px 0; }
+
+	/* On a touch screen there is no hover, so the submenu is opened by the
+	 * layout's own click handler, which toggles `.open` on the parent item. */
+	.nav .dropdown-menu {
+		position: static; border: 0; box-shadow: none; padding: 0 0 8px 16px;
+		min-width: 0; border-radius: 0;
+	}
+	.nav .dropdown:hover > .dropdown-menu { display: none; }
+	.nav .dropdown.open > .dropdown-menu { display: block; }
+	.nav .dropdown.open > .dropdown-toggle::after { transform: translateY(1px) rotate(-135deg); }
+}
+
+/* Hero ---------------------------------------------------------------------- */
+.hero { position: relative; background: var(--blue); color: #FFFFFF; overflow: hidden; }
+
+/* The weave and the wash are the design's stand-in for a photograph. When a
+ * site sets a hero image they sit on top of it as a tint, which is why the
+ * gradient is the second layer and not the only one. */
+.hero__weave {
+	position: absolute; inset: 0;
+	background: repeating-linear-gradient(135deg, var(--blue-weave) 0 18px, var(--blue-weave2) 18px 36px);
+}
+.hero__wash {
+	position: absolute; inset: 0;
+	background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 38%, rgba(26,95,168,0.55) 100%);
+}
+.hero__photo { position: absolute; inset: 0; background-size: cover; background-position: center; }
+
+.hero__inner {
+	position: relative; max-width: var(--wrap); margin: 0 auto;
+	padding: 128px var(--gutter) 140px;
+	display: flex; flex-direction: column; gap: 28px; align-items: flex-start;
+}
+.hero h1 {
+	max-width: 760px; font-size: var(--h1); line-height: 0.98; text-wrap: balance;
+	font-weight: 500;
+}
+.hero h1 em { font-style: italic; color: var(--peach); }
+.hero__lead { max-width: 560px; font-size: var(--lead); color: var(--pale); }
+.hero__note { position: absolute; right: var(--gutter); bottom: 28px; font-size: 13px; color: var(--pale); }
+
+/* Cards --------------------------------------------------------------------- */
+.grid {
+	display: grid; gap: 20px;
+	grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+}
+.grid--wide { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px; }
+
+.split { display: flex; flex-wrap: wrap; gap: 56px 72px; align-items: flex-start; }
+.split__intro { flex: 1 1 320px; min-width: 0; }
+/* `flex-grow: 999` so the cards take the remaining width on a wide screen but
+ * drop below the intro rather than squeezing it on a narrow one. */
+.split__body  { flex: 999 1 600px; min-width: 0; }
+
+.card {
+	background: var(--tint); border-radius: var(--radius); padding: 36px 32px;
+	display: flex; flex-direction: column; gap: 14px; color: var(--ink);
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+a.card:hover { color: var(--ink); transform: translateY(-2px); box-shadow: 0 20px 40px -28px rgba(14,47,82,.55); }
+.card h3 { font-size: var(--h3); margin-top: 6px; }
+.card p { font-size: 16px; color: var(--ink-soft); flex-grow: 1; }
+.card__more { font-size: 14px; font-weight: 600; color: var(--rust-ink); }
+
+.card__icon {
+	width: 56px; height: 56px; border-radius: var(--radius); background: var(--blue);
+	display: flex; align-items: center; justify-content: center; flex: none;
+}
+
+/* A card on the blue band: outlined rather than filled, so it reads as a panel
+ * on the colour instead of a hole in it. */
+.card--onblue { background: transparent; border: 1px solid var(--on-blue-line); color: #FFFFFF; padding: 34px 30px; }
+.card--onblue h3 { color: #FFFFFF; font-size: 30px; }
+.card--onblue p { color: var(--pale); }
+
+.feature { display: flex; flex-direction: column; gap: 12px; }
+.feature h3 { font-size: 22px; }
+.feature p { font-size: 16px; color: var(--ink-soft); }
+
+/* Process ------------------------------------------------------------------- */
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 32px;
+	grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+.step { display: flex; flex-direction: column; gap: 14px; }
+.step__row { display: flex; align-items: center; gap: 16px; }
+.step__num {
+	width: 48px; height: 48px; border-radius: 999px; background: var(--blue); color: #FFFFFF;
+	display: flex; align-items: center; justify-content: center; flex: none;
+	font-family: var(--display); font-size: 22px; font-weight: 600;
+}
+/* The rule between steps. Drawn as a flexible element rather than a border so
+ * it stops at the last step without a :last-child exception. */
+.step__rule { flex: 1 1 auto; height: 1px; background: var(--line); }
+.step h3 { font-size: 20px; }
+.step p { font-size: 16px; color: var(--ink-soft); }
+
+/* Testimonials --------------------------------------------------------------- */
+.quote {
+	background: #FFFFFF; border-radius: var(--radius); padding: 34px 32px;
+	display: flex; flex-direction: column; gap: 18px; border: 1px solid var(--line);
+}
+.quote blockquote { font-size: 18px; line-height: 1.6; color: var(--ink); }
+.quote figcaption { font-size: 15px; color: var(--ink-soft); }
+
+/* About ---------------------------------------------------------------------- */
+.about { display: flex; flex-wrap: wrap; gap: 56px 72px; align-items: center; }
+.about__media { flex: 1 1 420px; min-width: 0; position: relative; }
+.about__frame {
+	aspect-ratio: 4 / 3; border-radius: var(--radius); background: var(--tint);
+	display: flex; align-items: center; justify-content: center;
+	color: var(--ink-soft); font-size: 14px; text-align: center; padding: 24px;
+	background-size: cover; background-position: center;
+}
+.about__body { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+
+/* Contact -------------------------------------------------------------------- */
+.contact { display: flex; flex-wrap: wrap; gap: 56px 72px; align-items: flex-start; }
+.contact__intro { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
+.contact__facts { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%), 1fr)); width: 100%; }
+.contact__fact { display: flex; flex-direction: column; gap: 4px; }
+.contact__label { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--peach); }
+.contact__panel { flex: 1 1 420px; min-width: 0; background: #FFFFFF; border-radius: var(--radius); padding: 36px 32px; color: var(--ink); }
+.contact__panel h3 { font-size: 26px; margin-bottom: 4px; }
+
+/* Forms ---------------------------------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 6px; margin: 0 0 18px; }
+.field > label, .form-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+input[type=text], input[type=email], input[type=tel], input[type=url],
+input[type=date], input[type=number], select, textarea {
+	width: 100%; font: inherit; font-size: 16px; color: var(--ink);
+	padding: 13px 14px; background: #FFFFFF;
+	border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+textarea { resize: vertical; min-height: 7rem; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); outline-offset: 0; }
+
+.form-note { font-size: 13px; color: var(--ink-soft); margin-top: 14px; }
+
+.form-errors {
+	border-left: 3px solid #B3261E; background: #FDF3F2;
+	padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 0 0 20px;
+}
+.form-errors p { color: #8C1D18; margin: 2px 0; font-size: 15px; }
+
+/* The honeypot. Positioned off-canvas rather than `display:none`, which some
+ * bots read as a field to skip. */
+.hp { position: absolute; left: -9999px; }
+
+/* FAQ ------------------------------------------------------------------------ */
+.faq-list { display: flex; flex-direction: column; }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-item > summary {
+	list-style: none; cursor: pointer; display: flex; gap: 24px;
+	justify-content: space-between; align-items: center;
+	padding: 22px 0; font-weight: 600; font-size: 18px; color: var(--ink);
+}
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-plus { font-weight: 400; font-size: 28px; line-height: 1; color: var(--blue); transition: transform .2s; flex: none; }
+.faq-item[open] .faq-plus { transform: rotate(45deg); }
+.faq-answer { padding: 0 0 24px; color: var(--ink-soft); max-width: 80ch; }
+.faq-answer > :first-child { margin-top: 0; }
+.faq-answer > :last-child { margin-bottom: 0; }
+
+/* Closing band ---------------------------------------------------------------- */
+.cta-band { background: var(--tint); color: var(--ink); }
+.cta-band__inner {
+	max-width: var(--wrap); margin: 0 auto; padding: 72px var(--gutter);
+	display: flex; flex-wrap: wrap; gap: 24px 48px;
+	align-items: center; justify-content: space-between;
+}
+.cta-band h2 { font-size: clamp(30px, 3vw, 44px); }
+
+/* Footer ---------------------------------------------------------------------- */
+.site-foot { background: var(--navy); color: var(--foot-text); font-size: 15px; }
+.site-foot__inner { max-width: var(--wrap); margin: 0 auto; padding: 72px var(--gutter) 40px; }
+.site-foot__grid {
+	display: grid; gap: 40px 48px;
+	grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+/* The brand column is worth more room than a link column. */
+.site-foot__brand { grid-column: span 1; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.site-foot__brand .brand__name { color: #FFFFFF; }
+.site-foot__brand img { max-height: 48px; }
+.site-foot h5, .site-foot__head {
+	font-family: var(--body); font-size: 12px; letter-spacing: 0.2em;
+	text-transform: uppercase; color: var(--foot-head); font-weight: 600; margin-bottom: 4px;
+}
+.site-foot__col { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.site-foot a:hover { color: var(--peach); }
+.site-foot__legal {
+	margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--foot-line);
+	display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between;
+	font-size: 14px; color: var(--foot-dim);
+}
+.site-foot__legal div { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+
+/* Interior pages --------------------------------------------------------------- */
+/*
+ * The mockup drew one page. Everything below is the same design applied to the
+ * pages it did not draw — which is most of a site.
+ */
+.crumbs { font-size: 14px; color: var(--ink-soft); padding: 24px 0 0; }
+.crumbs a:hover { color: var(--rust-ink); }
+.crumbs span[aria-hidden] { margin: 0 6px; color: var(--line); }
+
+.page-hero { margin: 24px 0 0; border-radius: var(--radius); overflow: hidden; }
+.page-hero img { width: 100%; max-height: 420px; object-fit: cover; }
+
+.page-head { padding: 56px 0 0; }
+.page-head h1 { font-size: clamp(36px, 4.5vw, 64px); }
+
+/* Long-form content. The editor writes plain HTML, so these are element rules
+ * rather than classes — there is nowhere to put a class from a WYSIWYG. */
+.prose { max-width: 72ch; }
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { font-size: clamp(28px, 3vw, 40px); margin-top: 1.8em; }
+.prose h3 { font-size: 24px; margin-top: 1.6em; }
+.prose h4 { font-size: 19px; margin-top: 1.4em; }
+.prose ul, .prose ol { padding-left: 1.4em; }
+.prose li + li { margin-top: .4em; }
+.prose a { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+.prose a:hover { color: var(--rust); }
+.prose blockquote {
+	border-left: 3px solid var(--blue); padding: 4px 0 4px 20px;
+	color: var(--ink-soft); font-style: italic;
+}
+.prose img { border-radius: var(--radius); margin-top: 1.4em; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 16px; }
+.prose th, .prose td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.prose th { background: var(--tint); font-weight: 600; }
+.prose code { background: var(--tint); padding: 2px 6px; border-radius: 4px; font-size: .92em; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+
+/* Blog ------------------------------------------------------------------------- */
+.post-list { display: flex; flex-direction: column; gap: 0; }
+.post-item { padding: 28px 0; border-bottom: 1px solid var(--line); }
+.post-item h2 { font-size: 28px; }
+.post-item h2 a:hover { color: var(--rust-ink); }
+.post-meta { font-size: 14px; color: var(--ink-soft); margin: 6px 0 10px; }
+
+.pager { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 40px 0 0; font-size: 15px; }
+.pager a, .pager strong, .pager span { padding: 8px 14px; border-radius: var(--radius-xs); }
+.pager a { border: 1px solid var(--line); }
+.pager a:hover { border-color: var(--blue); color: var(--blue); }
+.pager strong { background: var(--blue); color: #FFFFFF; }
+.pager span { color: var(--ink-soft); }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.tag {
+	font-size: 14px; padding: 6px 14px; border-radius: 999px;
+	background: var(--tint); color: var(--ink-soft);
+}
+.tag:hover { background: var(--blue); color: #FFFFFF; }
+
+/* Narrow screens ----------------------------------------------------------------- */
+@media (max-width: 760px) {
+	:root { --section: 72px; --gutter: 20px; }
+
+	.hero__inner { padding: 80px var(--gutter) 92px; }
+	.hero__note { display: none; }
+
+	.card { padding: 28px 24px; }
+	.contact__panel { padding: 28px 24px; }
+	.cta-band__inner { padding: 56px var(--gutter); }
+	.site-foot__inner { padding: 56px var(--gutter) 32px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html { scroll-behavior: auto; }
+	*, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

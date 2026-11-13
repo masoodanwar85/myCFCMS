@@ -157,7 +157,7 @@ themes/
     default/
         theme.json          name, version, description
         layouts/main.cfm    receives args.body plus site, title, navigation
-        views/page.cfm      receives args.page, args.breadcrumb, args.showBreadcrumbs, args.site
+        views/page.cfm      receives args.page, args.breadcrumb, args.showBreadcrumbs, args.site, args.firm
         views/404.cfm       receives args.path, args.site
     starter/
         ...
@@ -170,6 +170,22 @@ layer stays free of any schema of its own.
 Rendering goes through ColdBox's `externalView()`, because theme templates sit
 outside the application's view conventions on purpose: a theme should be
 droppable into `/themes` without touching `app/`.
+
+### What reaches a theme
+
+A **layout** gets the lot: `args.body`, `args.site`, `args.title`,
+`args.metaDescription`, `args.navigation`, `args.path`, `args.seo`,
+`args.branding`, `args.analytics`, `args.notice` and `args.firm`.
+
+A **view or template** gets whatever the resolver put in the resolution, plus
+`args.site`, `args.theme`, `args.showBreadcrumbs` and `args.firm`.
+
+`args.firm` is on both lists for a reason worth recording. It was added to the
+layout alone at first, and the probate theme's header printed the phone number
+perfectly while the hero and the closing call to action a few hundred pixels
+below it rendered blank — because those are a *template*. The same argument
+applies to it as to `args.theme`: a view that needs it is as common as a layout
+that does, and the cost of passing it is a struct lookup.
 
 A layout receives the already-rendered content as `args.body` rather than
 fetching it. That keeps a theme a pair of dumb templates with no knowledge of
@@ -228,8 +244,8 @@ whatever `.cfm` files are in that directory, so a developer adds a template by
 deploying a file; there is nothing to register.
 
 A template receives the same `args` a view does — `args.page`, `args.breadcrumb`,
-`args.showBreadcrumbs`, `args.site`, `args.theme` — and is ordinary CFML, so it can reach any service
-through WireBox. The page's title, slug, SEO settings, menu position and publish
+`args.showBreadcrumbs`, `args.site`, `args.theme`, `args.firm` — and is ordinary CFML, so it can reach
+any service through WireBox. The page's title, slug, SEO settings, menu position and publish
 window are untouched: a template changes how the body is drawn and nothing else.
 
 `themes/default/templates/example.cfm` is a working one, written to be copied.

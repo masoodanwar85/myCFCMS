@@ -1,23 +1,34 @@
 <cfoutput>
-	<div class="wrap">
-		<cfif args.showBreadcrumbs>
-			<p class="crumbs">
-				<a href="/#xmlFormat( args.basePath )#">Blog</a>
-				<span aria-hidden="true">&rsaquo;</span>
-				<span aria-current="page">#encodeForHTML( args.post.getTitle() )#</span>
-			</p>
-		</cfif>
+<article>
+	<cfif args.showBreadcrumbs>
+		<div class="wrap">
+			<p class="crumbs"><a href="/#xmlFormat( args.basePath )#">Blog</a></p>
+		</div>
+	</cfif>
 
-		<article class="section">
-			<cfif args.post.getShowHeading()>
-				<h1>#encodeForHTML( args.post.getTitle() )#</h1>
-			</cfif>
+	<cfif args.post.getShowHeading()>
+		<div class="wrap page-head">
+			<h1>#encodeForHTML( args.post.getTitle() )#</h1>
 			<cfif !isNull( args.post.getPublishedAt() )>
-				<p style="color:##5b6675;font-size:.85rem;font-family:'Inter',sans-serif;margin-top:-.4rem">
+				<p class="post-meta">
 					<time datetime="#dateTimeFormat( args.post.getPublishedAt(), 'yyyy-mm-dd' )#">#dateFormat( args.post.getPublishedAt(), "d mmmm yyyy" )#</time>
 				</p>
 			</cfif>
-			#args.post.getContent()#
-		</article>
-	</div>
+		</div>
+	</cfif>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="prose">#args.post.getContent()#</div>
+
+			<cfif args.post.getCategories().len()>
+				<div class="tag-row">
+					<cfloop array="#args.post.getCategories()#" index="c">
+						<a class="tag" href="/#xmlFormat( args.basePath )#/category/#xmlFormat( c.getSlug() )#">#encodeForHTML( c.getName() )#</a>
+					</cfloop>
+				</div>
+			</cfif>
+		</div>
+	</section>
+</article>
 </cfoutput>
