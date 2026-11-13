@@ -9,7 +9,7 @@ they are three different things.
 | Logo, brand images, PDFs | one **site** | `storage/media/<siteId>/` | ColdFusion, at `/media/...` |
 | CSS, JS, fonts, theme images | one **theme** | `public/assets/themes/<slug>/` | the web server, directly |
 | Colours and font stacks | one **site** | `site_settings` | inlined into the page |
-| Phone, address, hours, ABN | one **site** | `site_settings` | printed by the theme |
+| Phone, address, ABN, social profiles | one **site** | `site_settings` | printed by the theme |
 
 ## 1. Uploads belong to a site
 
@@ -111,9 +111,9 @@ the start would accept `https://x" onerror="alert(1)`.
 
 ## 4. The practice's own details belong to a site too
 
-A phone number, an office address, the opening hours, the ABN, how fees are
-charged. **Settings → Firm details** stores them and every theme reads them from
-`args.firm`:
+A phone number, an office address, the ABN, the firm's profiles on Facebook,
+Instagram, LinkedIn, X, TikTok, YouTube and WhatsApp. **Settings → Firm details**
+stores them and every theme reads them from `args.firm`:
 
 ```cfml
 <cfif len( trim( args.firm.phone ?: "" ) )>
@@ -138,16 +138,49 @@ element** rather than printing an empty label: a site that has configured nothin
 has to render a working header, not a row of blank rows. The probate theme omits
 its entire top bar when the trust line, hours and phone are all unset.
 
-### Two of them are not just text
+### The ones that become links are constrained
 
-`phone` and `email` end up inside `tel:` and `mailto:` hrefs, where a
-`javascript:` value would be a link that runs. Both are validated on the way in
-*and* re-checked on the way out, for the same reason the branding values are: a
-row can reach `site_settings` from a migration, a seed or a direct `UPDATE`, and
-the read path does not get to assume otherwise. A stored value that would be
-refused today is returned as an empty string, and the settings form shows it
-with a note saying it is not in use — blanking the field is how somebody loses a
-value without being told.
+`phone` and `email` end up inside `tel:` and `mailto:` hrefs, and the seven
+social fields inside an ordinary `href`, where a `javascript:` value would be a
+link that runs. All of them are validated on the way in *and* re-checked on the
+way out, for the same reason the branding values are: a row can reach
+`site_settings` from a migration, a seed or a direct `UPDATE`, and the read path
+does not get to assume otherwise. A stored value that would be refused today is
+returned as an empty string, and the settings form shows it with a note saying
+it is not in use — blanking the field is how somebody loses a value without
+being told.
+
+A social address must be a full `http(s)` URL, and the **whole** string is
+checked rather than just the prefix: anchoring only the start would accept
+`https://x" onclick="alert(1)`.
+
+### Social profiles come back as a list
+
+Seven named fields rather than a free list of links, because a theme draws a
+named icon per network and can only do that if it knows which network a URL
+belongs to — a generic list would arrive with nothing but a hostname to guess
+from.
+
+`args.socials` is that list, already filtered to the ones that are set and in
+render order:
+
+```cfml
+<cfif arrayLen( args.socials ?: [] )>
+    <cfloop array="#args.socials#" index="social">
+        <a href="#xmlFormat( social.url )#" target="_blank" rel="noopener noreferrer"
+           aria-label="#encodeForHTMLAttribute( social.label )#">…icon for social.key…</a>
+    </cfloop>
+</cfif>
+```
+
+Its own argument rather than a key inside `args.firm`, which is a flat struct of
+strings a theme reads by name — an array in the middle of it would break
+anything that walks it.
+
+**`xmlFormat`, not `encodeForHTMLAttribute`, for the URL.** Both are safe in a
+quoted attribute, but the aggressive one turns every `/` and `:` into a numeric
+entity: the link still works and the page source becomes unreadable. The same
+choice `ShortcodeService` records for the same reason.
 
 ## Adding a theme
 

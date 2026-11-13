@@ -48,73 +48,115 @@ component singleton accessors="true" {
 	 *   lines — free text over several lines, escaped at output
 	 *   phone — reaches a `tel:` href, so it is constrained
 	 *   email — reaches a `mailto:` href, so it is constrained
+	 *   url   — reaches an `href`, so only http(s) is accepted
+	 *
+	 * `group` is how the settings screen breaks the form up; it means nothing
+	 * to a theme, which asks for fields by name.
 	 */
 	variables.FIELDS = [
 		{
 			key   : "trustLine",
 			kind  : "text",
+			group : "contact",
 			label : "Trust line",
 			hint  : "A short line of reassurance across the top bar, e.g. ""Acting for executors since 1994""."
 		},
 		{
 			key   : "phone",
 			kind  : "phone",
+			group : "contact",
 			label : "Phone",
 			hint  : "Digits, spaces and + ( ) - only. Used as a click-to-call link."
 		},
 		{
 			key   : "email",
 			kind  : "email",
+			group : "contact",
 			label : "Email",
 			hint  : "The address enquiries should reach."
 		},
 		{
 			key   : "address",
 			kind  : "lines",
+			group : "contact",
 			label : "Office address",
 			hint  : "One line, or several. Printed as written."
 		},
 		{
-			key   : "hours",
-			kind  : "text",
-			label : "Opening hours",
-			hint  : "e.g. ""Mon to Fri, 8.30am to 5.30pm""."
-		},
-		{
-			key   : "responseTime",
-			kind  : "text",
-			label : "Response time",
-			hint  : "How quickly an enquiry is answered, e.g. ""one business day""."
-		},
-		{
-			key   : "feeApproach",
-			kind  : "lines",
-			label : "How fees are charged",
-			hint  : "Fixed fee, court scale, or a quote in writing. Shown on the home page and in the questions."
-		},
-		{
-			key   : "typicalTimeframe",
-			kind  : "lines",
-			label : "Typical timeframe",
-			hint  : "How long the work usually takes, for the questions section."
-		},
-		{
-			key   : "reviewSummary",
-			kind  : "text",
-			label : "Review rating and source",
-			hint  : "e.g. ""4.9 out of 5 from 180 Google reviews""."
-		},
-		{
 			key   : "legalEntity",
 			kind  : "text",
+			group : "contact",
 			label : "Legal entity name",
 			hint  : "The name in the footer copyright line, if it differs from the site name."
 		},
 		{
 			key   : "abn",
 			kind  : "text",
+			group : "contact",
 			label : "ABN",
 			hint  : "Printed in the footer beside the legal entity name."
+		},
+
+		/*
+		 * Social profiles.
+		 *
+		 * One field each rather than a repeater, because the set is small,
+		 * stable and known: a theme draws a named icon per network, and it can
+		 * only do that if it knows which network a URL belongs to. A generic
+		 * list of links would arrive without that, and the icon would have to
+		 * be guessed from the hostname.
+		 *
+		 * `order` is the order they are rendered in, which is the order they
+		 * appear here.
+		 */
+		{
+			key   : "facebook",
+			kind  : "url",
+			group : "social",
+			label : "Facebook",
+			hint  : "The full address of your page, e.g. https://www.facebook.com/yourfirm"
+		},
+		{
+			key   : "instagram",
+			kind  : "url",
+			group : "social",
+			label : "Instagram",
+			hint  : "e.g. https://www.instagram.com/yourfirm"
+		},
+		{
+			key   : "linkedin",
+			kind  : "url",
+			group : "social",
+			label : "LinkedIn",
+			hint  : "e.g. https://www.linkedin.com/company/yourfirm"
+		},
+		{
+			key   : "x",
+			kind  : "url",
+			group : "social",
+			label : "X",
+			hint  : "Formerly Twitter, e.g. https://x.com/yourfirm"
+		},
+		{
+			key   : "tiktok",
+			kind  : "url",
+			group : "social",
+			label : "TikTok",
+			hint  : "e.g. https://www.tiktok.com/@yourfirm"
+		},
+		{
+			key   : "youtube",
+			kind  : "url",
+			group : "social",
+			label : "YouTube",
+			hint  : "e.g. https://www.youtube.com/@yourfirm"
+		},
+		{
+			key   : "whatsapp",
+			kind  : "url",
+			group : "social",
+			label : "WhatsApp",
+			hint  : "A wa.me link rather than a bare number, e.g. https://wa.me/61400000000"
 		}
 	];
 
@@ -130,6 +172,19 @@ component singleton accessors="true" {
 	// still be typed into the contact form; this one becomes a `mailto:` link
 	// in a page served to everybody.
 	variables.EMAIL_PATTERN = "^[A-Za-z0-9._%+\-]{1,64}@[A-Za-z0-9.\-]{1,190}\.[A-Za-z]{2,24}$";
+
+	/**
+	 * A social profile address we are willing to put in an `href`.
+	 *
+	 * `http(s)` only, and the **whole** string is constrained rather than just
+	 * the prefix — anchoring only the start would accept
+	 * `https://x" onclick="alert(1)`, a valid prefix followed by an attribute
+	 * break. Output encoding would still contain that, but a validator that
+	 * admits it is not a validator. The same reasoning as the logo address in
+	 * `SiteBrandingService`, minus the site-relative case: a social profile is
+	 * on somebody else's domain by definition.
+	 */
+	variables.URL_PATTERN = "^https?://[A-Za-z0-9][A-Za-z0-9\-._~:/?##\[\]@!$&''()*+,;=%]{2,490}$";
 
 	variables.MAX_TEXT  = 200;
 	variables.MAX_LINES = 600;
@@ -165,6 +220,39 @@ component singleton accessors="true" {
 	 */
 	boolean function hasValue( required struct firm, required string key ){
 		return len( trim( arguments.firm[ arguments.key ] ?: "" ) ) > 0;
+	}
+
+	/**
+	 * The social profiles this site has set, in the order a theme should draw
+	 * them.
+	 *
+	 * Only the ones with a usable address, so a theme loops the result and
+	 * draws nothing when it is empty — rather than testing seven keys and
+	 * deciding for itself whether a row of icons is worth having.
+	 *
+	 * The `key` comes back so the theme can pick the right icon. That is the
+	 * whole reason these are seven named fields and not a free list of links:
+	 * a generic list would arrive with no way to tell Instagram from LinkedIn
+	 * except by guessing at the hostname.
+	 *
+	 * @return [ { key, label, url } ]
+	 */
+	array function socialsFor( required numeric siteId ){
+		var found = [];
+
+		for ( var field in variables.FIELDS ) {
+			if ( ( field.group ?: "" ) != "social" ) {
+				continue;
+			}
+
+			var url = clean( field, raw( arguments.siteId, field.key ) );
+
+			if ( len( url ) ) {
+				found.append( { "key" : field.key, "label" : field.label, "url" : url } );
+			}
+		}
+
+		return found;
 	}
 
 	/**
@@ -249,6 +337,10 @@ component singleton accessors="true" {
 		return reFind( variables.EMAIL_PATTERN, trim( arguments.value ) ) > 0;
 	}
 
+	boolean function isValidUrl( required string value ){
+		return reFind( variables.URL_PATTERN, trim( arguments.value ) ) > 0;
+	}
+
 	/* ---------------------------------------------------------------------
 	 * Helpers
 	 * ------------------------------------------------------------------ */
@@ -270,6 +362,8 @@ component singleton accessors="true" {
 				return isValidPhone( text );
 			case "email":
 				return isValidEmail( text );
+			case "url":
+				return isValidUrl( text );
 			case "lines":
 				return len( text ) <= variables.MAX_LINES;
 			default:
@@ -290,6 +384,11 @@ component singleton accessors="true" {
 				);
 			case "email":
 				throw( type = "Firm.InvalidEmail", message = "That does not look like an email address." );
+			case "url":
+				throw(
+					type    = "Firm.InvalidUrl",
+					message = "#arguments.field.label# must be a full web address beginning http:// or https://."
+				);
 			default:
 				var limit = arguments.field.kind == "lines" ? variables.MAX_LINES : variables.MAX_TEXT;
 

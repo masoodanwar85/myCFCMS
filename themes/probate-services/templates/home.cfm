@@ -20,11 +20,6 @@
 	local.phone     = trim( local.firm.phone ?: "" );
 	local.email     = trim( local.firm.email ?: "" );
 	local.address   = trim( local.firm.address ?: "" );
-	local.hours     = trim( local.firm.hours ?: "" );
-	local.response  = trim( local.firm.responseTime ?: "" );
-	local.fees      = trim( local.firm.feeApproach ?: "" );
-	local.timeframe = trim( local.firm.typicalTimeframe ?: "" );
-	local.reviews   = trim( local.firm.reviewSummary ?: "" );
 
 	local.telHref = reReplace( local.phone, "[^0-9+]", "", "all" );
 
@@ -194,13 +189,11 @@
 				<p>You deal with an admitted solicitor from the first call to the final distribution.</p>
 			</div>
 
-			<cfif len( local.fees )>
-				<div class="feature">
-					<svg width="36" height="36" viewBox="0 0 40 40" fill="none" stroke="##1A5FA8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="9" width="28" height="22" rx="2"/><path d="M6 16h28M12 25h6"/></svg>
-					<h3>Costs set out upfront</h3>
-					<p>#encodeForHTML( local.fees )#</p>
-				</div>
-			</cfif>
+			<div class="feature">
+				<svg width="36" height="36" viewBox="0 0 40 40" fill="none" stroke="##1A5FA8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="9" width="28" height="22" rx="2"/><path d="M6 16h28M12 25h6"/></svg>
+				<h3>Costs set out upfront</h3>
+				<p>You get the cost in writing before any work starts, and we tell you if it changes.</p>
+			</div>
 
 			<div class="feature">
 				<svg width="36" height="36" viewBox="0 0 40 40" fill="none" stroke="##1A5FA8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="20" cy="20" r="14"/><path d="M6 20h28M20 6c5 4 5 24 0 28M20 6c-5 4-5 24 0 28"/></svg>
@@ -271,9 +264,6 @@
 				We act for executors and administrators across Australia, and probate is the
 				whole of our practice rather than a sideline to it.
 			</p>
-			<cfif len( local.reviews )>
-				<p class="muted">#encodeForHTML( local.reviews )#</p>
-			</cfif>
 			<a class="btn btn--line" href="/about">Read more about us</a>
 		</div>
 	</div>
@@ -286,13 +276,11 @@
 			<span class="eyebrow">Get in touch</span>
 			<h2>Tell us what has happened. We will tell you what comes next.</h2>
 			<p class="lead">
-				<cfif len( local.response )>
-					A lawyer will reply within #encodeForHTML( local.response )#.
-				</cfif>
-				You do not need the will or any paperwork ready.
+				A lawyer will read it and reply. You do not need the will or any
+				paperwork ready.
 			</p>
 
-			<cfif len( local.address ) or len( local.phone ) or len( local.email ) or len( local.hours )>
+			<cfif len( local.address ) or len( local.phone ) or len( local.email )>
 				<div class="contact__facts">
 					<cfif len( local.address )>
 						<div class="contact__fact">
@@ -310,12 +298,6 @@
 						<div class="contact__fact">
 							<span class="contact__label">Email</span>
 							<a href="mailto:#encodeForHTMLAttribute( local.email )#">#encodeForHTML( local.email )#</a>
-						</div>
-					</cfif>
-					<cfif len( local.hours )>
-						<div class="contact__fact">
-							<span class="contact__label">Hours</span>
-							<span>#encodeForHTML( local.hours )#</span>
 						</div>
 					</cfif>
 				</div>
@@ -384,19 +366,21 @@
 				</div>
 			</details>
 
-			<cfif len( local.timeframe )>
-				<details class="faq-item">
-					<summary>How long does it take?<span class="faq-plus" aria-hidden="true">+</span></summary>
-					<div class="faq-answer">#encodeForHTML( local.timeframe )#</div>
-				</details>
-			</cfif>
+			<details class="faq-item">
+				<summary>How long does it take?<span class="faq-plus" aria-hidden="true">+</span></summary>
+				<div class="faq-answer">
+					It varies between states, and with the court's workload and the
+					complexity of the estate. We give you a realistic range at the outset.
+				</div>
+			</details>
 
-			<cfif len( local.fees )>
-				<details class="faq-item">
-					<summary>How are your fees charged?<span class="faq-plus" aria-hidden="true">+</span></summary>
-					<div class="faq-answer">#encodeForHTML( local.fees )#</div>
-				</details>
-			</cfif>
+			<details class="faq-item">
+				<summary>How are your fees charged?<span class="faq-plus" aria-hidden="true">+</span></summary>
+				<div class="faq-answer">
+					You get the cost in writing before any work starts. Ask us for a quote
+					and we will set out what is included.
+				</div>
+			</details>
 		</div>
 	</div>
 </section>

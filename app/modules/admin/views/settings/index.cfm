@@ -256,10 +256,35 @@
 				The practice's own details, as a theme prints them. A phone number appears
 				in the top bar, the hero, the contact block and the footer of one page &mdash;
 				set here once rather than in four places that drift apart.
-				Every field is optional, and a theme leaves out what is not set.
+				<strong>Every field on this tab is optional.</strong> A theme leaves out
+				whatever is not set, so an empty field removes the element rather than
+				printing a blank one.
 			</p>
 
+			<!---
+				Grouped by the field's own `group`, rather than the view keeping
+				a second list of which field belongs where. A heading is printed
+				when the group changes, which is why the service declares them in
+				group order.
+			--->
+			<cfset local.firmGroup = "">
+
 			<cfloop array="#prc.firmFields#" index="field">
+				<cfif ( field.group ?: "" ) neq local.firmGroup>
+					<cfset local.firmGroup = field.group ?: "">
+					<cfif local.firmGroup eq "social">
+						<h2>Social profiles</h2>
+						<p class="muted" style="font-size:.8rem">
+							All optional, and independent of each other &mdash; fill in the ones
+							you use and leave the rest empty. The icon row is left out entirely
+							when none is set. Paste the full address including
+							<code>https://</code>.
+						</p>
+					<cfelseif local.firmGroup eq "contact">
+						<h2>Contact</h2>
+					</cfif>
+				</cfif>
+
 				<label for="firm-#encodeForHTMLAttribute( field.key )#">#encodeForHTML( field.label )#</label>
 
 				<cfif field.kind eq "lines">
@@ -267,10 +292,18 @@
 					          name="#encodeForHTMLAttribute( field.key )#"
 					          rows="3">#encodeForHTML( field.value )#</textarea>
 				<cfelse>
-					<input type="<cfif field.kind eq 'email'>email<cfelseif field.kind eq 'phone'>tel<cfelse>text</cfif>"
+					<!---
+						`type="url"` on a social field so the browser catches a
+						missing scheme before the round trip — the same rule the
+						service applies. It does not make the field required: an
+						empty url input is valid, and there is no `required`
+						attribute anywhere on this form.
+					--->
+					<input type="<cfif field.kind eq 'email'>email<cfelseif field.kind eq 'phone'>tel<cfelseif field.kind eq 'url'>url<cfelse>text</cfif>"
 					       id="firm-#encodeForHTMLAttribute( field.key )#"
 					       name="#encodeForHTMLAttribute( field.key )#"
 					       value="#encodeForHTMLAttribute( field.value )#"
+					       <cfif field.kind eq "url">placeholder="https://"</cfif>
 					       autocomplete="off" style="max-width:30rem">
 				</cfif>
 

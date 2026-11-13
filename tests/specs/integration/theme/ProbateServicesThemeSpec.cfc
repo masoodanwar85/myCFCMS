@@ -202,14 +202,12 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 						trustLine : "Acting for executors since 1994",
 						phone     : "02 9000 1234",
 						email     : "enquiries@" & PREFIX & "one.test",
-						hours     : "Mon to Fri, 8.30am to 5.30pm",
 						abn       : "11 222 333 444"
 					} );
 
 					var html = render( "/" & home.getPath() );
 
 					expect( html ).toInclude( "Acting for executors since 1994" );
-					expect( html ).toInclude( "Mon to Fri, 8.30am to 5.30pm" );
 					expect( html ).toInclude( "11 222 333 444" );
 					// Printed as written, dialled without the spaces.
 					expect( html ).toInclude( "02 9000 1234" );
@@ -245,6 +243,34 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					expect( html ).notToInclude( "&##xa;" );
 
 					clearFirm();
+				} );
+
+				it( "draws the social row only for the profiles that are set", function(){
+					firm.save( site.getId(), {
+						facebook : "https://www.facebook.com/yourfirm",
+						whatsapp : "https://wa.me/61400000000"
+					} );
+
+					// Cleared in a finally: a failed assertion here used to leave
+					// the profiles set, and the next spec then failed too for a
+					// reason that had nothing to do with it.
+					try {
+						var html = render( "/" & home.getPath() );
+
+						expect( html ).toInclude( "https://www.facebook.com/yourfirm" );
+						expect( html ).toInclude( "https://wa.me/61400000000" );
+						expect( html ).toInclude( "aria-label=""Facebook""" );
+						// The five that were not set leave nothing behind.
+						expect( html ).notToInclude( "aria-label=""TikTok""" );
+						// Other people's sites: opened safely and with no referrer.
+						expect( html ).toInclude( "rel=""noopener noreferrer""" );
+					} finally {
+						clearFirm();
+					}
+				} );
+
+				it( "draws no social row at all when none is set", function(){
+					expect( render( "/" & home.getPath() ) ).notToInclude( "class=""socials""" );
 				} );
 
 				it( "never lets a stored value escape into a link", function(){

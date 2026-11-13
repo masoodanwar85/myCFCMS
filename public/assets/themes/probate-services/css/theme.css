@@ -425,6 +425,17 @@ input:focus, select:focus, textarea:focus { border-color: var(--blue); outline-o
 .site-foot__brand { grid-column: span 1; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .site-foot__brand .brand__name { color: #FFFFFF; }
 .site-foot__brand img { max-height: 48px; }
+/* The social row, under the footer blurb — where the design put it. */
+.socials { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.socials a {
+	display: flex; align-items: center; justify-content: center;
+	width: 38px; height: 38px; border-radius: 999px;
+	border: 1px solid var(--foot-line); color: var(--foot-text);
+	transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.socials a:hover { background: var(--rust); border-color: var(--rust); color: #FFFFFF; }
+.socials svg { width: 18px; height: 18px; }
+
 .site-foot h5, .site-foot__head {
 	font-family: var(--body); font-size: 12px; letter-spacing: 0.2em;
 	text-transform: uppercase; color: var(--foot-head); font-weight: 600; margin-bottom: 4px;

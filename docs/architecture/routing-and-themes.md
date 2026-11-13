@@ -175,10 +175,10 @@ droppable into `/themes` without touching `app/`.
 
 A **layout** gets the lot: `args.body`, `args.site`, `args.title`,
 `args.metaDescription`, `args.navigation`, `args.path`, `args.seo`,
-`args.branding`, `args.analytics`, `args.notice` and `args.firm`.
+`args.branding`, `args.analytics`, `args.notice`, `args.firm` and `args.socials`.
 
 A **view or template** gets whatever the resolver put in the resolution, plus
-`args.site`, `args.theme`, `args.showBreadcrumbs` and `args.firm`.
+`args.site`, `args.theme`, `args.showBreadcrumbs`, `args.firm` and `args.socials`.
 
 `args.firm` is on both lists for a reason worth recording. It was added to the
 layout alone at first, and the probate theme's header printed the phone number

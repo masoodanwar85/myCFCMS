@@ -56,12 +56,12 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				} );
 
 				it( "reads back what was saved", function(){
-					firm.save( site.getId(), { phone : "02 9000 1234", hours : "Mon to Fri, 9 to 5" } );
+					firm.save( site.getId(), { phone : "02 9000 1234", abn : "11 222 333 444" } );
 
 					var details = firm.firmFor( site.getId() );
 
 					expect( details.phone ).toBe( "02 9000 1234" );
-					expect( details.hours ).toBe( "Mon to Fri, 9 to 5" );
+					expect( details.abn ).toBe( "11 222 333 444" );
 				} );
 
 				it( "says whether a value is worth rendering", function(){
@@ -160,13 +160,13 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 				it( "refuses a single-line field that is too long", function(){
 					expect( function(){
-						firm.save( site.getId(), { hours : repeatString( "x", 201 ) } );
+						firm.save( site.getId(), { trustLine : repeatString( "x", 201 ) } );
 					} ).toThrow( type = "Firm.TooLong" );
 				} );
 
 				it( "allows a longer value in a field meant for several lines", function(){
 					expect( function(){
-						firm.save( site.getId(), { feeApproach : repeatString( "x", 400 ) } );
+						firm.save( site.getId(), { address : repeatString( "x", 400 ) } );
 					} ).notToThrow();
 				} );
 
@@ -177,27 +177,27 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				it( "stores nothing at all when one field is invalid", function(){
 					// All-or-nothing: a partially applied form is harder to
 					// notice than a refused one.
-					firm.save( site.getId(), { hours : "Mon to Fri" } );
+					firm.save( site.getId(), { trustLine : "Since 1994" } );
 
 					try {
-						firm.save( site.getId(), { hours : "Weekends too", phone : "ring us" } );
+						firm.save( site.getId(), { trustLine : "Since 1995", phone : "ring us" } );
 					} catch ( Firm.InvalidPhone e ) {
 						// expected
 					}
 
-					expect( firm.firmFor( site.getId() ).hours ).toBe(
-						"Mon to Fri",
+					expect( firm.firmFor( site.getId() ).trustLine ).toBe(
+						"Since 1994",
 						"the valid field was written even though the save failed"
 					);
 				} );
 
 				it( "leaves a field alone when the form did not mention it", function(){
 					// What lets one screen save a subset without blanking the rest.
-					firm.save( site.getId(), { phone : "02 9000 1234", hours : "Mon to Fri" } );
-					firm.save( site.getId(), { hours : "Mon to Sat" } );
+					firm.save( site.getId(), { phone : "02 9000 1234", trustLine : "Since 1994" } );
+					firm.save( site.getId(), { trustLine : "Since 1995" } );
 
 					expect( firm.firmFor( site.getId() ).phone ).toBe( "02 9000 1234" );
-					expect( firm.firmFor( site.getId() ).hours ).toBe( "Mon to Sat" );
+					expect( firm.firmFor( site.getId() ).trustLine ).toBe( "Since 1995" );
 				} );
 
 				it( "clears a field that was submitted empty", function(){
@@ -219,9 +219,120 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				} );
 
 				it( "trims what it stores", function(){
-					firm.save( site.getId(), { hours : "   Mon to Fri   " } );
+					firm.save( site.getId(), { trustLine : "   Since 1994   " } );
 
-					expect( firm.firmFor( site.getId() ).hours ).toBe( "Mon to Fri" );
+					expect( firm.firmFor( site.getId() ).trustLine ).toBe( "Since 1994" );
+				} );
+
+			} );
+
+			describe( "social profiles", function(){
+
+				it( "accepts an http(s) address", function(){
+					expect( firm.isValidUrl( "https://www.facebook.com/yourfirm" ) ).toBeTrue();
+					expect( firm.isValidUrl( "http://x.com/yourfirm" ) ).toBeTrue();
+				} );
+
+				it( "refuses anything that is not one, because it becomes an href", function(){
+					for ( var bad in [
+						"javascript:alert(1)",
+						"www.facebook.com/yourfirm",
+						"//evil.test",
+						"data:text/html;base64,x",
+						"https://x.test"" onclick=""alert(1)"
+					] ) {
+						expect( firm.isValidUrl( bad ) ).toBeFalse( "should refuse #bad#" );
+					}
+				} );
+
+				it( "refuses a bad address on save", function(){
+					expect( function(){
+						firm.save( site.getId(), { facebook : "not-a-url" } );
+					} ).toThrow( type = "Firm.InvalidUrl" );
+				} );
+
+				it( "lists only the profiles that are set, in field order", function(){
+					// A theme loops the result and draws nothing when it is
+					// empty, rather than testing seven keys itself.
+					firm.save( site.getId(), {
+						linkedin : "https://www.linkedin.com/company/yourfirm",
+						facebook : "https://www.facebook.com/yourfirm"
+					} );
+
+					var socials = firm.socialsFor( site.getId() );
+
+					expect( socials.len() ).toBe( 2 );
+					// Facebook is declared before LinkedIn, and that is the
+					// order a theme renders them in.
+					expect( socials[ 1 ].key ).toBe( "facebook" );
+					expect( socials[ 2 ].key ).toBe( "linkedin" );
+					expect( socials[ 1 ].label ).toBe( "Facebook" );
+					expect( socials[ 1 ].url ).toBe( "https://www.facebook.com/yourfirm" );
+				} );
+
+				it( "is empty on a site that has set none", function(){
+					expect( firm.socialsFor( site.getId() ) ).toBeEmpty();
+				} );
+
+				it( "are every one of them optional", function(){
+					// Submitting the form having filled in nothing at all. No
+					// field on this tab is required, so this has to be accepted
+					// rather than refused with a message about a missing value.
+					var blank = {};
+
+					for ( var field in firm.getFields() ) {
+						blank[ field.key ] = "";
+					}
+
+					expect( function(){
+						firm.save( site.getId(), blank );
+					} ).notToThrow();
+
+					expect( firm.socialsFor( site.getId() ) ).toBeEmpty();
+				} );
+
+				it( "accepts one profile without the other six", function(){
+					// They are independent: filling in LinkedIn must not oblige
+					// anybody to find a TikTok account.
+					expect( function(){
+						firm.save( site.getId(), { linkedin : "https://www.linkedin.com/company/yourfirm" } );
+					} ).notToThrow();
+
+					var socials = firm.socialsFor( site.getId() );
+
+					expect( socials.len() ).toBe( 1 );
+					expect( socials[ 1 ].key ).toBe( "linkedin" );
+				} );
+
+				it( "lets a profile be cleared again", function(){
+					firm.save( site.getId(), { facebook : "https://www.facebook.com/yourfirm" } );
+					expect( firm.socialsFor( site.getId() ).len() ).toBe( 1 );
+
+					firm.save( site.getId(), { facebook : "" } );
+					expect( firm.socialsFor( site.getId() ) ).toBeEmpty();
+				} );
+
+				it( "leaves out a stored address that would not be accepted today", function(){
+					// The second gate again: written straight past the service,
+					// as a migration or a hand-run UPDATE would.
+					settings.put( site.getId(), "firm.youtube", "javascript:alert(1)" );
+
+					var keys = firm.socialsFor( site.getId() ).map( function( social ){
+						return social.key;
+					} );
+
+					expect( keys ).notToInclude( "youtube" );
+					expect( firm.firmFor( site.getId() ).youtube ).toBe( "" );
+				} );
+
+				it( "covers every network that was asked for", function(){
+					var keys = firm.getFields()
+						.filter( function( field ){ return ( field.group ?: "" ) == "social"; } )
+						.map( function( field ){ return field.key; } );
+
+					for ( var network in [ "facebook", "instagram", "linkedin", "x", "tiktok", "youtube", "whatsapp" ] ) {
+						expect( keys ).toInclude( network );
+					}
 				} );
 
 			} );

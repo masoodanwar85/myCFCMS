@@ -104,6 +104,11 @@ component extends="coldbox.system.EventHandler" {
 		// to the layout alone left them silently blank while the header a few
 		// lines above showed the number perfectly well.
 		viewArgs.firm = firmDetails.firmFor( site.getId() );
+		// The profiles the site has actually set, in render order. Its own
+		// argument rather than a key inside `firm`, which is a flat struct of
+		// strings that a theme reads by name — an array in the middle of it
+		// would break every caller that walks it.
+		viewArgs.socials = firmDetails.socialsFor( site.getId() );
 
 		var body = renderBody( theme, resolution, viewArgs );
 
@@ -142,7 +147,8 @@ component extends="coldbox.system.EventHandler" {
 				// here for the same reason as analytics and the notice: a theme
 				// prints these in five places on one page, and must not 500 for
 				// want of a service when it is rendered outside this handler.
-				firm            : firmDetails.firmFor( site.getId() )
+				firm            : firmDetails.firmFor( site.getId() ),
+				socials         : firmDetails.socialsFor( site.getId() )
 			}
 		);
 	}
@@ -217,7 +223,8 @@ component extends="coldbox.system.EventHandler" {
 				branding        : branding.brandingFor( arguments.site.getId() ),
 				analytics       : analytics.analyticsFor( arguments.site.getId() ),
 				notice          : noticeService.noticeFor( arguments.site.getId() ),
-				firm            : firmDetails.firmFor( arguments.site.getId() )
+				firm            : firmDetails.firmFor( arguments.site.getId() ),
+				socials         : firmDetails.socialsFor( arguments.site.getId() )
 			}
 		);
 	}

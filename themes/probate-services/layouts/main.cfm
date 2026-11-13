@@ -70,7 +70,6 @@
 	local.phone       = trim( local.firm.phone       ?: "" );
 	local.email       = trim( local.firm.email       ?: "" );
 	local.address     = trim( local.firm.address     ?: "" );
-	local.hours       = trim( local.firm.hours       ?: "" );
 	local.legalEntity = trim( local.firm.legalEntity ?: "" );
 	local.abn         = trim( local.firm.abn         ?: "" );
 
@@ -93,7 +92,7 @@
 <a class="visually-hidden" href="##main-content">Skip to content</a>
 
 <!--- ============ TOP BAR ============ --->
-<cfif len( local.trustLine ) or len( local.hours ) or len( local.phone )>
+<cfif len( local.trustLine ) or len( local.phone )>
 	<div class="topbar">
 		<div class="topbar__inner">
 			<cfif len( local.trustLine )>
@@ -103,12 +102,6 @@
 			</cfif>
 
 			<div class="topbar__side">
-				<cfif len( local.hours )>
-					<span class="topbar__item">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="##FFB58A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-						#encodeForHTML( local.hours )#
-					</span>
-				</cfif>
 				<cfif len( local.phone )>
 					<a class="topbar__item topbar__phone" href="tel:#encodeForHTMLAttribute( local.telHref )#">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="##FFB58A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
@@ -196,6 +189,40 @@
 					</cfif>
 				</a>
 				<p>Probate and deceased estate lawyers acting in every Australian state and territory.</p>
+
+				<!---
+					Only the profiles the site has set, in the order the service
+					lists them. `args.socials` arrives already filtered, so there
+					is nothing to test here beyond whether the row is empty.
+				--->
+				<cfif arrayLen( args.socials ?: [] )>
+					<ul class="socials" aria-label="Find us elsewhere">
+						<cfloop array="#args.socials#" index="social">
+							<li>
+								<!---
+									`rel="noopener"` with `target="_blank"`: a page
+									opened this way can otherwise reach back through
+									`window.opener` and navigate the page it came from.
+									`noreferrer` because these are other people's sites
+									and the referrer is nobody's business.
+								--->
+								<!---
+									`xmlFormat`, not `encodeForHTMLAttribute`: both are
+									safe in a quoted attribute, but the aggressive one
+									turns every `/` and `:` into a numeric entity — a
+									working link whose source nobody can read. The same
+									choice `ShortcodeService` records for the same reason.
+								--->
+								<a href="#xmlFormat( social.url )#"
+								   target="_blank" rel="noopener noreferrer"
+								   aria-label="#encodeForHTMLAttribute( social.label )#"
+								   title="#encodeForHTMLAttribute( social.label )#">
+									<cfinclude template="/themes/probate-services/views/_social-icon.cfm">
+								</a>
+							</li>
+						</cfloop>
+					</ul>
+				</cfif>
 			</div>
 
 			<div class="site-foot__col">
@@ -225,9 +252,6 @@
 				</cfif>
 				<cfif len( local.email )>
 					<a href="mailto:#encodeForHTMLAttribute( local.email )#">#encodeForHTML( local.email )#</a>
-				</cfif>
-				<cfif len( local.hours )>
-					<span>#encodeForHTML( local.hours )#</span>
 				</cfif>
 			</div>
 		</div>
