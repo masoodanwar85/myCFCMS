@@ -48,7 +48,8 @@ component {
 			{ pattern : "/roles/:action?/:id?",  handler : "Roles" },
 			{ pattern : "/settings/:action?/:id?", handler : "Settings" },
 			{ pattern : "/menus/:action?/:id?",  handler : "Menus" },
-			{ pattern : "/api-tokens/:action?/:id?", handler : "ApiTokens" }
+			{ pattern : "/api-tokens/:action?/:id?", handler : "ApiTokens" },
+			{ pattern : "/api-activity/:action?/:id?", handler : "ChangeLog" }
 		];
 	}
 
@@ -65,7 +66,7 @@ component {
 		 *     Modules            40   contributed by the feature modules
 		 *     Access             60   Users 60, Roles 62
 		 *     Settings           90
-		 *     API                95
+		 *     API                95   Tokens 95, Activity 96
 		 */
 		nav.register( label = "Dashboard", href = "/admin", order = 10, exact = true );
 
@@ -76,17 +77,24 @@ component {
 		nav.register( label = "Users", href = "/admin/users", permission = "users.view", order = 60, group = "Access" );
 		nav.register( label = "Roles", href = "/admin/roles", permission = "roles.view", order = 62, group = "Access" );
 
-		// Settings and API stay top level. Both are site configuration rather
-		// than a category of screens, and a menu holding one item each would be
-		// two clicks to reach what is now one.
+		// Settings stays top level: it is site configuration rather than a
+		// category of screens, and a menu holding one item would be two clicks
+		// to reach what is now one.
 		nav.register( label = "Settings", href = "/admin/settings", permission = "site.view", order = 90 );
-		nav.register( label = "API", href = "/admin/api-tokens", permission = "api.tokens.manage", order = 95 );
+
+		// API has two screens now — the credentials, and what was done with
+		// them — so by the rule above it earns a group.
+		nav.register( label = "Tokens", href = "/admin/api-tokens", permission = "api.tokens.manage", order = 95, group = "API" );
+		nav.register( label = "Activity", href = "/admin/api-activity", permission = "api.tokens.manage", order = 96, group = "API" );
 	}
 
 	function onUnload(){
 		var nav = wirebox.getInstance( "AdminNavigationRegistry@core" );
 
-		for ( var href in [ "/admin", "/admin/users", "/admin/roles", "/admin/menus", "/admin/settings", "/admin/api-tokens" ] ) {
+		for ( var href in [
+			"/admin", "/admin/users", "/admin/roles", "/admin/menus",
+			"/admin/settings", "/admin/api-tokens", "/admin/api-activity"
+		] ) {
 			nav.unregister( href );
 		}
 	}

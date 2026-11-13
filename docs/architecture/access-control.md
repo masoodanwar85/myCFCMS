@@ -229,7 +229,7 @@ it hangs off, so splitting them would buy indirection and nothing else.
 
 ### Default roles
 
-`RoleService.seedDefaultRolesForSite( siteId )` gives a site two roles:
+`RoleService.seedDefaultRolesForSite( siteId )` gives a site three roles:
 
 - **Owner** — every permission in the catalogue, resolved at seed time rather
   than from a fixed list. "Full control" has to keep meaning that as modules
@@ -238,8 +238,55 @@ it hangs off, so splitting them would buy indirection and nothing else.
   existing site is how it picks up a newly installed module's permissions.
 - **Editor** — `site.view`, `users.view`, `roles.view`. A non-privileged role to
   hand out, widened with content permissions by later groups.
+- **Agent** — for an automated client working through the REST API. Can draft,
+  edit and publish pages, upload media and run SEO audits:
+  `site.view`, `pages.view/create/update/publish`, `media.view/upload`,
+  `seo.view/run`.
 
-Two, not five. Anything more would be guessing at each client's org chart.
+Three, not five. Anything more would be guessing at each client's org chart.
+
+#### Why the agent is its own role
+
+Not a widened `editor`: that role carries almost nothing and would be refused
+everywhere, and widening it would hand every human editor on every site the new
+permissions too. And an agent's capabilities should be legible in one place —
+when something unexpected turns up on a site, "what was the agent allowed to
+do?" has one answer.
+
+Listed explicitly, never `grantsEverything`. A role meaning "everything"
+silently acquires each new permission a module registers, which is right for an
+owner and wrong for a non-human client.
+
+What is absent matters as much as what is there:
+
+| Withheld | Why |
+| --- | --- |
+| `pages.delete` `media.delete` | Nothing an agent does should be unrecoverable. |
+| `content.unfiltered` | Raw HTML bypasses AntiSamy, `<script>` included — so an agent also cannot write `jsonLd`, `headMarkup` or `bodyMarkup`. |
+| `users.*` `roles.*` `api.tokens.manage` | An agent must not be able to widen its own access or issue itself another token. |
+| `site.update` `site.settings.manage` `site.domains.manage` | Configuration is not content. |
+
+`pages.publish` **is** granted: publishing is one of the jobs the role exists
+for. The control on it is the API client's explicit confirmation step, not the
+absence of the permission.
+
+And the other half of granting write access to a non-human client: **everything
+it changes is logged**. Every write endpoint records a before-and-after snapshot
+to `api_change_log`, readable at `/admin/api-activity`, so "what did the agent do
+on Monday" has an answer that does not depend on anybody having been watching.
+The log is read with `api.tokens.manage` — the same permission as the tokens
+themselves, since it answers the same question — and the `agent` role does not
+carry it, so an agent cannot read or reach its own audit trail. See
+`shortcodes-and-api.md` for what is and is not recorded.
+
+The role is defined in `RoleService.DEFAULT_ROLES` for new sites and repeated in
+`2026_10_29_100000_seed_agent_role.cfc` for sites that already existed — a
+migration runs with no application context and cannot ask WireBox.
+`AgentRoleSpec` asserts the two lists agree, so they cannot drift silently.
+
+Creating the role creates **no user and no token**. Those stay manual: an
+automated client appearing on a site because a migration ran is exactly what
+nobody wants.
 
 ### Provisioning a site
 

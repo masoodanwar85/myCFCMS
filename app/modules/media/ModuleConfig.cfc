@@ -45,6 +45,12 @@ component {
 	}
 
 	function onLoad(){
+		// Reads and uploads only. Alt-text edits and deletes stay in the admin
+		// — see `handlers/Api.cfc` for why neither is worth an endpoint.
+		wirebox
+			.getInstance( "ApiRouteRegistry@core" )
+			.resource( name = "media", module = "media", handler = "Api", only = "index,show,create" );
+
 		wirebox
 			.getInstance( "AdminNavigationRegistry@core" )
 			.register(
@@ -75,6 +81,7 @@ component {
 	}
 
 	function onUnload(){
+		wirebox.getInstance( "ApiRouteRegistry@core" ).unregister( "media" );
 		wirebox.getInstance( "AdminNavigationRegistry@core" ).unregister( "/admin/media" );
 		wirebox.getInstance( "ShortcodeRegistry@core" ).unregister( "image" );
 		wirebox.getInstance( "ShortcodeRegistry@core" ).unregister( "file" );

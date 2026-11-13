@@ -25,8 +25,8 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 					for ( var check in [
 						"StatusCheck", "TitleCheck", "DescriptionCheck", "HeadingCheck",
-						"ImageAltCheck", "CanonicalCheck", "OpenGraphCheck",
-						"ContentLengthCheck", "UrlShapeCheck"
+						"ImageAltCheck", "CanonicalCheck", "RobotsCheck", "OpenGraphCheck",
+						"StructuredDataCheck", "ContentLengthCheck", "UrlShapeCheck"
 					] ) {
 						expect( ids ).toInclude( check & "@seoaudit" );
 					}
@@ -237,6 +237,164 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 					);
 
 					expect( found ).toBeEmpty();
+				} );
+
+			} );
+
+			describe( "robots", function(){
+
+				it( "says nothing when there is no robots tag", function(){
+					// The common case by far. A check that fires on every page
+					// of a healthy site is a check nobody reads.
+					expect( inspect( "RobotsCheck", page( "<h1>About</h1>" ) ) ).toBeEmpty();
+				} );
+
+				it( "says nothing when the page asks to be indexed", function(){
+					expect(
+						inspect( "RobotsCheck", page( '<meta name="robots" content="index, follow">' ) )
+					).toBeEmpty();
+				} );
+
+				it( "warns about noindex, because the page gets no traffic and looks fine", function(){
+					var found = inspect( "RobotsCheck", page( '<meta name="robots" content="noindex">' ) );
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "robots.noindex" );
+					// A warning rather than an error: this CMS has an explicit
+					// switch for it, so it can be a deliberate choice.
+					expect( found[ 1 ].severity ).toBe( "warning" );
+				} );
+
+				it( "reads `none` as both noindex and nofollow", function(){
+					var ids = inspect( "RobotsCheck", page( '<meta name="robots" content="none">' ) )
+						.map( ( f ) => f.checkId );
+
+					expect( ids ).toInclude( "robots.noindex" );
+					expect( ids ).toInclude( "robots.nofollow" );
+				} );
+
+				it( "reports nofollow on its own as a notice", function(){
+					var found = inspect( "RobotsCheck", page( '<meta name="robots" content="index,nofollow">' ) );
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "robots.nofollow" );
+					expect( found[ 1 ].severity ).toBe( "notice" );
+				} );
+
+				it( "does not read a longer word as a directive", function(){
+					// The reason this matches list entries rather than
+					// substrings: `noindexing` is not `noindex`, and a
+					// substring test would report a page that is perfectly
+					// indexable.
+					expect(
+						inspect( "RobotsCheck", page( '<meta name="robots" content="noindexing">' ) )
+					).toBeEmpty();
+				} );
+
+			} );
+
+			describe( "structured data", function(){
+
+				it( "notices a page with none", function(){
+					var found = inspect( "StructuredDataCheck", page( "<h1>About</h1>" ) );
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.missing" );
+					// A notice: structured data earns a rich result, it does
+					// not earn a ranking, so its absence is not a fault.
+					expect( found[ 1 ].severity ).toBe( "notice" );
+				} );
+
+				it( "says nothing about a valid block", function(){
+					expect( inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"X"}</script>' )
+					) ).toBeEmpty();
+				} );
+
+				it( "warns about a block that is not valid JSON", function(){
+					// The finding this check exists for. JSON-LD fails
+					// silently: the page looks completely normal and the markup
+					// somebody spent an afternoon on does nothing.
+					var found = inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">{"@type":"Thing",}</script>' )
+					);
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.invalid" );
+					expect( found[ 1 ].severity ).toBe( "warning" );
+				} );
+
+				it( "warns about a block with no @type", function(){
+					var found = inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">{"name":"X"}</script>' )
+					);
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.noType" );
+				} );
+
+				it( "accepts an array of typed objects", function(){
+					expect( inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">[{"@type":"A"},{"@type":"B"}]</script>' )
+					) ).toBeEmpty();
+				} );
+
+				it( "refuses an array where only some entries are typed", function(){
+					// One typed object in a list of three does not make the
+					// other two usable.
+					var found = inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">[{"@type":"A"},{"name":"B"}]</script>' )
+					);
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.noType" );
+				} );
+
+				it( "looks inside @graph", function(){
+					expect( inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite"}]}</script>' )
+					) ).toBeEmpty();
+				} );
+
+				it( "accepts a @type that is itself an array", function(){
+					expect( inspect(
+						"StructuredDataCheck",
+						page( '<script type="application/ld+json">{"@type":["Person","Author"],"name":"X"}</script>' )
+					) ).toBeEmpty();
+				} );
+
+				it( "judges each block separately and says which one is wrong", function(){
+					// A layout block plus a page block is normal, so the detail
+					// has to name the one at fault.
+					var found = inspect(
+						"StructuredDataCheck",
+						page(
+							'<script type="application/ld+json">{"@type":"WebSite"}</script>'
+							& '<script type="application/ld+json">not json at all</script>'
+						)
+					);
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.invalid" );
+					expect( found[ 1 ].detail ).toInclude( "Block 2 of 2" );
+				} );
+
+				it( "ignores a script that is not JSON-LD", function(){
+					// An ordinary `<script>` is code, not structured data, and
+					// a page with one still has none.
+					var found = inspect(
+						"StructuredDataCheck",
+						page( '<script>var x = {broken:,};</script>' )
+					);
+
+					expect( found.len() ).toBe( 1 );
+					expect( found[ 1 ].checkId ).toBe( "structuredData.missing" );
 				} );
 
 			} );

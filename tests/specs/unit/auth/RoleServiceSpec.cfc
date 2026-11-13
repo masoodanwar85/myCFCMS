@@ -160,18 +160,22 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
 				it( "grant the owner every registered permission when seeding", function(){
 					permissionRepo.$( "findAll", [ makePermission( "a.one" ), makePermission( "b.two" ) ] );
-					// Seeding grants the editor role too, so the stub has to
-					// resolve its slugs as well as the owner's.
-					permissionRepo.$(
-						"findIdsBySlugs",
-						{
-							"a.one"      : 1,
-							"b.two"      : 2,
-							"site.view"  : 3,
-							"users.view" : 4,
-							"roles.view" : 5
+
+					// Seeding grants every default role, not just the owner, and
+					// `grantPermissions` refuses a batch containing a slug it
+					// cannot resolve. So the stub resolves whatever the
+					// definitions ask for — built from them rather than listed,
+					// so adding a default role does not break this spec about
+					// the owner.
+					var resolvable = { "a.one" : 1, "b.two" : 2 };
+
+					for ( var definition in service.getDefaultRoleDefinitions() ) {
+						for ( var slug in definition.permissions ) {
+							resolvable[ slug ] = 9;
 						}
-					);
+					}
+
+					permissionRepo.$( "findIdsBySlugs", resolvable );
 					roleRepo.$( "findBySlugForSite", makeRole( 5, 1, "owner" ) );
 					roleRepo.$( "findById", makeRole( 5, 1, "owner" ) );
 

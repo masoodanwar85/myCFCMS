@@ -59,6 +59,14 @@ component {
 			"descriptionMax"  : 160,
 			"thinContent"     : 300,
 
+			// How many of one page's own links a single-page audit will probe
+			// for breakage. Much smaller than `maxUrls` because this one runs
+			// *in the request*: the caller is waiting, and a page with a large
+			// navigation would otherwise turn one audit into fifty sequential
+			// fetches. Links beyond the budget are left unjudged rather than
+			// reported as unknown.
+			"pageLinkBudget" : 25,
+
 			// A run whose heartbeat is older than this is treated as dead. A
 			// thread killed by a restart cannot mark its own row failed, and
 			// without a window like this the row stays "running" for ever and
@@ -70,6 +78,20 @@ component {
 	}
 
 	function onLoad(){
+		// Reads and starts; no delete, because nothing asks to remove a run
+		// over the API and a report is the record of what was true. `page` is a
+		// collection action rather than a member one: it audits a URL, not an
+		// existing run.
+		wirebox
+			.getInstance( "ApiRouteRegistry@core" )
+			.resource(
+				name              = "seo-audits",
+				module            = "seoaudit",
+				handler           = "Api",
+				only              = "index,show,create",
+				collectionActions = "page"
+			);
+
 		wirebox
 			.getInstance( "AdminNavigationRegistry@core" )
 			.register(
@@ -92,7 +114,9 @@ component {
 			"HeadingCheck",
 			"ImageAltCheck",
 			"CanonicalCheck",
+			"RobotsCheck",
 			"OpenGraphCheck",
+			"StructuredDataCheck",
 			"ContentLengthCheck",
 			"UrlShapeCheck"
 		] ) {
@@ -114,6 +138,7 @@ component {
 	}
 
 	function onUnload(){
+		wirebox.getInstance( "ApiRouteRegistry@core" ).unregister( "seo-audits" );
 		wirebox.getInstance( "AdminNavigationRegistry@core" ).unregister( "/admin/seo" );
 	}
 

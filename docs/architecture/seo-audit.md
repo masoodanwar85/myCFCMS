@@ -191,8 +191,8 @@ Severity is the editorial judgement in this module, and it is deliberate:
 | Severity | Means | Checks |
 | --- | --- | --- |
 | **error** | Costs traffic, or the page is broken | no title, no `h1`, **more than one `h1`**, canonical pointing elsewhere, non-200, unparseable, no primary domain |
-| **warning** | Works, but leaves value on the table | title/description length, duplicate-looking title, missing `alt`, thin content, redirect |
-| **notice** | Worth knowing, not worth alarm | Open Graph tags, skipped heading level, underscores or capitals in a URL, no analytics tag |
+| **warning** | Works, but leaves value on the table | title/description length, duplicate-looking title, missing `alt`, thin content, redirect, **`noindex`**, **structured data that is broken or untyped** |
+| **notice** | Worth knowing, not worth alarm | Open Graph tags, skipped heading level, underscores or capitals in a URL, no analytics tag, **`nofollow`**, **no structured data at all** |
 
 A canonical pointing elsewhere is an error and not a warning because it is the
 most damaging single fault on the list: the page disappears from results and
@@ -204,6 +204,42 @@ dishonest about what matters.
 
 Site-level findings are recorded **once**, against the empty path. "This site has
 no Google tag" repeated on all hundred pages would be true and useless.
+
+### `noindex` is a warning, not an error
+
+It is the single most consequential tag on a page — the page is removed from
+results entirely and nothing about it looks wrong — but this CMS has an explicit
+`robotsIndex` switch, so it can be a deliberate choice: a thank-you page after a
+form, a print variant, a staging tenant. A warning says "look at this" without
+claiming it is a fault. It is reported on **every** page that carries it, because
+the only way for it to stop appearing is for somebody to decide it is correct.
+
+The check reads the comma list rather than looking for a substring: `noindexing`
+is not `noindex`, and a substring test would report a page that is perfectly
+indexable. `robots.txt` and the `X-Robots-Tag` header can exclude a page just as
+effectively and neither is in the markup — the header is thrown away by the
+fetcher, and `robots.txt` is a site-level question.
+
+### Structured data stops at `@type`
+
+Checking that a `Product` has an `offers` with a `price` means encoding Google's
+rich-result requirements, which are long, per-type, and change without notice. A
+check that is confidently out of date is worse than one that is honestly
+shallow.
+
+What it does catch is the failure that is otherwise invisible: **JSON-LD fails
+silently**. A trailing comma or a smart quote pasted from a word processor, and
+the block is ignored, the page looks completely normal, and nothing says the
+markup somebody spent an afternoon on is doing nothing. That is a warning, and
+the detail names which block when a page carries several — a `WebSite` block in
+the layout plus an `Article` block on the page is normal.
+
+Three shapes are all legal and all appear in the wild: one object, an array of
+them, and an object whose `@graph` holds the list. Only the top level of each is
+examined — a nested `author` with its own `@type` does not make an untyped
+parent typed, and recursing would find one and call the block fine. An array
+needs **every** entry typed: one typed object in a list of five does not make
+the other four usable.
 
 ---
 
@@ -333,14 +369,53 @@ asked to prioritise cannot encode priority in hue alone.
 
 ---
 
-## 9. What is intentionally not here yet
+## 9. Auditing one URL, now
+
+`SeoAuditService.auditOne()` fetches one path, runs every registered per-page
+check against it, and returns the findings. It writes no row and spawns no
+thread, and that is the whole difference from a run:
+
+| | A run | One URL |
+| --- | --- | --- |
+| Scope | Every public URL, bounded by `maxUrls` | One path |
+| Where it happens | A background thread, with the run row as its progress record | In the request |
+| What it leaves behind | A `seo_audits` row and its findings | Nothing |
+| How the caller gets the answer | Polls the run until it stops being `running` | In the response |
+
+It exists because an editor checking the page they just saved, six times in a
+row, must not leave six runs in a report nobody will read — and must not trip
+`SeoAudit.AlreadyRunning` for the real nightly crawl.
+
+Because every *registered* check runs, a check added for the admin report
+appears here with no further wiring. The three **crawl** checks do not apply:
+they answer about a set, and there is no set.
+
+### Except broken links, which do apply
+
+A link to a 404 is one of the most useful things a single-page audit can report,
+so `auditOne` builds `BrokenLinkCheck` the set it needs: the page itself, plus a
+stand-in entry per link target carrying nothing but the status its fetch came
+back with. That reuses the real check, so the single-page answer cannot drift
+from the nightly report's.
+
+The other two crawl checks are deliberately *not* run over that set. Every
+stand-in has an empty title and was never in a sitemap, so duplicate-content and
+sitemap reconciliation would report findings about fixtures the method invented.
+
+It costs one fetch per link, so it is capped by `pageLinkBudget` (25) and can be
+switched off by the caller. Links beyond the budget are left unjudged rather
+than reported as unknown — the same rule a run follows when it hits `maxUrls`.
+
+---
+
+## 10. What is intentionally not here yet
 
 | Area | Why it waits |
 | --- | --- |
 | **External link checking** | An outbound request per link to a third party. Slow, and it reports this site as broken when someone else's server is down. Belongs on its own schedule, not as a side effect of auditing markup. |
 | **Concurrency within a run** | Pages are fetched one at a time. Fetching four at once would cut a large run's wall time, at the cost of four CF threads against the server itself. |
 | **Near-duplicate content detection** | Needs shingling or hashing and a judgement about how similar is too similar. The common CMS cause is already covered by the canonical check. |
-| Scheduled runs | No scheduler in the app. A cron hitting a tokenised URL would do it. |
+| Scheduled runs | No scheduler in the app. `POST /api/v1/seo-audits` with a token now makes a cron job a one-liner. |
 | Image weight and dimensions | Needs a request per image. |
-| Structured data validation | A large job, and Google's own tool does it well. |
+| Structured data validation beyond `@type` | Encoding Google's per-type rich-result requirements, which change without notice. Their own tool does it well. |
 | Per-site thresholds | `titleMax`, `thinContent` and the rest are module settings, so they are the same for every site on the installation. |

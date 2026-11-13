@@ -38,6 +38,59 @@ component singleton accessors="true" {
 			name        : "Editor",
 			description : "Day-to-day content work. Cannot change site configuration or access.",
 			permissions : [ "site.view", "users.view", "roles.view" ]
+		},
+		{
+			/**
+			 * The role for an automated client working through the REST API —
+			 * the MCP server, or anything else holding a token.
+			 *
+			 * A role of its own rather than reusing `editor`, for two reasons.
+			 * The stock editor carries almost nothing (`site.view`,
+			 * `users.view`, `roles.view`) and would be refused everywhere, so
+			 * it would have to be widened — and widening it would hand every
+			 * human editor on every site the new permissions too, which is a
+			 * change nobody asked for. And an agent's capabilities should be
+			 * legible in one place: when something unexpected appears on a
+			 * site, the question "what was the agent allowed to do?" has one
+			 * answer, and it is this list.
+			 *
+			 * Listed explicitly, never `grantsEverything`. A role that means
+			 * "everything" silently acquires each new permission a module
+			 * registers, which is right for an owner and wrong for a
+			 * non-human client.
+			 *
+			 * What is deliberately absent matters as much as what is here:
+			 *
+			 *   - `pages.delete` and `media.delete` — nothing an agent does
+			 *     should be unrecoverable. Removing content stays a human act.
+			 *   - `content.unfiltered` — raw HTML bypasses AntiSamy, including
+			 *     `<script>`. An agent writes content through the sanitiser
+			 *     like any untrusted author, which also means it cannot write
+			 *     `jsonLd`, `headMarkup` or `bodyMarkup`.
+			 *   - `users.*`, `roles.*`, `api.tokens.manage` — an agent must not
+			 *     be able to widen its own access or issue itself another
+			 *     token.
+			 *   - `site.update`, `site.settings.manage`, `site.domains.manage`
+			 *     — configuration is not content.
+			 *
+			 * `pages.publish` *is* here, because publishing is one of the jobs
+			 * this role exists to do. The control on it is the API client's
+			 * explicit confirmation step, not the absence of the permission.
+			 */
+			slug        : "agent",
+			name        : "Agent",
+			description : "An automated client working through the API. Can draft, edit and publish content, upload media and run SEO audits. Cannot delete anything, post raw HTML, or change access or configuration.",
+			permissions : [
+				"site.view",
+				"pages.view",
+				"pages.create",
+				"pages.update",
+				"pages.publish",
+				"media.view",
+				"media.upload",
+				"seo.view",
+				"seo.run"
+			]
 		}
 	];
 
