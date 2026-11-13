@@ -1,4 +1,3 @@
-
 <style>
 .wc-pricing {
   --wc-navy: #183451;
@@ -260,38 +259,38 @@
       <tbody>
         <tr>
           <td>Up to $30,000</td>
-          <td>$560</td>
-          <td class="wc-highlight">$504</td>
+          <td>$560 plus $13.33 for each $1,000 up to $30,000</td>
+          <td class="wc-highlight">$504 plus $13.33 for each $1,000 up to $30,000</td>
           <td><span class="wc-savings">$56</span></td>
         </tr>
         <tr>
           <td>$30,001 – $150,000</td>
-          <td>$960</td>
-          <td class="wc-highlight">$864</td>
+          <td>$960 plus $5.90 for each $1,000 in excess of $30,000</td>
+          <td class="wc-highlight">$864 plus $5.90 for each $1,000 in excess of $30,000</td>
           <td><span class="wc-savings">$96</span></td>
         </tr>
         <tr>
           <td>$150,001 – $1,000,000</td>
-          <td>$1,670</td>
-          <td class="wc-highlight">$1,503</td>
+          <td>$1,670 plus $4.47 for each $1,000 in excess of $150,000</td>
+          <td class="wc-highlight">$1,503 plus $4.47 for each $1,000 in excess of $150,000</td>
           <td><span class="wc-savings">$167</span></td>
         </tr>
         <tr>
           <td>$1,000,001 – $3,000,000</td>
-          <td>$5,470</td>
-          <td class="wc-highlight">$4,923</td>
+          <td>$5,470 plus $1.66 for each $1,000 in excess of $1,000,000</td>
+          <td class="wc-highlight">$4,923 plus $1.66 for each $1,000 in excess of $1,000,000</td>
           <td><span class="wc-savings">$547</span></td>
         </tr>
         <tr>
           <td>$3,000,001 – $5,000,000</td>
-          <td>$8,800</td>
-          <td class="wc-highlight">$7,920</td>
+          <td>$8,800 plus $1.10 for each $1,000 in excess of $3,000,000</td>
+          <td class="wc-highlight">$7,920 plus $1.10 for each $1,000 in excess of $3,000,000</td>
           <td><span class="wc-savings">$880</span></td>
         </tr>
         <tr>
           <td>$5,000,001 – $10,000,000</td>
-          <td>$11,000</td>
-          <td class="wc-highlight">$9,900</td>
+          <td>$11,000 plus $0.90 for each $1,000 in excess of $5,000,000</td>
+          <td class="wc-highlight">$9,900 plus $0.90 for each $1,000 in excess of $5,000,000</td>
           <td><span class="wc-savings">$1,100</span></td>
         </tr>
         <tr>
