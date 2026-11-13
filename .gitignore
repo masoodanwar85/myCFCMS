@@ -15,6 +15,13 @@ tests/results/**
 npm-debug.log
 yarn-error.log
 
+# MCP server. `.env` above matches the root only, and mcp/.env holds a live API
+# token — a credential committed once stays in the history for ever.
+mcp/.env
+mcp/.env.*
+!mcp/.env.example
+mcp/dist/
+
 ## Global Libs
 lib/**
 !lib/java/

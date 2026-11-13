@@ -53,29 +53,47 @@ Architecture documentation:
 - [seo-and-menus.md](docs/architecture/seo-and-menus.md) — canonical addresses, sitemaps, robots, and editable navigation.
 - [shortcodes-and-api.md](docs/architecture/shortcodes-and-api.md) — shortcode expansion, API tokens, and the REST boundary.
 - [forms.md](docs/architecture/forms.md) — author-defined forms, their fields, and why an answer records the question it was asked.
+- [seo-audit.md](docs/architecture/seo-audit.md) — why the audit reads rendered HTML, the checks and their severities, and auditing one URL on demand.
+- [deployment/deploying.md](docs/deployment/deploying.md) — the whole deploy procedure, on ColdFusion and on Lucee.
 - [deployment/apache-modjk.md](docs/deployment/apache-modjk.md) — deploying behind Apache + mod_jk, and why the rewrite rules cannot live in `.htaccess`.
+- [guides/running-locally.md](docs/guides/running-locally.md) — CommandBox setup, migrations, tests, reinitialising, and what to check when something does not work.
 - [guides/adding-a-site.md](docs/guides/adding-a-site.md) — provisioning a second site on the same instance.
+- [guides/creating-a-module.md](docs/guides/creating-a-module.md) — building a feature module against Core's seams.
+- [guides/module-request-flow.md](docs/guides/module-request-flow.md) — how a public URL reaches a module and comes back as HTML.
 - [guides/theme-assets-and-branding.md](docs/guides/theme-assets-and-branding.md) — where logos, stylesheets and brand colours live when one app serves many sites.
+
+[AGENTS.md](AGENTS.md) is the brief for AI coding agents: the commands, the
+architectural rules, the testing conventions, and the CFML traps that have each
+already cost a debugging session.
 
 Each records what is implemented and what is deliberately postponed.
 
 ## Getting started
 
 ```bash
-box install
-cp .env.example .env      # then set DB_PASSWORD and create the database
+box install               # also writes .env from .env.example
+# edit .env, then create the database
 box migrate up
 box server start
 ```
 
+The port is assigned rather than fixed — `box server info` reports it. A fresh
+database has no sites, and a hostname with no `site_domains` row resolves to no
+tenant, so a fresh install serves nothing until you add one. See
+[guides/running-locally.md](docs/guides/running-locally.md) and
+[guides/adding-a-site.md](docs/guides/adding-a-site.md).
+
 ## Tests
 
-```bash
-box server start
+Start the server, then open `/tests/runner.cfm` on the reported port, or one
+bundle at a time:
+
+```
+/tests/runner.cfm?reporter=text&bundles=tests.specs.integration.api.PagesApiSpec
 ```
 
-Then open `/tests/runner.cfm` on the reported port. Integration specs require
-migrations to have run.
+Integration specs require migrations to have run. A few make real HTTP requests
+back to the running server and skip when the suite was not reached over HTTP.
 
 ## Layout
 
@@ -85,5 +103,7 @@ lib/            Framework and dependencies — not in version control
 public/         Web root
 resources/      Database migrations and seeds
 tests/          TestBox specs
-docs/           Architecture documentation
+docs/           Architecture documentation, guides and deployment
+themes/         Layouts and views, outside the webroot on purpose
+storage/        Uploaded media, outside the webroot on purpose
 ```

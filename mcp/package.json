@@ -1,0 +1,26 @@
+{
+  "name": "mycfcms-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for managing a myCFCMS site over its REST API.",
+  "type": "module",
+  "bin": { "mycfcms-mcp": "dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  },
+  "engines": { "node": ">=18" }
+}
