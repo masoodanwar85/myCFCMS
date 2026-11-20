@@ -53,7 +53,7 @@
 			same thing twice. Off by choice, per page, which is why the heading
 			above is conditional rather than part of this section.
 		--->
-		<div class="prose">#args.page.getContent()#</div>
+		<div>#args.page.getContent()#</div>
 	</div>
 </section>
 </cfoutput>

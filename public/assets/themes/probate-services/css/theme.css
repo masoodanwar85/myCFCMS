@@ -524,3 +524,132 @@ input:focus, select:focus, textarea:focus { border-color: var(--blue); outline-o
 	html { scroll-behavior: auto; }
 	*, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* ============================================================================
+	INSTRUMENTS (the three documents)
+	========================================================================== */
+	.section { padding-block: clamp(3.5rem, 7vw, 6rem); }
+	.section--paper2 { background: var(--paper-2); border-block: 1px solid var(--rust-ink); }
+	.section__head { max-width: 60ch; margin-bottom: 2.8rem; }
+	.section__head h2 { margin: .8rem 0 1rem; }
+	.section__head p { color: var(--ink-soft); font-size: var(--step-1); line-height: 1.5; }
+
+	.instruments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 50px;}
+	.instrument {
+	background: var(--tint); border: 1px solid var(--rust-ink);
+	border-radius: var(--radius); padding: 2rem 1.8rem;
+	display: flex; flex-direction: column; gap: .9rem;
+	transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+	}
+	.instrument:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--sage); }
+	.instrument__num { font-family: var(--display); font-size: 1.5rem; color: var(--navy); letter-spacing: .1em; }
+	.instrument__icon { width: 46px; height: 46px; color: var(--eucalypt); }
+	.instrument h3 { font-size: var(--h3); color: var(--blue); }
+	.instrument p { font-size: var(--step-0); color: var(--ink-soft); flex: 1; text-align: justify;}
+	.instrument__link { font-weight: 700; font-size: var(--step--1); text-transform: uppercase; letter-spacing: .06em; text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
+	.instrument__link::after { content: "â†’"; transition: transform .2s ease; }
+	.instrument:hover .instrument__link::after { transform: translateX(4px); }
+
+
+/* Checkerboard 8-Part Grid Layout */
+.ps-checkerboard-section {
+  padding: 60px 0;
+}
+
+.ps-checkerboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+
+.ps-grid-card {
+  padding: 48px 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Light Card Variant */
+.ps-card--light {
+  background-color: var(--foot-head);
+  border: 1px solid #eef0f3;
+}
+
+.ps-card--light .ps-card-title {
+  color: #2c353d;
+}
+
+.ps-card--light .ps-card-text {
+/*   color: #555e68; */
+}
+
+/* Blueish Card Variant (matched to your brand's slate-blue tone) */
+.ps-card--blue {
+  background-color: var(--blue); /* Adjust to #3a5a78 for deeper navy or #587ea3 for lighter slate */
+}
+
+.ps-card--blue .ps-card-title {
+  color: #ffffff;
+}
+
+.ps-card--blue .ps-card-text {
+  color: #f0f4f8;
+}
+
+/* Typography Spacing */
+.ps-card-title {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ps-card-text {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+/* Responsive Stacking for Mobile & Small Tablets */
+@media (max-width: 768px) {
+  .ps-checkerboard-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .ps-grid-card {
+    padding: 36px 28px;
+  }
+
+  /* Keeps alternating pattern when stacked into 1 column */
+  .ps-grid-card:nth-child(odd) {
+    background-color: #f7f8fa;
+    border: 1px solid #eef0f3;
+  }
+  .ps-grid-card:nth-child(odd) .ps-card-title {
+    color: #2c353d;
+  }
+  .ps-grid-card:nth-child(odd) .ps-card-text {
+    color: #555e68;
+  }
+
+  .ps-grid-card:nth-child(even) {
+    background-color: #46698c;
+    border: none;
+  }
+  .ps-grid-card:nth-child(even) .ps-card-title {
+    color: #ffffff;
+  }
+  .ps-grid-card:nth-child(even) .ps-card-text {
+    color: #f0f4f8;
+  }
+}
+
+/* like css */
+
+.m-0-auto {margin: 0 auto;} 
+.w-50-per {width: 50%;}
+.w-75-per {width: 75%;}
+.w-88-per {width: 88%;}
