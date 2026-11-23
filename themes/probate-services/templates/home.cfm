@@ -243,7 +243,10 @@
 				<p>Assets are released, debts settled and each beneficiary receives their share.</p>
 			</li>
 		</ol>
+        <hr />
+        <img src="/media/2026/11/from-meeting-to-grant-of-probate-aae8ba18.png" />
 	</div>
+    
 </section>
 
 <!--- ============ ABOUT ============ --->
