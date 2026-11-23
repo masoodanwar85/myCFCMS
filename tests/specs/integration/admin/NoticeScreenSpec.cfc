@@ -68,6 +68,59 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 			 * `site.settings.manage` — the same permission as branding.
 			 * An editor can write content but cannot put a dialog on the site.
 			 */
+			describe( "saving it from the screen", function(){
+
+				it( "goes live when the box is ticked, and comes back ticked", function(){
+					// The exact journey a person takes: fill it in, tick the box,
+					// save, come back. A checkbox that did not render `checked`
+					// would look unticked on the next visit and save itself off
+					// again — which is indistinguishable from "it does not work".
+					adminRequest(
+						uri    = "/admin/settings/notice",
+						method = "POST",
+						params = {
+							csrfToken       : getInstance( "CsrfService@core" ).getCurrentToken(),
+							noticeEnabled   : "on",
+							noticeHeading   : "Black Friday",
+							noticeBody      : "Estate packages half price.",
+							noticeExpiresAt : dateFormat( dateAdd( "d", 14, now() ), "yyyy-mm-dd" )
+						}
+					);
+
+					expect( notice.noticeFor( site.getId() ).active ).toBeTrue( "the notice did not go live" );
+
+					var html = render( "/admin/settings" );
+
+					expect( html ).toInclude( "checked" );
+					expect( html ).toInclude( "showing" );
+				} );
+
+				it( "switches off when the box is left unticked, because a checkbox posts nothing", function(){
+					// Not a bug, and the reason an apparently complete notice can
+					// be dormant: an unticked box sends no field at all, so the
+					// absence has to mean off.
+					notice.save(
+						siteId = site.getId(), enabled = true,
+						heading = "Black Friday", body = "Estate packages half price."
+					);
+					expect( notice.noticeFor( site.getId() ).active ).toBeTrue();
+
+					adminRequest(
+						uri    = "/admin/settings/notice",
+						method = "POST",
+						params = {
+							csrfToken     : getInstance( "CsrfService@core" ).getCurrentToken(),
+							noticeHeading : "Black Friday",
+							noticeBody    : "Estate packages half price."
+						}
+					);
+
+					expect( notice.noticeFor( site.getId() ).active ).toBeFalse();
+					expect( render( "/admin/settings" ) ).toInclude( "switched off" );
+				} );
+
+			} );
+
 			describe( "the live state", function(){
 
 				it( "says it is showing when it is", function(){

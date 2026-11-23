@@ -17,11 +17,20 @@
  * Validated on the way in **and** again on read, because a row can reach
  * `site_settings` from a migration, a seed or a direct `UPDATE`.
  *
- * ## First visit is a browser fact
+ * ## Once per browser, or every visit
  *
- * The server emits the dialog when the notice is active. Whether this visitor
- * has already seen it is remembered in `localStorage`, keyed per site and
- * expiry, so a new campaign can appear again and an old one cannot.
+ * The server emits the dialog whenever the notice is active; *whether this
+ * visitor has already seen it* is a browser fact, so it is remembered in
+ * `localStorage`, keyed per site and expiry — a new campaign appears again and
+ * an old one cannot.
+ *
+ * `everyVisit` turns that off for sites that want the notice on every page
+ * load. It is per site rather than a global switch because two tenants share
+ * this code and only one of them is running a campaign that way.
+ *
+ * It is off by default, and worth leaving off: a dialog that cannot be
+ * dismissed for longer than one page view is the behaviour visitors hate most
+ * about them. Dismissing still works within the page either way.
  */
 component singleton accessors="true" {
 
@@ -33,6 +42,8 @@ component singleton accessors="true" {
 	this.KEY_CTA_URL    = "notice.ctaUrl";
 	this.KEY_CTA_LABEL  = "notice.ctaLabel";
 	this.KEY_EXPIRES_AT = "notice.expiresAt";
+	// Whether it reappears on every visit instead of once per browser.
+	this.KEY_EVERY_VISIT = "notice.everyVisit";
 
 	variables.MAX_HEADING   = 80;
 	variables.MAX_BODY      = 600;
@@ -54,6 +65,7 @@ component singleton accessors="true" {
 		var ctaUrl    = usableUrl( raw( arguments.siteId, this.KEY_CTA_URL ) );
 		var ctaLabel  = clipped( raw( arguments.siteId, this.KEY_CTA_LABEL ), variables.MAX_CTA_LABEL );
 		var expiresAt = validDate( raw( arguments.siteId, this.KEY_EXPIRES_AT ) );
+		var everyVisit = raw( arguments.siteId, this.KEY_EVERY_VISIT ) == "true";
 
 		var active = isEnabled( arguments.siteId )
 			&& len( heading )
@@ -67,6 +79,7 @@ component singleton accessors="true" {
 			"ctaUrl"     : ctaUrl,
 			"ctaLabel"   : ctaLabel,
 			"expiresAt"  : expiresAt,
+			"everyVisit" : everyVisit,
 			"storageKey" : storageKeyFor( arguments.siteId, expiresAt )
 		};
 	}
@@ -84,7 +97,8 @@ component singleton accessors="true" {
 			"body"       : raw( arguments.siteId, this.KEY_BODY ),
 			"ctaUrl"     : raw( arguments.siteId, this.KEY_CTA_URL ),
 			"ctaLabel"   : raw( arguments.siteId, this.KEY_CTA_LABEL ),
-			"expiresAt"  : raw( arguments.siteId, this.KEY_EXPIRES_AT )
+			"expiresAt"  : raw( arguments.siteId, this.KEY_EXPIRES_AT ),
+			"everyVisit" : raw( arguments.siteId, this.KEY_EVERY_VISIT ) == "true"
 		};
 	}
 
@@ -108,7 +122,8 @@ component singleton accessors="true" {
 		string body       = "",
 		string ctaUrl     = "",
 		string ctaLabel   = "",
-		string expiresAt  = ""
+		string expiresAt  = "",
+		boolean everyVisit = false
 	){
 		var headingValue  = trim( arguments.heading );
 		var bodyValue     = trim( arguments.body );
@@ -157,6 +172,7 @@ component singleton accessors="true" {
 		siteSettingsRepo.put( arguments.siteId, this.KEY_CTA_URL, ctaUrlValue );
 		siteSettingsRepo.put( arguments.siteId, this.KEY_CTA_LABEL, ctaLabelValue );
 		siteSettingsRepo.put( arguments.siteId, this.KEY_EXPIRES_AT, expiresValue );
+		siteSettingsRepo.put( arguments.siteId, this.KEY_EVERY_VISIT, arguments.everyVisit ? "true" : "false" );
 
 		return this;
 	}

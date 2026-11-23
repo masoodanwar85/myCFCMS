@@ -446,7 +446,12 @@
 			<p class="muted" style="font-size:.8rem">
 				<cfif prc.noticeLive.active>
 					<span class="pill on">showing</span>
-					Visitors see this once each; dismissing it is remembered in their browser.
+					<cfif prc.noticeLive.everyVisit>
+						On <strong>every visit</strong> until the end date. Dismissing it lasts
+						for that page only; it is back on the next one.
+					<cfelse>
+						Once per visitor &mdash; dismissing it is remembered in their browser.
+					</cfif>
 				<cfelse>
 					<span class="pill off">not showing</span>
 					<cfif !prc.notice.enabled>
@@ -471,9 +476,20 @@
 			<div class="checks">
 				<label>
 					<input type="checkbox" name="noticeEnabled"<cfif prc.notice.enabled> checked</cfif>>
-					Show this notice to first-time visitors
+					Show this notice
+				</label>
+				<label>
+					<input type="checkbox" name="noticeEveryVisit"<cfif prc.notice.everyVisit> checked</cfif>>
+					Show it on every visit, not just the first
 				</label>
 			</div>
+
+			<p class="muted" style="font-size:.8rem">
+				Left unticked, a visitor sees the notice once and their browser remembers
+				it &mdash; which is what most campaigns want. Ticked, it reappears on every
+				page load until the end date. That is the behaviour visitors complain
+				about most, so it is worth a reason.
+			</p>
 
 			<label for="noticeHeading">Heading</label>
 			<input type="text" id="noticeHeading" name="noticeHeading" maxlength="80"

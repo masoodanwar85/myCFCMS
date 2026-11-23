@@ -203,7 +203,8 @@ component extends="core.models.security.SecuredHandler" {
 				body      = rc.noticeBody ?: "",
 				ctaUrl    = rc.noticeCtaUrl ?: "",
 				ctaLabel  = rc.noticeCtaLabel ?: "",
-				expiresAt = rc.noticeExpiresAt ?: ""
+				expiresAt = rc.noticeExpiresAt ?: "",
+				everyVisit = ( rc.noticeEveryVisit ?: "" ) == "on"
 			);
 		} catch ( any e ) {
 			return done( "/admin/settings", e.message, "error" );

@@ -103,6 +103,105 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 				expect( html ).toInclude( "cms-site-notice" );
 			} );
 
+
+			it( "keeps the line breaks typed into the message", function(){
+				// The body is plain text and stays escaped; the dialog honours
+				// its newlines with CSS rather than turning them into markup.
+				notice.save(
+					siteId  = site.getId(),
+					enabled = true,
+					heading = "Black Friday",
+					body    = "first line" & chr( 10 ) & chr( 10 ) & "second line"
+				);
+
+				var html = render();
+
+				expect( html ).toInclude( "white-space:pre-line" );
+
+				// `encodeForHTML` writes the newline as a numeric entity, which
+				// the parser decodes back to a real newline in the text node —
+				// so `pre-line` breaks on it. Asserted in that form because it
+				// is what actually reaches the page.
+				//
+				// The copy either side deliberately has no `%` in it: that is
+				// encoded as well, and a needle carrying one silently never
+				// matches.
+				expect( html ).toInclude( "first line&##xa;&##xa;second line" );
+
+				// Still text, not markup.
+				expect( html ).notToInclude( "first line<br>" );
+			} );
+
+			describe( "showing it on every visit", function(){
+
+				it( "remembers the visitor by default", function(){
+					// The attribute is what the script keys off. Absent means
+					// the browser is asked whether it has seen this before.
+					notice.save(
+						siteId  = site.getId(),
+						enabled = true,
+						heading = "Black Friday",
+						body    = "Estate packages half price."
+					);
+
+					var html = render();
+
+					expect( html ).toInclude( "cms-site-notice" );
+					// The attribute, not the bare name: the script below the
+					// dialog mentions it too, so a looser needle matches the
+					// code that reads the flag rather than the flag itself.
+					expect( html ).notToInclude( "data-every-visit=""1""" );
+				} );
+
+				it( "marks the dialog when the site asks for every visit", function(){
+					notice.save(
+						siteId     = site.getId(),
+						enabled    = true,
+						heading    = "Black Friday",
+						body       = "Estate packages half price.",
+						everyVisit = true
+					);
+
+					expect( render() ).toInclude( "data-every-visit=""1""" );
+				} );
+
+				it( "stays off unless it was saved on", function(){
+					// A site that has never heard of the option keeps the
+					// behaviour it already had.
+					notice.save(
+						siteId  = site.getId(),
+						enabled = true,
+						heading = "Black Friday",
+						body    = "Estate packages half price."
+					);
+
+					expect( notice.noticeFor( site.getId() ).everyVisit ).toBeFalse();
+				} );
+
+				it( "round-trips through save, and back off again", function(){
+					notice.save(
+						siteId     = site.getId(),
+						enabled    = true,
+						heading    = "Black Friday",
+						body       = "Estate packages half price.",
+						everyVisit = true
+					);
+
+					expect( notice.noticeFor( site.getId() ).everyVisit ).toBeTrue();
+					expect( notice.settingsFor( site.getId() ).everyVisit ).toBeTrue();
+
+					notice.save(
+						siteId  = site.getId(),
+						enabled = true,
+						heading = "Black Friday",
+						body    = "Estate packages half price."
+					);
+
+					expect( notice.noticeFor( site.getId() ).everyVisit ).toBeFalse();
+				} );
+
+			} );
+
 		} );
 	}
 

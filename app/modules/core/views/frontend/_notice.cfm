@@ -16,7 +16,8 @@
 	<div id="cms-site-notice"
 	     class="cms-site-notice"
 	     hidden
-	     data-storage-key="#encodeForHTMLAttribute( local.notice.storageKey )#">
+	     data-storage-key="#encodeForHTMLAttribute( local.notice.storageKey )#"
+	     <cfif local.notice.everyVisit ?: false>data-every-visit="1"</cfif>>
 		<div class="cms-site-notice__backdrop" data-notice-dismiss></div>
 		<div class="cms-site-notice__dialog"
 		     role="dialog"
@@ -53,7 +54,14 @@
 			margin:0 0 .7rem; font: 700 1.45rem/1.2 var(--brand-font-heading, Georgia, serif);
 			letter-spacing:-.02em;
 		}
-		.cms-site-notice__dialog p{ margin:0; }
+		/*
+		 * `pre-line` so the line breaks typed into the settings textarea survive.
+		 * The alternative is splitting the value and joining it with <br>, which
+		 * means generating markup from a field that is deliberately plain text —
+		 * this keeps the body fully escaped and costs one declaration. Runs of
+		 * spaces still collapse; only the newlines are honoured.
+		 */
+		.cms-site-notice__dialog p{ margin:0; white-space:pre-line; }
 		.cms-site-notice__close{
 			position:absolute; top:.45rem; right:.55rem; width:2.2rem; height:2.2rem;
 			border:0; background:transparent; color:inherit; font-size:1.6rem; line-height:1;
@@ -77,11 +85,17 @@
 		}
 
 		var key = root.getAttribute( "data-storage-key" );
+		// A site can ask for the notice on every page load instead of once per
+		// browser. Nothing is read and nothing is written in that mode, so a
+		// visitor who has seen it before is not remembered at all.
+		var everyVisit = root.hasAttribute( "data-every-visit" );
 		var remembered = false;
 
-		try {
-			remembered = !!( window.localStorage && window.localStorage.getItem( key ) );
-		} catch ( e ) {}
+		if ( !everyVisit ) {
+			try {
+				remembered = !!( window.localStorage && window.localStorage.getItem( key ) );
+			} catch ( e ) {}
+		}
 
 		if ( remembered ) {
 			return;
@@ -95,9 +109,11 @@
 			dialog.focus();
 		}
 
-		try {
-			window.localStorage.setItem( key, "1" );
-		} catch ( e ) {}
+		if ( !everyVisit ) {
+			try {
+				window.localStorage.setItem( key, "1" );
+			} catch ( e ) {}
+		}
 
 		function dismiss() {
 			root.hidden = true;
