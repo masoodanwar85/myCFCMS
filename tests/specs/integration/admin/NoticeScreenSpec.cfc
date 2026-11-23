@@ -68,6 +68,66 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 			 * `site.settings.manage` — the same permission as branding.
 			 * An editor can write content but cannot put a dialog on the site.
 			 */
+			describe( "the live state", function(){
+
+				it( "says it is showing when it is", function(){
+					notice.save(
+						siteId  = site.getId(),
+						enabled = true,
+						heading = "Special offer",
+						body    = "Half price wills until the end of the month."
+					);
+
+					var html = render( "/admin/settings" );
+
+					expect( html ).toInclude( "showing" );
+					expect( html ).notToInclude( "not showing" );
+				} );
+
+				it( "says it is not showing, and why, once the date has passed", function(){
+					// The whole reason this line exists. A notice can be ticked,
+					// filled in and completely dormant, and until the screen said
+					// so the only symptom was "the notice does not work".
+					notice.save(
+						siteId    = site.getId(),
+						enabled   = true,
+						heading   = "Special offer",
+						body      = "Half price wills until the end of the month.",
+						expiresAt = "2020-01-31"
+					);
+
+					var html = render( "/admin/settings" );
+
+					expect( html ).toInclude( "not showing" );
+					expect( html ).toInclude( "2020-01-31" );
+					expect( html ).toInclude( "has passed" );
+				} );
+
+				it( "says it is switched off when the box is unticked", function(){
+					notice.save(
+						siteId  = site.getId(),
+						enabled = false,
+						heading = "Special offer",
+						body    = "Half price wills until the end of the month."
+					);
+
+					var html = render( "/admin/settings" );
+
+					expect( html ).toInclude( "not showing" );
+					expect( html ).toInclude( "switched off" );
+				} );
+
+				it( "says what is missing when the copy is incomplete", function(){
+					notice.save( siteId = site.getId(), enabled = true, heading = "Special offer", body = "" );
+
+					var html = render( "/admin/settings" );
+
+					expect( html ).toInclude( "not showing" );
+					expect( html ).toInclude( "heading and a message" );
+				} );
+
+			} );
+
 			it( "is refused to a user whose role does not grant it", function(){
 				auth.logout();
 				signIn( variables.editor );

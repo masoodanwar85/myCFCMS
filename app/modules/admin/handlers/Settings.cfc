@@ -95,6 +95,10 @@ component extends="core.models.security.SecuredHandler" {
 		prc.analyticsIsGtm = len( prc.analyticsTagId ) && analyticsService.isGtm( prc.analyticsTagId );
 
 		prc.notice = noticeService.settingsFor( siteId );
+		// What the *public site* is doing with it, which is not the same as what
+		// was saved: a notice can be ticked, filled in and still dormant because
+		// its expiry date has passed.
+		prc.noticeLive = noticeService.noticeFor( siteId );
 
 		prc.recaptchaSiteKey   = recaptchaService.getSiteKey( siteId );
 		prc.recaptchaHasSecret = recaptchaService.hasSecret( siteId );

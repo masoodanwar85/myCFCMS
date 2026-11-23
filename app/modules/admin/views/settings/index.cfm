@@ -436,6 +436,32 @@
 		<form method="post" action="/admin/settings/notice">
 			<input type="hidden" name="csrfToken" value="#encodeForHTMLAttribute( prc.csrfToken )#">
 
+			<!---
+				Whether the public site is actually showing it, which is not the
+				same question as what was saved. A notice can be ticked, filled
+				in and completely dormant because its expiry date has passed —
+				and until this line existed the screen gave no hint of that, so
+				the only symptom was "the notice does not work".
+			--->
+			<p class="muted" style="font-size:.8rem">
+				<cfif prc.noticeLive.active>
+					<span class="pill on">showing</span>
+					Visitors see this once each; dismissing it is remembered in their browser.
+				<cfelse>
+					<span class="pill off">not showing</span>
+					<cfif !prc.notice.enabled>
+						It is switched off.
+					<cfelseif !len( trim( prc.notice.heading ) ) or !len( trim( prc.notice.body ) )>
+						It needs both a heading and a message.
+					<cfelseif len( trim( prc.notice.expiresAt ) )>
+						The expiry date <strong>#encodeForHTML( prc.notice.expiresAt )#</strong> has passed.
+						Clear the date or set a later one.
+					<cfelse>
+						Check the fields below.
+					</cfif>
+				</cfif>
+			</p>
+
 			<p class="muted" style="font-size:.85rem">
 				A dialog shown the first time someone visits this site in their browser.
 				It is not part of the theme &mdash; turning it off, or changing the copy,
